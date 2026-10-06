@@ -61,15 +61,10 @@ Web beží na http://localhost:5173, API na http://localhost:8787/api/health. Be
 Build vyrába výstup podľa Vercel Build Output API (`tools/build-vercel.mjs`): statický web + jedna Vercel Function pre celé `/api`. Kým nie je pripojená databáza, zemeguľa beží z dátového balíka pribaleného k funkcii a formulár hostí hlási, že zbieranie ešte nie je spustené.
 
 1. Nahraj repozitár na GitHub (súkromný repozitár stačí).
-2. Vo Vercel: **Add New → Project**, vyber repozitár. Framework nechaj **Other**, Root Directory koreň repozitára. Build a install príkazy sú vo `vercel.json`.
-3. Vo Vercel projekte: **Storage → Create Database → Neon (Postgres)**, región Frankfurt (`aws-eu-central-1`). Vercel doplní `DATABASE_URL` sám.
-4. **Settings → Environment Variables**: `ADMIN_PASSWORD` (heslo do /admin) a `SESSION_SECRET` (náhodný reťazec, aspoň 32 znakov).
-5. Redeploy. Migrácie sa spustia pri builde (`npm run vercel-build`).
-6. Jednorazovo naplň produkčnú databázu zo svojho počítača:
-
-```bash
-DATABASE_URL="postgresql://…(z Vercel → Storage → Neon)…" npm run db:seed
-```
+2. Vo Vercel: **Add New → Project**, vyber repozitár. Application Preset **Other** (nie Services), Root Directory koreň repozitára. Build a install príkazy sú vo `vercel.json`.
+3. Vo Vercel projekte: **Storage → Create Database → Neon (Postgres)**, región Frankfurt, pri pripojení k projektu prefix premenných `DATABASE`, takže vznikne `DATABASE_URL`.
+4. **Settings → Environment Variables**: `ADMIN_PASSWORD` (heslo do /admin). `SESSION_SECRET` je voliteľný: bez neho si server vygeneruje náhodný kľúč a uloží ho do tabuľky `app_settings`.
+5. Redeploy. Build spustí migrácie a naplní databázu (`npm run db:seed -- --if-needed`): pri prvom nasadení všetko, neskôr len keď sa zmení `data/tuke_cooperation.json`.
 
 Každá vetva a pull request dostane vlastnú preview adresu; s integráciou Neon aj vlastnú vetvu databázy.
 

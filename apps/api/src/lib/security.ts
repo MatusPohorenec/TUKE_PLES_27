@@ -1,15 +1,31 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { Context } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
+import { eq } from 'drizzle-orm';
+import { appSettings, getDb, isDatabaseConfigured } from '@ples/db';
 import { fail } from './http.ts';
 
 const isProduction = () => Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production';
+const configuredSecret = () => (process.env.SESSION_SECRET && process.env.SESSION_SECRET.length >= 16 ? process.env.SESSION_SECRET : undefined);
+let storedSecret: string | undefined;
 
-/** Secret for HMACs. Production refuses to run without one, local development uses a fixed value. */
+/**
+ * Without SESSION_SECRET the server creates a random secret once and keeps it in app_settings,
+ * so nobody has to generate or paste one. Called before every route that signs or hashes.
+ */
+export async function ensureSecret(): Promise<void> {
+  if (configuredSecret() || storedSecret || !isDatabaseConfigured()) return;
+  const db = await getDb();
+  await db.insert(appSettings).values({ key: 'session_secret', value: randomBytes(32).toString('base64url') }).onConflictDoNothing();
+  const [row] = await db.select({ value: appSettings.value }).from(appSettings).where(eq(appSettings.key, 'session_secret'));
+  storedSecret = row?.value;
+}
+
+/** Secret for HMACs: SESSION_SECRET, else the one stored in the database, else a fixed value in local development. */
 function secret(): string {
-  const s = process.env.SESSION_SECRET;
-  if (s && s.length >= 16) return s;
-  if (isProduction()) fail(503, 'not_configured', 'Server nemá nastavený SESSION_SECRET.');
+  const s = configuredSecret() ?? storedSecret;
+  if (s) return s;
+  if (isProduction()) fail(503, 'not_configured', 'Server nemá kľúč na podpisovanie (SESSION_SECRET ani databázu).');
   return 'local-development-secret';
 }
 

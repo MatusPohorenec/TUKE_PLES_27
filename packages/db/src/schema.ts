@@ -187,3 +187,10 @@ export const adminAudit = pgTable('admin_audit', {
   ipHash: text('ip_hash'),
   createdAt: createdAt(),
 }, t => [index('admin_audit_action_time').on(t.action, t.createdAt)]);
+
+/** Values the server creates for itself, e.g. the HMAC secret when SESSION_SECRET is not configured. */
+export const appSettings = pgTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  createdAt: createdAt(),
+});

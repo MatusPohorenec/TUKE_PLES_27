@@ -3,6 +3,7 @@ import { HTTPException } from 'hono/http-exception';
 import { getDb, isDatabaseConfigured, resolveDriver } from '@ples/db';
 import { sql } from 'drizzle-orm';
 import { ApiFailure } from './lib/http.ts';
+import { ensureSecret } from './lib/security.ts';
 import { adminRoutes } from './routes/admin.ts';
 import { eventRoutes } from './routes/events.ts';
 import { feedbackRoutes } from './routes/feedback.ts';
@@ -12,6 +13,7 @@ import { globe } from './routes/globe.ts';
 export const app = new Hono().basePath('/api');
 
 app.use('*', async (c, next) => {
+  if (/^\/api\/(events|feedback|admin)(\/|$)/.test(c.req.path)) await ensureSecret();
   await next();
   c.header('X-Content-Type-Options', 'nosniff');
 });
