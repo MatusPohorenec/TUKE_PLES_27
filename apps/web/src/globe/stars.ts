@@ -12,7 +12,7 @@ export interface StarInput {
   /** diameter in CSS pixels at the default camera distance */
   size: number;
   color: string;
-  /** seconds until the star lights up (e.g. when its arc arrives) */
+  /** seconds until the star lights up (e.g. when its arc arrives); negative: it has been lit for that long */
   delay?: number;
 }
 
@@ -142,6 +142,9 @@ export class StarLayer {
     this.points.geometry = g;
   }
 
+  /** Forget when the stars lit up, so the next set() lights them again (the reveal starts over). */
+  clear(): void { this.born.clear(); }
+
   /** Flare a star again (another guest added the same place); applied at the next set(). */
   ignite(id: string, delay = 0): void {
     if (this.born.has(id)) this.born.set(id, now() + delay);
@@ -157,7 +160,9 @@ export class StarLayer {
     const rect = this.globe.renderer().domElement.getBoundingClientRect();
     const v = new THREE.Vector3(), toCam = new THREE.Vector3();
     let best: PlacedStar | null = null, bestD = maxPx;
+    const t = now();
     for (const s of this.stars) {
+      if ((this.born.get(s.id) ?? 0) > t) continue; // not lit yet
       if (toCam.copy(cam.position).sub(s.pos).dot(s.pos) <= 0) continue;
       v.copy(s.pos).project(cam);
       const d = Math.hypot(((v.x + 1) / 2) * rect.width + rect.left - x, ((1 - v.y) / 2) * rect.height + rect.top - y);

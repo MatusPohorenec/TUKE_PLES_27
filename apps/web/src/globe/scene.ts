@@ -2,11 +2,17 @@
  * The globe: a dark planet, country outlines, arcs from Košice and two star layers
  * (cooperation places tinted by legend group, guest lights in warm white).
  * Framework-free on purpose: the wall, the map and later any other screen drive it imperatively.
+ *
+ * The reveal runs on a clock: every place gets a launch time, its beam flies on the GPU (arcs.ts), its star
+ * lights up when the beam lands (stars.ts) and its country fades in at that moment. Nothing is rebuilt while
+ * the light spreads, which keeps the first half minute smooth.
  */
 import Globe, { type GlobeInstance } from 'globe.gl';
-import { Vector3, type PerspectiveCamera } from 'three';
+import { DoubleSide, MeshBasicMaterial, SRGBColorSpace, Vector3, type LineSegments, type PerspectiveCamera } from 'three';
 import { CATEGORY_GROUPS, ORIGIN, type GroupCode } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
+import { ArcLayer } from './arcs.ts';
+import { createBorders } from './borders.ts';
 import { StarLayer, type PlacedStar } from './stars.ts';
 
 export const GROUP_COLOR = Object.fromEntries(CATEGORY_GROUPS.map(g => [g.code, g.color])) as Record<GroupCode, string>;
@@ -18,32 +24,61 @@ export interface GuestPlace { key: string; name: string; countryCode: string; la
 export type SceneMode = 'cooperation' | 'live';
 export type PickResult = { kind: 'coop'; place: GlobePlace } | { kind: 'guest'; place: GuestPlace };
 
-interface ArcDatum { id: string; kind: 'coop' | 'guest'; lat: number; lon: number; color: string; stroke: number; distanceKm: number; gap: number }
+interface GuestArc { id: string; lat: number; lon: number }
+/** r, g, b (0–255) and alpha of a country fill */
+type Look = readonly [number, number, number, number];
+interface Country { material: MeshBasicMaterial; shown: Look; from: Look; to: Look; since: number }
 
 const rgba = (hex: string, a: number) => {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
 };
 const smoothstep = (e0: number, e1: number, x: number) => { const k = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return k * k * (3 - 2 * k); };
-const hash01 = (s: string) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return ((h >>> 0) % 1000) / 1000; };
+const seconds = () => performance.now() / 1000; // the clock of the arc and star shaders
 
 const GUEST_ARC_MS = 2600;
+const GUEST_DASH = 0.3;
 const GLOBE_RADIUS = 100; // three-globe units
 const FOCUS_SPEED = 1.6; // × base speed at most while a card is on screen
-const GUEST_DASH = 0.3;
+const REVEAL_DELAY = 0.8; // s before the first beam leaves Košice
+const REVEAL_SPAN = 24; // s over which the beams leave, nearest places first
+const COUNTRY_FADE = 0.8; // s for a country to light up
+const NOTIFY_MS = 150; // the counters follow the landings at most this often
+/** Seconds a beam needs from Košice to a place. */
+const beamSeconds = (km: number) => 0.9 + km / 5000;
+
+// one blue for both layers, so the globe stays in the palette: the scene's subject lit, the other one faint
+const LOOK = {
+  dark: [14, 26, 78, 0.55],
+  lit: [86, 128, 255, 0.42],
+  faint: [86, 128, 255, 0.2],
+  home: [255, 255, 255, 0.55],
+} as const satisfies Record<string, Look>;
+const applyLook = (m: MeshBasicMaterial, [r, g, b, a]: Look) => { m.color.setRGB(r / 255, g / 255, b / 255, SRGBColorSpace); m.opacity = a; };
 
 export class GlobeScene {
   readonly globe: GlobeInstance;
   private readonly coopStars: StarLayer;
   private readonly guestStars: StarLayer;
+  private readonly arcs: ArcLayer;
+  private readonly borders: LineSegments;
   private coop: GlobePlace[] = [];
+  /** how many of this.coop have been reached by their beam (a prefix: nearer places land first) */
   private coopShown = 0;
-  private revealTimer = 0;
+  /** when each place's beam leaves Košice and how long it flies, by place id */
+  private readonly timing = new Map<string, { launch: number; travel: number }>();
+  /** landing time of each place in this.coop */
+  private landAt: number[] = [];
+  private notify = { pending: false, last: 0 };
   private groups = new Set<GroupCode>(ALL_GROUPS);
-  private readonly coopArcs = new Map<string, ArcDatum>();
   private guests = new Map<string, GuestPlace>();
+  /** guest places whose light is still in the air: their country lights up when it lands */
+  private readonly guestLanding = new Map<string, number>();
   private arrivalTimers = new Set<number>();
-  private guestArcs: ArcDatum[] = [];
+  private guestArcs: GuestArc[] = [];
+  private readonly countryLooks = new Map<string, Country>();
+  private lookSets = { main: new Set<string>(), other: new Set<string>() };
+  private countriesFading = false;
   private mode: SceneMode = 'cooperation';
   private readonly ro: ResizeObserver;
   private title?: { el: HTMLElement; bottomGap: number; bottom: number };
@@ -61,18 +96,17 @@ export class GlobeScene {
       .atmosphereColor('#4f7dff').atmosphereAltitude(0.2)
       .polygonsData(countries)
       .polygonAltitude(0.006)
-      .polygonSideColor(() => 'rgba(0,0,0,0)')
-      .polygonStrokeColor(() => 'rgba(190,210,255,.22)')
+      .polygonSideColor(() => '') // no sides
+      .polygonCapMaterial((f: object) => this.countryMaterial((f as CountryFeature).properties.iso2)) // colours change without a rebuild
       .polygonsTransitionDuration(900)
+      // globe.gl's own arcs carry only the guest lights (a handful at a time); the cooperation arcs are in ArcLayer
       .arcStartLat(() => ORIGIN.lat).arcStartLng(() => ORIGIN.lon)
-      .arcEndLat((d: object) => (d as ArcDatum).lat).arcEndLng((d: object) => (d as ArcDatum).lon)
-      .arcColor((d: object) => { const a = d as ArcDatum; return a.kind === 'guest' ? [rgba('#ffffff', 1), rgba(GUEST_COLOR, 1)] : [rgba('#ffffff', 0.95), rgba(a.color, 0.55)]; })
+      .arcEndLat((d: object) => (d as GuestArc).lat).arcEndLng((d: object) => (d as GuestArc).lon)
+      .arcColor(() => [rgba('#ffffff', 1), rgba(GUEST_COLOR, 1)])
       .arcAltitudeAutoScale(0.38)
-      .arcStroke((d: object) => (d as ArcDatum).stroke)
-      .arcDashLength((d: object) => ((d as ArcDatum).kind === 'guest' ? GUEST_DASH : 0.45))
-      .arcDashGap((d: object) => ((d as ArcDatum).kind === 'guest' ? 8 : 1.4))
-      .arcDashInitialGap((d: object) => (d as ArcDatum).gap)
-      .arcDashAnimateTime((d: object) => { const a = d as ArcDatum; return a.kind === 'guest' ? GUEST_ARC_MS : 2200 + a.distanceKm / 4; })
+      .arcStroke(0.9)
+      .arcDashLength(GUEST_DASH).arcDashGap(8).arcDashInitialGap(0)
+      .arcDashAnimateTime(GUEST_ARC_MS)
       .arcsTransitionDuration(0)
       .ringsData([ORIGIN]).ringLat('lat').ringLng('lon')
       .ringColor(() => (t: number) => `rgba(255,255,255,${1 - t})`)
@@ -90,6 +124,9 @@ export class GlobeScene {
     const base = opts.autoRotateSpeed ?? 0.45;
     this.rotation = { base, max: base * 3, speed: base, focused: false, last: 0 };
 
+    this.borders = createBorders(this.globe, countries, { altitude: 0.0062, color: '#bed2ff', opacity: 0.22 });
+    this.globe.scene().add(this.borders);
+    this.arcs = new ArcLayer(this.globe, ORIGIN);
     this.coopStars = new StarLayer(this.globe, 0.012);
     this.guestStars = new StarLayer(this.globe, 0.016);
     this.ro = new ResizeObserver(() => {
@@ -97,8 +134,17 @@ export class GlobeScene {
       if (this.title) { this.fitBelowTitle(); this.fadeTitle(); }
     });
     this.ro.observe(el);
-    this.renderStars();
-    const tick = (now: number) => { this.adaptRotation(now); this.frame = requestAnimationFrame(tick); };
+    this.renderCoopStars();
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      this.adaptRotation(now);
+      this.advanceReveal(now);
+      this.fadeCountries(now / 1000);
+      this.arcs.update(now / 1000, dt);
+      this.frame = requestAnimationFrame(tick);
+    };
     this.frame = requestAnimationFrame(tick);
   }
 
@@ -140,7 +186,7 @@ export class GlobeScene {
   }
 
   private updateInterest(): void {
-    const places = [...this.visibleCoop(), ...this.guests.values()];
+    const places = [...this.visibleCoop(), ...this.landedGuests()];
     const a = new Float32Array(places.length * 3);
     places.forEach((p, i) => {
       const c = this.globe.getCoords(p.lat, p.lon, 0);
@@ -177,14 +223,15 @@ export class GlobeScene {
     return (new Vector3(c.x, c.y, c.z).normalize().dot(cam.clone().normalize()) - horizon) / (1 - horizon);
   }
 
-  guestPlaces(): GuestPlace[] { return [...this.guests.values()]; }
+  /** Guest places whose light has landed. */
+  guestPlaces(): GuestPlace[] { return this.landedGuests(); }
 
   currentMode(): SceneMode { return this.mode; }
 
   /** Makes a star flare up again, e.g. when the wall puts a card on it. */
   flare(kind: 'coop' | 'guest', id: string): void {
-    if (kind === 'coop') this.coopStars.ignite(id); else this.guestStars.ignite(`guest:${id}`);
-    this.renderStars();
+    if (kind === 'coop') { this.coopStars.ignite(id); this.renderCoopStars(); }
+    else { this.guestStars.ignite(`guest:${id}`); this.renderGuestStars(); }
   }
 
   // ---------------------------------------------------------------- overlay title
@@ -236,27 +283,63 @@ export class GlobeScene {
 
   // ---------------------------------------------------------------- cooperation
 
-  /** Places sorted by distance from Košice; with reveal the light spreads outwards in about 30 s. */
+  /**
+   * Places sorted by distance from Košice. With reveal the beams leave over REVEAL_SPAN seconds, nearest
+   * places first, so the light spreads outwards in about half a minute; without, everything is lit at once.
+   */
   setCooperation(places: GlobePlace[], { reveal = false } = {}): void {
     this.coop = [...places].sort((a, b) => a.distanceKm - b.distanceKm);
-    clearInterval(this.revealTimer);
-    if (!reveal) { this.coopShown = this.coop.length; this.render(); return; }
-    this.coopShown = 0;
-    this.render();
-    const step = Math.max(3, Math.round(this.coop.length / 90));
-    this.revealTimer = window.setInterval(() => {
-      this.coopShown = Math.min(this.coop.length, this.coopShown + step);
-      this.render();
-      if (this.coopShown >= this.coop.length) clearInterval(this.revealTimer);
-    }, 320);
+    const t = seconds();
+    const n = this.coop.length;
+    this.timing.clear();
+    this.landAt = this.coop.map((p, i) => {
+      const travel = beamSeconds(p.distanceKm);
+      const launch = reveal ? t + REVEAL_DELAY + (REVEAL_SPAN * i) / Math.max(1, n - 1) : t - 3600;
+      this.timing.set(p.id, { launch, travel });
+      return launch + travel;
+    });
+    this.coopShown = reveal ? 0 : n;
+    if (reveal) this.coopStars.clear();
+    this.renderArcs();
+    this.renderCoopStars();
+    this.renderCountries();
+    this.notifyCoop();
   }
 
   replay(): void { this.setCooperation(this.coop, { reveal: true }); }
 
-  setGroups(groups: Iterable<GroupCode>): void { this.groups = new Set(groups); this.render(); }
+  setGroups(groups: Iterable<GroupCode>): void {
+    this.groups = new Set(groups);
+    this.renderArcs();
+    this.renderCoopStars();
+    this.renderCountries();
+    this.notifyCoop();
+  }
 
+  /** Cooperation places in the active groups that their beam has reached. */
   visibleCoop(): GlobePlace[] {
-    return this.coop.slice(0, this.coopShown).filter(p => p.groups.some(g => this.groups.has(g)));
+    return this.coop.slice(0, this.coopShown).filter(p => this.inGroups(p));
+  }
+
+  private inGroups(p: GlobePlace): boolean { return p.groups.some(g => this.groups.has(g)); }
+
+  /** Moves the reveal on: places whose beam has landed count, and their countries light up. */
+  private advanceReveal(nowMs: number): void {
+    const t = nowMs / 1000;
+    let k = this.coopShown;
+    while (k < this.coop.length && this.landAt[k]! <= t) k++;
+    if (k !== this.coopShown) {
+      this.coopShown = k;
+      this.renderCountries();
+      this.notify.pending = true;
+    }
+    if (this.notify.pending && nowMs - this.notify.last >= NOTIFY_MS) this.notifyCoop(nowMs);
+  }
+
+  private notifyCoop(nowMs = performance.now()): void {
+    this.notify = { pending: false, last: nowMs };
+    this.updateInterest();
+    this.onCoopChange?.(this.visibleCoop());
   }
 
   // ---------------------------------------------------------------- guests
@@ -266,8 +349,11 @@ export class GlobeScene {
     // arrivals still waiting for their turn are part of the new snapshot (or come again from the feed)
     for (const t of this.arrivalTimers) clearTimeout(t);
     this.arrivalTimers.clear();
+    this.guestLanding.clear();
     this.guests = new Map(places.map(p => [p.key, p]));
-    this.render();
+    this.renderGuestStars();
+    this.renderCountries();
+    this.updateInterest();
   }
 
   /** Lights added without the flight, e.g. the older part of a big burst. */
@@ -276,36 +362,48 @@ export class GlobeScene {
       const prev = this.guests.get(pin.key);
       this.guests.set(pin.key, prev ? { ...prev, count: prev.count + 1 } : { key: pin.key, name: pin.name, countryCode: pin.countryCode, lat: pin.lat, lon: pin.lon, count: 1 });
     }
-    this.renderStars();
+    this.renderGuestStars();
     this.renderCountries();
     this.updateInterest();
   }
 
-  /** New lights: a bright dash flies from Košice, the star ignites when it lands. */
+  /** New lights: a bright dash flies from Košice; the star ignites and the country lights up when it lands. */
   addGuestArrivals(pins: { id: number; key: string; name: string; countryCode: string; lat: number; lon: number }[]): void {
     pins.forEach((pin, i) => {
       const timer = window.setTimeout(() => {
         this.arrivalTimers.delete(timer);
-        const arc: ArcDatum = { id: `g${pin.id}`, kind: 'guest', lat: pin.lat, lon: pin.lon, color: GUEST_COLOR, stroke: 0.9, distanceKm: 0, gap: 0 };
+        const arc: GuestArc = { id: `g${pin.id}`, lat: pin.lat, lon: pin.lon };
         this.guestArcs.push(arc);
         const prev = this.guests.get(pin.key);
         this.guests.set(pin.key, prev ? { ...prev, count: prev.count + 1 } : { key: pin.key, name: pin.name, countryCode: pin.countryCode, lat: pin.lat, lon: pin.lon, count: 1 });
         const landing = ((1 - GUEST_DASH) * GUEST_ARC_MS) / 1000;
+        if (!prev) this.guestLanding.set(pin.key, seconds() + landing);
         this.guestStars.ignite(`guest:${pin.key}`, landing);
-        this.renderStars(landing);
-        this.renderArcs();
-        this.renderCountries();
-        this.updateInterest();
-        window.setTimeout(() => { this.guestArcs = this.guestArcs.filter(a => a !== arc); this.renderArcs(); }, GUEST_ARC_MS + 200);
+        this.renderGuestStars(landing);
+        this.renderGuestArcs();
+        const landed = window.setTimeout(() => {
+          this.arrivalTimers.delete(landed);
+          this.guestLanding.delete(pin.key);
+          this.renderCountries();
+          this.updateInterest();
+        }, landing * 1000);
+        this.arrivalTimers.add(landed);
+        window.setTimeout(() => { this.guestArcs = this.guestArcs.filter(a => a !== arc); this.renderGuestArcs(); }, GUEST_ARC_MS + 200);
       }, i * 450); // a burst arrives one by one, so every light gets its moment
       this.arrivalTimers.add(timer);
     });
   }
 
+  private landedGuests(): GuestPlace[] {
+    const t = seconds();
+    return [...this.guests.values()].filter(g => !((this.guestLanding.get(g.key) ?? 0) > t));
+  }
+
   setMode(mode: SceneMode): void {
     this.mode = mode;
     this.coopStars.setIntensity(mode === 'live' ? 0.45 : 1);
-    this.render();
+    this.arcs.setOpacity(mode === 'live' ? 0 : 1);
+    this.renderCountries();
   }
 
   // ---------------------------------------------------------------- picking, teardown
@@ -323,70 +421,107 @@ export class GlobeScene {
   }
 
   dispose(): void {
-    clearInterval(this.revealTimer);
     cancelAnimationFrame(this.frame);
     for (const t of this.arrivalTimers) clearTimeout(t);
     this.ro.disconnect();
     this.coopStars.dispose();
     this.guestStars.dispose();
+    this.arcs.dispose();
+    this.borders.geometry.dispose();
+    (this.borders.material as { dispose(): void }).dispose();
+    for (const c of this.countryLooks.values()) c.material.dispose();
     this.globe._destructor?.();
     this.el.replaceChildren();
   }
 
   // ---------------------------------------------------------------- rendering
 
-  private render(): void {
-    this.renderArcs();
-    this.renderStars();
-    this.renderCountries();
-    this.updateInterest();
-    this.onCoopChange?.(this.visibleCoop());
-  }
-
-  private coopArc(p: GlobePlace, group: GroupCode): ArcDatum {
-    const key = `${p.id}:${group}`;
-    let arc = this.coopArcs.get(key);
-    if (!arc) {
-      arc = { id: p.id, kind: 'coop', lat: p.lat, lon: p.lon, color: GROUP_COLOR[group], stroke: 0.12 + Math.min(p.links, 12) * 0.02, distanceKm: p.distanceKm, gap: hash01(p.id) * 2 };
-      this.coopArcs.set(key, arc); // stable objects: globe.gl keeps the existing arc instead of rebuilding it
-    }
-    return arc;
-  }
-
   private renderArcs(): void {
-    const coop = this.mode === 'cooperation'
-      ? this.visibleCoop().map(p => this.coopArc(p, p.groups.find(g => this.groups.has(g))!))
-      : [];
-    this.globe.arcsData([...coop, ...this.guestArcs]);
+    this.arcs.set(this.coop.filter(p => this.inGroups(p)).map(p => {
+      const { launch, travel } = this.timing.get(p.id)!;
+      return {
+        lat: p.lat, lon: p.lon,
+        color: GROUP_COLOR[p.groups.find(g => this.groups.has(g))!],
+        width: 0.12 + Math.min(p.links, 12) * 0.02,
+        launch, travel,
+      };
+    }));
   }
 
-  private renderStars(guestDelay = 0): void {
+  private renderGuestArcs(): void {
+    this.globe.arcsData(this.guestArcs);
+  }
+
+  /** All stars at once: each lights up when its beam lands (the star layer counts down on the GPU). */
+  private renderCoopStars(): void {
+    const t = seconds();
     this.coopStars.set([
       { id: 'origin', lat: ORIGIN.lat, lon: ORIGIN.lon, size: 66, color: '#ffffff' },
-      ...this.visibleCoop().map(p => ({
-        id: p.id, lat: p.lat, lon: p.lon,
-        size: 11 + 5.5 * Math.sqrt(Math.min(p.links, 50)),
-        color: GROUP_COLOR[p.groups.find(g => this.groups.has(g))!],
-        delay: 0.35,
-      })),
+      ...this.coop.filter(p => this.inGroups(p)).map(p => {
+        const { launch, travel } = this.timing.get(p.id)!;
+        return {
+          id: p.id, lat: p.lat, lon: p.lon,
+          size: 11 + 5.5 * Math.sqrt(Math.min(p.links, 50)),
+          color: GROUP_COLOR[p.groups.find(g => this.groups.has(g))!],
+          delay: launch + travel - t,
+        };
+      }),
     ]);
+  }
+
+  private renderGuestStars(delay = 0): void {
     this.guestStars.set([...this.guests.values()].map(g => ({
-      id: `guest:${g.key}`, lat: g.lat, lon: g.lon, size: 14 + 6 * Math.sqrt(Math.min(g.count, 60)), color: GUEST_COLOR, delay: guestDelay,
+      id: `guest:${g.key}`, lat: g.lat, lon: g.lon, size: 14 + 6 * Math.sqrt(Math.min(g.count, 60)), color: GUEST_COLOR, delay,
     })));
+  }
+
+  // ---------------------------------------------------------------- countries
+
+  /** Each country has its own material, so a colour change is a fade instead of a rebuild of all polygons. */
+  private countryMaterial(iso: string): MeshBasicMaterial {
+    let c = this.countryLooks.get(iso);
+    if (!c) {
+      const look = this.targetLook(iso);
+      const material = new MeshBasicMaterial({ side: DoubleSide, transparent: true, depthWrite: true });
+      applyLook(material, look);
+      c = { material, shown: look, from: look, to: look, since: -1 };
+      this.countryLooks.set(iso, c);
+    }
+    return c.material;
+  }
+
+  private targetLook(iso: string): Look {
+    if (iso === ORIGIN.countryCode) return LOOK.home;
+    return this.lookSets.main.has(iso) ? LOOK.lit : this.lookSets.other.has(iso) ? LOOK.faint : LOOK.dark;
   }
 
   private renderCountries(): void {
     const coop = new Set(this.visibleCoop().map(p => p.countryCode));
-    const guests = new Set([...this.guests.values()].map(g => g.countryCode));
-    // one blue for both layers, so the globe stays in the palette: the scene's subject lit, the other one faint
-    // (a warm tint at this strength reads as grey on the dark globe)
+    const guests = new Set(this.landedGuests().map(g => g.countryCode));
     const [main, other] = this.mode === 'cooperation' ? [coop, guests] : [guests, coop];
-    this.globe.polygonCapColor((f: object) => {
-      const iso = (f as CountryFeature).properties.iso2;
-      if (iso === ORIGIN.countryCode) return 'rgba(255,255,255,.55)';
-      if (main.has(iso)) return 'rgba(86,128,255,.42)';
-      if (other.has(iso)) return 'rgba(86,128,255,.2)';
-      return 'rgba(14,26,78,.55)';
-    });
+    this.lookSets = { main, other };
+    const t = seconds();
+    for (const [iso, c] of this.countryLooks) {
+      const to = this.targetLook(iso);
+      if (to === c.to) continue;
+      c.from = c.shown;
+      c.to = to;
+      c.since = t;
+      this.countriesFading = true;
+    }
+  }
+
+  private fadeCountries(t: number): void {
+    if (!this.countriesFading) return;
+    let busy = false;
+    for (const c of this.countryLooks.values()) {
+      if (c.since < 0) continue;
+      const k = Math.min(1, (t - c.since) / COUNTRY_FADE);
+      const e = k * k * (3 - 2 * k);
+      c.shown = [0, 1, 2, 3].map(i => c.from[i]! + (c.to[i]! - c.from[i]!) * e) as unknown as Look;
+      applyLook(c.material, c.shown);
+      if (k >= 1) c.since = -1; else busy = true;
+    }
+    this.countriesFading = busy;
   }
 }
