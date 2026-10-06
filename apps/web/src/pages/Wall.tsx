@@ -7,7 +7,7 @@ import { DEFAULT_EVENT } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
 import { useGlobeScene } from '../globe/useGlobeScene.ts';
 import { GlobeTooltip } from '../components/GlobeTooltip.tsx';
-import { PlaceSpotlight } from '../components/PlaceSpotlight.tsx';
+import { PlaceSpotlight, type Box } from '../components/PlaceSpotlight.tsx';
 import { QrCode } from '../components/QrCode.tsx';
 import { Starfield } from '../components/Starfield.tsx';
 import { useGlobeData } from '../lib/useGlobeData.ts';
@@ -57,13 +57,22 @@ export default function Wall() {
     return () => { lock?.release().catch(() => {}); removeEventListener('pointermove', show); clearTimeout(timer); document.body.style.cursor = ''; };
   }, [kiosk]);
 
-  // cards stay below the title (while it is visible) and above the counters and the QR code
-  const insets = useCallback(() => {
+  // what the cards keep clear of: the title text while it is visible, the counters, the QR code and the buttons
+  const obstacles = useCallback((): Box[] => {
+    const rects: Box[] = [];
     const title = titleRef.current;
-    const titleBottom = title && Number(getComputedStyle(title).opacity) > 0.2 ? title.getBoundingClientRect().bottom + 12 : 16;
-    const hud = ['.wall-stats', '.wall-join'].map(sel => document.querySelector(sel)?.getBoundingClientRect()).filter(r => r && r.height > 0);
-    const hudTop = Math.min(innerHeight, ...hud.map(r => r!.top)); // hidden panels (narrow screens) report 0
-    return { top: titleBottom, bottom: innerHeight - hudTop + 12 };
+    if (title && Number(getComputedStyle(title).opacity) > 0.2) {
+      for (const line of title.children) { // the text itself, the header box spans the whole width
+        const range = document.createRange();
+        range.selectNodeContents(line);
+        rects.push(range.getBoundingClientRect());
+      }
+    }
+    for (const sel of ['.wall-stats', '.wall-join', '.wall-nav', '.feedback-open']) {
+      const r = document.querySelector(sel)?.getBoundingClientRect();
+      if (r && r.height > 0) rects.push(r); // hidden panels (narrow screens) have no size
+    }
+    return rects;
   }, []);
 
   const counts = useMemo(() => ({
@@ -81,7 +90,7 @@ export default function Wall() {
       <Starfield />
       <div className="globe-host" ref={ref} />
       {!kiosk && <GlobeTooltip scene={scene} host={ref.current} />}
-      <PlaceSpotlight scene={scene} insets={insets} />
+      <PlaceSpotlight scene={scene} obstacles={obstacles} />
 
       <header className="wall-title title-block" ref={titleRef}>
         <small>TECHNICKÁ UNIVERZITA V KOŠICIACH</small>

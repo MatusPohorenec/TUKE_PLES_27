@@ -162,6 +162,13 @@ export class GlobeScene {
     return { x: rect.left + ((p.x + 1) / 2) * rect.width, y: rect.top + ((1 - p.y) / 2) * rect.height, facing };
   }
 
+  /** The globe on screen: centre and radius in client pixels. */
+  disc(): { x: number; y: number; r: number } {
+    const rect = this.el.getBoundingClientRect();
+    const [ox, oy] = this.globe.globeOffset();
+    return { x: rect.left + rect.width / 2 + ox, y: rect.top + rect.height / 2 + oy, r: this.globeRadiusPx() };
+  }
+
   /** Only how directly a place faces the viewer (see screenPoint), without the projection. */
   facing(lat: number, lon: number, altitude = 0.012): number {
     const c = this.globe.getCoords(lat, lon, altitude);
