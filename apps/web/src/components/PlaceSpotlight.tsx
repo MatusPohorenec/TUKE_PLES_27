@@ -24,7 +24,8 @@ const SHOW_MS = 7000;
 const GAP_MS = 2600;
 const LEAVE_MS = 450;
 const LOAD_MS = 2500; // longest wait for a place's partners; after that the card shows without them
-const FIRST_DELAY_MS = 9000; // let the reveal play first
+const FIRST_DELAY_MS = 9000; // at least this long after the page opens
+const AFTER_REVEAL_MS = 3000; // the whole lit globe first, then the cards
 const PAD = 14; // free space kept around the title, counters and buttons
 const EDGE = 12; // free space kept at the window edges
 const BESIDE = 60; // distance between a card and its place when the card sits on the globe
@@ -164,7 +165,9 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: GlobeScene | null;
     const loop = (t: number) => {
       const dt = Math.min(0.1, (t - (last || t)) / 1000);
       last = t;
-      if (phase === 'wait' && t > until) {
+      if (phase === 'wait' && scene.revealing()) {
+        until = Math.max(until, t + AFTER_REVEAL_MS); // no cards while the light spreads: they would hide the stars
+      } else if (phase === 'wait' && t > until) {
         const next = pickSpot(scene, recent, obstaclesRef.current());
         if (next) {
           current = next;
@@ -185,6 +188,8 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: GlobeScene | null;
         } else {
           until = t + 1500; // nothing in the middle (an ocean): try again soon, the globe turns faster meanwhile
         }
+      } else if (phase === 'load' && current && scene.revealing()) {
+        reset(t, AFTER_REVEAL_MS); // the reveal started again while this card was being prepared
       } else if (phase === 'load' && current) {
         if (t > until) want = keyOf(current); // partners took too long
         const el = card.current;
@@ -211,7 +216,7 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: GlobeScene | null;
         const p = scene.screenPoint(current.lat, current.lon);
         const w = card.current.offsetWidth, h = card.current.offsetHeight;
         const target = follow(placement, p.x, p.y, w, h, obstaclesRef.current());
-        const gone = p.facing < 0.15 || p.x < 0 || p.x > innerWidth || p.y < 0 || p.y > innerHeight || !target;
+        const gone = p.facing < 0.15 || p.x < 0 || p.x > innerWidth || p.y < 0 || p.y > innerHeight || !target || scene.revealing(); // e.g. R replays the reveal
         if (phase === 'show' && (t > until || gone)) {
           phase = 'leave';
           until = t + LEAVE_MS;

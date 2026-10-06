@@ -40,6 +40,7 @@ const GUEST_ARC_MS = 2600;
 const GUEST_DASH = 0.3;
 const GLOBE_RADIUS = 100; // three-globe units
 const FOCUS_SPEED = 1.6; // × base speed at most while a card is on screen
+const REVEAL_SPEED = 0.3; // × base speed while the light spreads, so the beams can be followed
 const REVEAL_DELAY = 0.8; // s before the first beam leaves Košice
 const REVEAL_SPAN = 24; // s over which the beams leave, nearest places first
 const COUNTRY_FADE = 0.8; // s for a country to light up
@@ -152,8 +153,9 @@ export class GlobeScene {
 
   /**
    * Turns faster where there is little to see: up to three times the base speed over an empty ocean
-   * (the Pacific), the base speed wherever a few dozen lit places face the viewer. Not during the reveal;
-   * while a card is on screen only a little faster, so the card can still be read.
+   * (the Pacific), the base speed wherever a few dozen lit places face the viewer. During the reveal it turns
+   * slowly, so the beams can be followed to where they land; while a card is on screen only a little faster
+   * than the base speed, so the card can still be read.
    */
   private adaptRotation(now: number): void {
     const controls = this.globe.controls() as unknown as { autoRotate: boolean; autoRotateSpeed: number };
@@ -161,8 +163,8 @@ export class GlobeScene {
     const dt = Math.min(0.1, (now - r.last) / 1000);
     r.last = now;
     if (!controls.autoRotate) return;
-    let target = r.base;
-    if (this.coopShown >= this.coop.length) {
+    let target = this.revealing() ? r.base * REVEAL_SPEED : r.base;
+    if (!this.revealing()) {
       const cam = this.camera().position;
       const len = cam.length();
       const cx = cam.x / len, cy = cam.y / len, cz = cam.z / len;
@@ -172,7 +174,8 @@ export class GlobeScene {
       target += (r.max - r.base) * (1 - smoothstep(8, 45, seen));
       if (r.focused) target = Math.min(target, r.base * FOCUS_SPEED);
     }
-    r.speed += (target - r.speed) * (1 - Math.exp(-dt / 0.8)); // ease over about a second, never jump
+    const ease = target > r.speed ? 2 : 0.8; // speed up gently (after the reveal), slow down within a second
+    r.speed += (target - r.speed) * (1 - Math.exp(-dt / ease));
     controls.autoRotateSpeed = r.speed;
   }
 
@@ -288,6 +291,7 @@ export class GlobeScene {
    * places first, so the light spreads outwards in about half a minute; without, everything is lit at once.
    */
   setCooperation(places: GlobePlace[], { reveal = false } = {}): void {
+    const first = this.coop.length === 0;
     this.coop = [...places].sort((a, b) => a.distanceKm - b.distanceKm);
     const t = seconds();
     const n = this.coop.length;
@@ -299,7 +303,10 @@ export class GlobeScene {
       return launch + travel;
     });
     this.coopShown = reveal ? 0 : n;
-    if (reveal) this.coopStars.clear();
+    if (reveal) {
+      this.coopStars.clear();
+      if (first) this.rotation.speed = this.rotation.base * REVEAL_SPEED; // the page opens calm; a replay slows down smoothly
+    }
     this.renderArcs();
     this.renderCoopStars();
     this.renderCountries();
@@ -315,6 +322,9 @@ export class GlobeScene {
     this.renderCountries();
     this.notifyCoop();
   }
+
+  /** True while beams are still on their way (the counters are rising). */
+  revealing(): boolean { return this.coopShown < this.coop.length; }
 
   /** Cooperation places in the active groups that their beam has reached. */
   visibleCoop(): GlobePlace[] {
