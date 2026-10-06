@@ -2,7 +2,7 @@
  * The wall: what the LED screen at the ball shows. Open with ?kiosk=1 on the playback PC
  * (no links, no comment button, cursor hidden). ?k=CODE puts the event access code into the QR link.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_EVENT } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
 import { useGlobeScene } from '../globe/useGlobeScene.ts';
@@ -21,6 +21,7 @@ export default function Wall() {
   const slug = queryParam('event') ?? DEFAULT_EVENT;
   const code = queryParam('k');
   const { ref, scene } = useGlobeScene();
+  const titleRef = useRef<HTMLElement>(null);
   const { data, error } = useGlobeData();
   const [visible, setVisible] = useState<GlobePlace[]>([]);
   const guests = useGuests(scene, slug);
@@ -33,6 +34,8 @@ export default function Wall() {
   }, [scene, data]);
 
   useEffect(() => { scene?.setMode(mode); }, [scene, mode]);
+
+  useEffect(() => { if (scene && titleRef.current) scene.attachTitle(titleRef.current, { bottomGap: kiosk ? 20 : 28 }); }, [scene, kiosk]);
 
   // replay the reveal with R (handy when rehearsing on the venue screen)
   useEffect(() => {
@@ -69,7 +72,7 @@ export default function Wall() {
       <div className="globe-host" ref={ref} />
       {!kiosk && <GlobeTooltip scene={scene} host={ref.current} />}
 
-      <header className="wall-title title-block">
+      <header className="wall-title title-block" ref={titleRef}>
         <small>TECHNICKÁ UNIVERZITA V KOŠICIACH</small>
         <h1>rozsvieťme mapu sveta</h1>
       </header>

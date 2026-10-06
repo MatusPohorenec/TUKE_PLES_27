@@ -4,6 +4,7 @@
  * Framework-free on purpose: the wall, the map and later any other screen drive it imperatively.
  */
 import Globe, { type GlobeInstance } from 'globe.gl';
+import type { PerspectiveCamera } from 'three';
 import { CATEGORY_GROUPS, ORIGIN, type GroupCode } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
 import { StarLayer, type PlacedStar } from './stars.ts';
@@ -26,6 +27,7 @@ const rgba = (hex: string, a: number) => {
 const hash01 = (s: string) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return ((h >>> 0) % 1000) / 1000; };
 
 const GUEST_ARC_MS = 2600;
+const GLOBE_RADIUS = 100; // three-globe units
 const GUEST_DASH = 0.3;
 
 export class GlobeScene {
@@ -41,6 +43,7 @@ export class GlobeScene {
   private guestArcs: ArcDatum[] = [];
   private mode: SceneMode = 'cooperation';
   private readonly ro: ResizeObserver;
+  private title?: { el: HTMLElement; bottomGap: number; bottom: number };
   /** Called whenever the set of visible cooperation places changes (reveal, filters). */
   onCoopChange?: (visible: GlobePlace[]) => void;
 
@@ -80,9 +83,59 @@ export class GlobeScene {
 
     this.coopStars = new StarLayer(this.globe, 0.012);
     this.guestStars = new StarLayer(this.globe, 0.016);
-    this.ro = new ResizeObserver(() => this.globe.width(el.clientWidth).height(el.clientHeight));
+    this.ro = new ResizeObserver(() => {
+      this.globe.width(el.clientWidth).height(el.clientHeight);
+      if (this.title) { this.fitBelowTitle(); this.fadeTitle(); }
+    });
     this.ro.observe(el);
     this.renderStars();
+  }
+
+  // ---------------------------------------------------------------- overlay title
+
+  /**
+   * Keeps an overlay title clear of the globe on any screen shape: the starting view fits the globe between
+   * the title and the bottom edge, and when the globe is zoomed into the title, the title fades out.
+   */
+  attachTitle(el: HTMLElement, { bottomGap = 24 } = {}): void {
+    this.title = { el, bottomGap, bottom: 0 };
+    this.fitBelowTitle();
+    this.globe.onZoom(() => this.fadeTitle());
+    this.fadeTitle();
+  }
+
+  private camera(): PerspectiveCamera {
+    return this.globe.camera() as PerspectiveCamera;
+  }
+
+  /** Radius of the globe on screen in CSS pixels, from the camera distance and field of view. */
+  private globeRadiusPx(): number {
+    const cam = this.camera();
+    const alpha = Math.asin(Math.min(1, GLOBE_RADIUS / cam.position.length()));
+    return (Math.tan(alpha) / Math.tan((cam.fov * Math.PI) / 360)) * (this.el.clientHeight / 2);
+  }
+
+  private fitBelowTitle(): void {
+    if (!this.title) return;
+    const h = this.el.clientHeight;
+    this.title.bottom = this.title.el.getBoundingClientRect().bottom;
+    const top = this.title.bottom + 16;
+    const bottom = h - this.title.bottomGap;
+    const radius = Math.min((bottom - top) / 2, this.el.clientWidth * 0.46);
+    if (radius < 80) return; // very small screens keep the default view
+    this.globe.globeOffset([0, Math.round((top + bottom) / 2 - h / 2)]);
+    const tanAlpha = (radius / (h / 2)) * Math.tan((this.camera().fov * Math.PI) / 360);
+    const altitude = 1 / Math.sin(Math.atan(tanAlpha)) - 1;
+    const { lat, lng } = this.globe.pointOfView();
+    this.globe.pointOfView({ lat, lng, altitude }, 0);
+  }
+
+  private fadeTitle(): void {
+    if (!this.title) return;
+    const centerY = this.el.clientHeight / 2 + this.globe.globeOffset()[1];
+    const overlap = this.title.bottom + 8 - (centerY - this.globeRadiusPx());
+    const t = Math.min(1, Math.max(0, overlap / 90));
+    this.title.el.style.opacity = String(1 - t * t * (3 - 2 * t));
   }
 
   // ---------------------------------------------------------------- cooperation
