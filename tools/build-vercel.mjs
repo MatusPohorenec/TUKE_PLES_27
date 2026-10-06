@@ -5,7 +5,7 @@
 // The API bundle is a plain Node handler, so the same build runs on any Node server outside Vercel.
 import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
-import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -26,12 +26,19 @@ await build({
   target: 'node22',
   format: 'esm',
   sourcemap: 'linked',
-  // PGlite is the local development database only; pg-native is an optional addon of pg
-  external: ['@electric-sql/pglite', '@electric-sql/pglite/*', 'pg-native'],
+  // PGlite is the local development database only. Its drizzle driver must stay external too, otherwise
+  // bundling it hoists a static import of @electric-sql/pglite, which does not exist on Vercel.
+  // pg-native is an optional addon of pg.
+  external: ['@electric-sql/pglite', '@electric-sql/pglite/*', 'drizzle-orm/pglite', 'drizzle-orm/pglite/*', 'pg-native'],
   banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
   logLevel: 'info',
 });
 cpSync(`${root}data/tuke_cooperation.json`, `${fn}/tuke_cooperation.json`);
+
+// the function directory has no node_modules: any static import of a package would crash every request
+const bundle = readFileSync(`${fn}/index.mjs`, 'utf8');
+const staticImports = [...bundle.matchAll(/^import\s[^;]*?from\s*["']([^"']+)["']/gm)].map(m => m[1]).filter(s => !s.startsWith('node:'));
+if (staticImports.length) throw new Error(`API bundle imports packages that are not bundled: ${[...new Set(staticImports)].join(', ')}`);
 
 writeFileSync(`${fn}/.vc-config.json`, JSON.stringify({
   runtime: 'nodejs22.x',
