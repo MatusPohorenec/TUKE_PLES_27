@@ -86,5 +86,7 @@ export const LIMITS = {
   submissionsPerDevice10min: 5,
   submissionsPerIp10min: 300, // the venue Wi-Fi puts every guest behind one address
   undoMinutes: 15,
+  /** newest lights in the shared, CDN-cached live feed; clients keep their own cursor */
+  liveWindow: 60,
   feedbackChars: 2000,
 } as const;

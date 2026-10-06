@@ -4,7 +4,7 @@
  * Framework-free on purpose: the wall, the map and later any other screen drive it imperatively.
  */
 import Globe, { type GlobeInstance } from 'globe.gl';
-import type { PerspectiveCamera } from 'three';
+import { Vector3, type PerspectiveCamera } from 'three';
 import { CATEGORY_GROUPS, ORIGIN, type GroupCode } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
 import { StarLayer, type PlacedStar } from './stars.ts';
@@ -24,10 +24,12 @@ const rgba = (hex: string, a: number) => {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
 };
+const smoothstep = (e0: number, e1: number, x: number) => { const k = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return k * k * (3 - 2 * k); };
 const hash01 = (s: string) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return ((h >>> 0) % 1000) / 1000; };
 
 const GUEST_ARC_MS = 2600;
 const GLOBE_RADIUS = 100; // three-globe units
+const FOCUS_SPEED = 1.6; // × base speed at most while a card is on screen
 const GUEST_DASH = 0.3;
 
 export class GlobeScene {
@@ -40,10 +42,15 @@ export class GlobeScene {
   private groups = new Set<GroupCode>(ALL_GROUPS);
   private readonly coopArcs = new Map<string, ArcDatum>();
   private guests = new Map<string, GuestPlace>();
+  private arrivalTimers = new Set<number>();
   private guestArcs: ArcDatum[] = [];
   private mode: SceneMode = 'cooperation';
   private readonly ro: ResizeObserver;
   private title?: { el: HTMLElement; bottomGap: number; bottom: number };
+  /** unit vectors of every lit place (x, y, z per place): how much is there to see in the current view */
+  private interest = new Float32Array(0);
+  private readonly rotation: { base: number; max: number; speed: number; focused: boolean; last: number };
+  private frame = 0;
   /** Called whenever the set of visible cooperation places changes (reveal, filters). */
   onCoopChange?: (visible: GlobePlace[]) => void;
 
@@ -80,6 +87,8 @@ export class GlobeScene {
     controls.autoRotate = true;
     controls.autoRotateSpeed = opts.autoRotateSpeed ?? 0.45;
     controls.enableZoom = true;
+    const base = opts.autoRotateSpeed ?? 0.45;
+    this.rotation = { base, max: base * 3, speed: base, focused: false, last: 0 };
 
     this.coopStars = new StarLayer(this.globe, 0.012);
     this.guestStars = new StarLayer(this.globe, 0.016);
@@ -88,6 +97,86 @@ export class GlobeScene {
       if (this.title) { this.fitBelowTitle(); this.fadeTitle(); }
     });
     this.ro.observe(el);
+    this.renderStars();
+    const tick = (now: number) => { this.adaptRotation(now); this.frame = requestAnimationFrame(tick); };
+    this.frame = requestAnimationFrame(tick);
+  }
+
+  // ---------------------------------------------------------------- rotation
+
+  /**
+   * Turns faster where there is little to see: up to three times the base speed over an empty ocean
+   * (the Pacific), the base speed wherever a few dozen lit places face the viewer. Not during the reveal;
+   * while a card is on screen only a little faster, so the card can still be read.
+   */
+  private adaptRotation(now: number): void {
+    const controls = this.globe.controls() as unknown as { autoRotate: boolean; autoRotateSpeed: number };
+    const r = this.rotation;
+    const dt = Math.min(0.1, (now - r.last) / 1000);
+    r.last = now;
+    if (!controls.autoRotate) return;
+    let target = r.base;
+    if (this.coopShown >= this.coop.length) {
+      const cam = this.camera().position;
+      const len = cam.length();
+      const cx = cam.x / len, cy = cam.y / len, cz = cam.z / len;
+      const a = this.interest;
+      let seen = 0; // places in the middle of the disc count fully, towards the horizon less, behind not at all
+      for (let i = 0; i < a.length; i += 3) seen += smoothstep(0.5, 0.95, a[i]! * cx + a[i + 1]! * cy + a[i + 2]! * cz);
+      target += (r.max - r.base) * (1 - smoothstep(8, 45, seen));
+      if (r.focused) target = Math.min(target, r.base * FOCUS_SPEED);
+    }
+    r.speed += (target - r.speed) * (1 - Math.exp(-dt / 0.8)); // ease over about a second, never jump
+    controls.autoRotateSpeed = r.speed;
+  }
+
+  /** While a card is on screen the globe turns at most a little faster than the base speed. */
+  setFocus(on: boolean): void { this.rotation.focused = on; }
+
+  /** Degrees of longitude the view turns in the given time while a card is up (the camera moves west, places drift east). */
+  turnWhileFocused(seconds: number): number {
+    const controls = this.globe.controls() as unknown as { autoRotate: boolean };
+    return controls.autoRotate ? 6 * Math.min(this.rotation.speed, this.rotation.base * FOCUS_SPEED) * seconds : 0;
+  }
+
+  private updateInterest(): void {
+    const places = [...this.visibleCoop(), ...this.guests.values()];
+    const a = new Float32Array(places.length * 3);
+    places.forEach((p, i) => {
+      const c = this.globe.getCoords(p.lat, p.lon, 0);
+      const len = Math.hypot(c.x, c.y, c.z) || 1;
+      a[i * 3] = c.x / len; a[i * 3 + 1] = c.y / len; a[i * 3 + 2] = c.z / len;
+    });
+    this.interest = a;
+  }
+
+  // ---------------------------------------------------------------- screen positions (cards on the wall)
+
+  /** Where a place is on screen and how directly it faces the viewer: 1 = centre of the disc, 0 = horizon, below 0 = behind. */
+  screenPoint(lat: number, lon: number, altitude = 0.012): { x: number; y: number; facing: number } {
+    const c = this.globe.getCoords(lat, lon, altitude);
+    const p = new Vector3(c.x, c.y, c.z);
+    const facing = this.facing(lat, lon, altitude);
+    p.project(this.camera());
+    const rect = this.el.getBoundingClientRect();
+    return { x: rect.left + ((p.x + 1) / 2) * rect.width, y: rect.top + ((1 - p.y) / 2) * rect.height, facing };
+  }
+
+  /** Only how directly a place faces the viewer (see screenPoint), without the projection. */
+  facing(lat: number, lon: number, altitude = 0.012): number {
+    const c = this.globe.getCoords(lat, lon, altitude);
+    const cam = this.camera().position;
+    const horizon = GLOBE_RADIUS / cam.length();
+    return (new Vector3(c.x, c.y, c.z).normalize().dot(cam.clone().normalize()) - horizon) / (1 - horizon);
+  }
+
+  guestPlaces(): GuestPlace[] { return [...this.guests.values()]; }
+
+  currentMode(): SceneMode { return this.mode; }
+
+  /** Makes a star flare up again, e.g. when the wall puts a card on it. */
+  flare(kind: 'coop' | 'guest', id: string): void {
+    if (kind === 'coop') this.coopStars.ignite(id); else this.guestStars.ignite(`guest:${id}`);
     this.renderStars();
   }
 
@@ -167,14 +256,29 @@ export class GlobeScene {
 
   /** All guest lights at once (initial load, reconnect), no arrival animation. */
   setGuests(places: GuestPlace[]): void {
+    // arrivals still waiting for their turn are part of the new snapshot (or come again from the feed)
+    for (const t of this.arrivalTimers) clearTimeout(t);
+    this.arrivalTimers.clear();
     this.guests = new Map(places.map(p => [p.key, p]));
     this.render();
+  }
+
+  /** Lights added without the flight, e.g. the older part of a big burst. */
+  addGuests(pins: { key: string; name: string; countryCode: string; lat: number; lon: number }[]): void {
+    for (const pin of pins) {
+      const prev = this.guests.get(pin.key);
+      this.guests.set(pin.key, prev ? { ...prev, count: prev.count + 1 } : { key: pin.key, name: pin.name, countryCode: pin.countryCode, lat: pin.lat, lon: pin.lon, count: 1 });
+    }
+    this.renderStars();
+    this.renderCountries();
+    this.updateInterest();
   }
 
   /** New lights: a bright dash flies from Košice, the star ignites when it lands. */
   addGuestArrivals(pins: { id: number; key: string; name: string; countryCode: string; lat: number; lon: number }[]): void {
     pins.forEach((pin, i) => {
-      window.setTimeout(() => {
+      const timer = window.setTimeout(() => {
+        this.arrivalTimers.delete(timer);
         const arc: ArcDatum = { id: `g${pin.id}`, kind: 'guest', lat: pin.lat, lon: pin.lon, color: GUEST_COLOR, stroke: 0.9, distanceKm: 0, gap: 0 };
         this.guestArcs.push(arc);
         const prev = this.guests.get(pin.key);
@@ -183,8 +287,11 @@ export class GlobeScene {
         this.guestStars.ignite(`guest:${pin.key}`, landing);
         this.renderStars(landing);
         this.renderArcs();
+        this.renderCountries();
+        this.updateInterest();
         window.setTimeout(() => { this.guestArcs = this.guestArcs.filter(a => a !== arc); this.renderArcs(); }, GUEST_ARC_MS + 200);
       }, i * 450); // a burst arrives one by one, so every light gets its moment
+      this.arrivalTimers.add(timer);
     });
   }
 
@@ -210,6 +317,8 @@ export class GlobeScene {
 
   dispose(): void {
     clearInterval(this.revealTimer);
+    cancelAnimationFrame(this.frame);
+    for (const t of this.arrivalTimers) clearTimeout(t);
     this.ro.disconnect();
     this.coopStars.dispose();
     this.guestStars.dispose();
@@ -223,6 +332,7 @@ export class GlobeScene {
     this.renderArcs();
     this.renderStars();
     this.renderCountries();
+    this.updateInterest();
     this.onCoopChange?.(this.visibleCoop());
   }
 

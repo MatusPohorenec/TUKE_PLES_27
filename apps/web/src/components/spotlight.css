@@ -1,0 +1,50 @@
+.spot-lines {
+  position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4;
+  transition: opacity 0.45s ease;
+}
+.spot-lines line { stroke: rgba(223, 231, 255, 0.55); stroke-width: 1; }
+.spot-lines circle {
+  fill: none; stroke: rgba(255, 255, 255, 0.85); stroke-width: 1.2;
+  transform-box: fill-box; transform-origin: center; animation: spot-ring 1.6s ease-out infinite;
+}
+.spot-lines.leaving { opacity: 0; }
+
+.spot-card {
+  position: fixed; left: 0; top: 0; z-index: 5; pointer-events: none;
+  width: min(clamp(250px, 19vw, 380px), 72vw);
+  padding: clamp(14px, 1vw, 20px) clamp(16px, 1.2vw, 24px);
+  border-radius: var(--radius); border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, rgba(10, 22, 70, 0.9), rgba(4, 10, 40, 0.92));
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45), 0 0 40px rgba(79, 125, 255, 0.18);
+  backdrop-filter: blur(8px);
+  animation: spot-in 0.5s ease-out both;
+  transition: opacity 0.45s ease;
+}
+.spot-card.leaving { opacity: 0; }
+.spot-guest { border-color: rgba(255, 217, 160, 0.45); }
+
+.spot-kicker {
+  display: flex; align-items: center; gap: 8px;
+  font-size: clamp(10px, 0.7vw, 13px); font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver-dim);
+}
+.spot-kicker i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px currentColor; }
+.spot-card h3 { font: italic 600 clamp(26px, 2vw, 40px)/1.05 var(--font-display); margin-top: 8px; }
+.spot-guest h3 { color: var(--warm); }
+.spot-meta { margin: 4px 0 0; color: var(--silver-dim); font-size: clamp(12px, 0.8vw, 15px); }
+.spot-stats { margin: 10px 0 0; font-size: clamp(13px, 0.85vw, 16px); }
+.spot-stats b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.spot-card ul { list-style: none; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid var(--line); display: grid; gap: 4px; }
+.spot-card li { font-size: clamp(12px, 0.78vw, 15px); line-height: 1.35; }
+.spot-card li::before { content: "✦"; color: var(--silver-dim); margin-right: 8px; font-size: 0.8em; }
+.spot-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.spot-tags span {
+  font-size: clamp(10px, 0.65vw, 12px); padding: 3px 8px; border-radius: 99px;
+  border: 1px solid var(--line); color: var(--silver-dim);
+}
+
+@keyframes spot-in { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: none; } }
+@keyframes spot-ring { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spot-lines circle { animation: none; }
+}

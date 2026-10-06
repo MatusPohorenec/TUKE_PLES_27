@@ -13,6 +13,8 @@ export const CACHE = {
   dataset: 'public, max-age=60, s-maxage=3600, stale-while-revalidate=604800',
   dictionary: 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
   summary: 'public, max-age=0, s-maxage=5, stale-while-revalidate=30',
+  /** same response for every viewer: the CDN answers almost every poll, the function runs about once per 2 s */
+  live: 'public, max-age=0, s-maxage=2, stale-while-revalidate=2',
   none: 'no-store',
 } as const;
 

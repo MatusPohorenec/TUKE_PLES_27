@@ -3,11 +3,12 @@
  *   GET    /api/events/:slug                    event info for the form and the wall
  *   POST   /api/events/:slug/pins               a guest adds places (one submission = up to 10 lights)
  *   DELETE /api/events/:slug/submissions/:id    undo from the same browser within LIMITS.undoMinutes
- *   GET    /api/events/:slug/live?after=<id>    new lights since the cursor (the wall polls every 2 s)
+ *   GET    /api/events/:slug/live               newest lights, CDN cached 2 s (the wall polls every 2 s)
+ *   GET    /api/events/:slug/live?after=<id>    lights since a cursor, uncached (debugging, tools)
  *   GET    /api/events/:slug/summary            all lights aggregated per place (initial load, CDN cached 5 s)
  */
 import { Hono } from 'hono';
-import { and, asc, eq, gt, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import {
   LIMITS, PinSubmitSchema, type EventInfo, type LivePin, type LiveTotals, type SubmitResponse, type SummaryPlace,
 } from '@ples/shared';
@@ -119,8 +120,20 @@ export const eventRoutes = new Hono()
 
   .get('/:slug/live', async c => {
     const ev = await loadEvent(c.req.param('slug'));
-    const after = Math.max(0, Number(c.req.query('after')) || 0);
     const d = await db();
+    const afterParam = c.req.query('after');
+    if (afterParam === undefined) {
+      // the newest lights, identical for every viewer, so the CDN can answer the polls
+      const rows = await d.select({ pin: pins }).from(pins)
+        .innerJoin(countries, eq(countries.code, pins.countryCode))
+        .where(visible(ev.id))
+        .orderBy(desc(pins.id))
+        .limit(LIMITS.liveWindow);
+      const list = rows.map(r => toLivePin(r.pin)).reverse();
+      c.header('Cache-Control', CACHE.live);
+      return c.json({ event: eventInfo(ev), cursor: list.at(-1)?.id ?? 0, pins: list, totals: await totals(d, ev.id) });
+    }
+    const after = Math.max(0, Number(afterParam) || 0);
     const rows = await d.select({ pin: pins }).from(pins)
       .innerJoin(countries, eq(countries.code, pins.countryCode))
       .where(and(visible(ev.id), gt(pins.id, after)))

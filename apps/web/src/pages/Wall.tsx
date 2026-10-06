@@ -2,11 +2,12 @@
  * The wall: what the LED screen at the ball shows. Open with ?kiosk=1 on the playback PC
  * (no links, no comment button, cursor hidden). ?k=CODE puts the event access code into the QR link.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_EVENT } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
 import { useGlobeScene } from '../globe/useGlobeScene.ts';
 import { GlobeTooltip } from '../components/GlobeTooltip.tsx';
+import { PlaceSpotlight } from '../components/PlaceSpotlight.tsx';
 import { QrCode } from '../components/QrCode.tsx';
 import { Starfield } from '../components/Starfield.tsx';
 import { useGlobeData } from '../lib/useGlobeData.ts';
@@ -56,6 +57,15 @@ export default function Wall() {
     return () => { lock?.release().catch(() => {}); removeEventListener('pointermove', show); clearTimeout(timer); document.body.style.cursor = ''; };
   }, [kiosk]);
 
+  // cards stay below the title (while it is visible) and above the counters and the QR code
+  const insets = useCallback(() => {
+    const title = titleRef.current;
+    const titleBottom = title && Number(getComputedStyle(title).opacity) > 0.2 ? title.getBoundingClientRect().bottom + 12 : 16;
+    const hud = ['.wall-stats', '.wall-join'].map(sel => document.querySelector(sel)?.getBoundingClientRect()).filter(r => r && r.height > 0);
+    const hudTop = Math.min(innerHeight, ...hud.map(r => r!.top)); // hidden panels (narrow screens) report 0
+    return { top: titleBottom, bottom: innerHeight - hudTop + 12 };
+  }, []);
+
   const counts = useMemo(() => ({
     countries: new Set(visible.map(p => p.countryCode)).size,
     places: visible.length,
@@ -71,6 +81,7 @@ export default function Wall() {
       <Starfield />
       <div className="globe-host" ref={ref} />
       {!kiosk && <GlobeTooltip scene={scene} host={ref.current} />}
+      <PlaceSpotlight scene={scene} insets={insets} />
 
       <header className="wall-title title-block" ref={titleRef}>
         <small>TECHNICKÁ UNIVERZITA V KOŠICIACH</small>
