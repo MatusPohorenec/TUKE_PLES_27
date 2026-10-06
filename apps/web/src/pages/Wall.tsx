@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_EVENT } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
 import { useGlobeScene } from '../globe/useGlobeScene.ts';
+import { CountUp } from '../components/CountUp.tsx';
 import { GlobeTooltip } from '../components/GlobeTooltip.tsx';
 import { PlaceSpotlight, type Box } from '../components/PlaceSpotlight.tsx';
 import { QrCode } from '../components/QrCode.tsx';
@@ -15,7 +16,6 @@ import { useGuests } from '../lib/useGuests.ts';
 import { Link, queryParam } from '../lib/router.tsx';
 import './wall.css';
 
-const fmt = (n: number) => n.toLocaleString('sk');
 
 export default function Wall() {
   const kiosk = queryParam('kiosk') !== null;
@@ -145,7 +145,7 @@ export default function Wall() {
 function Stat({ value, label, warm, small }: { value: number; label: string; warm?: boolean; small?: boolean }) {
   return (
     <div className={`stat${warm ? ' warm' : ''}${small ? ' small' : ''}`}>
-      <b>{fmt(value)}</b>
+      <CountUp value={value} />
       <span>{label}</span>
     </div>
   );
