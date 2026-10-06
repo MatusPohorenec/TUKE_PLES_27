@@ -82,7 +82,7 @@ export class GlobeScene {
   private countriesFading = false;
   private mode: SceneMode = 'cooperation';
   private readonly ro: ResizeObserver;
-  private title?: { el: HTMLElement; bottomGap: number; bottom: number };
+  private title?: { el: HTMLElement; bottomGap: number; bottom: number; limit?: () => number | null };
   /** unit vectors of every lit place (x, y, z per place): how much is there to see in the current view */
   private interest = new Float32Array(0);
   private readonly rotation: { base: number; max: number; speed: number; focused: boolean; last: number };
@@ -243,8 +243,8 @@ export class GlobeScene {
    * Keeps an overlay title clear of the globe on any screen shape: the starting view fits the globe between
    * the title and the bottom edge, and when the globe is zoomed into the title, the title fades out.
    */
-  attachTitle(el: HTMLElement, { bottomGap = 24 } = {}): void {
-    this.title = { el, bottomGap, bottom: 0 };
+  attachTitle(el: HTMLElement, { bottomGap = 24, bottom }: { bottomGap?: number; bottom?: () => number | null } = {}): void {
+    this.title = { el, bottomGap, bottom: 0, limit: bottom };
     this.fitBelowTitle();
     this.globe.onZoom(() => this.fadeTitle());
     this.fadeTitle();
@@ -266,7 +266,8 @@ export class GlobeScene {
     const h = this.el.clientHeight;
     this.title.bottom = this.title.el.getBoundingClientRect().bottom;
     const top = this.title.bottom + 16;
-    const bottom = h - this.title.bottomGap;
+    // bottom(): where the globe has to end (e.g. above the counters on a phone), in client pixels
+    const bottom = Math.min(h - this.title.bottomGap, (this.title.limit?.() ?? Infinity) - this.el.getBoundingClientRect().top);
     const radius = Math.min((bottom - top) / 2, this.el.clientWidth * 0.46);
     if (radius < 80) return; // very small screens keep the default view
     this.globe.globeOffset([0, Math.round((top + bottom) / 2 - h / 2)]);

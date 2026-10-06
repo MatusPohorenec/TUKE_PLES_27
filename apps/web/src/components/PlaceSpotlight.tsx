@@ -17,7 +17,9 @@ import './spotlight.css';
 type Spot = { kind: 'coop'; id: string; lat: number; lon: number; place: GlobePlace } | { kind: 'guest'; id: string; lat: number; lon: number; place: GuestPlace };
 export interface Box { left: number; top: number; right: number; bottom: number }
 type Side = 'left' | 'right';
-interface Placement { side: Side; margin: boolean; x: number; y: number }
+/** margin: in the free space next to the globe; beside: on the globe next to the place; above / below: over or under the place (phones) */
+type Mode = 'margin' | 'beside' | 'above' | 'below';
+interface Placement { mode: Mode; side: Side; x: number; y: number }
 interface Disc { x: number; y: number; r: number }
 
 const SHOW_MS = 7000;
@@ -85,32 +87,59 @@ const overlapsDisc = (b: Box, d: Disc) => {
   return dx * dx + dy * dy < d.r * d.r;
 };
 
-/** Where a card goes when it appears: next to the globe on the side of its place if there is room, else beside the place. */
+const clampX = (x: number, w: number) => Math.min(Math.max(x, EDGE), innerWidth - EDGE - w);
+
+/** The card's x and the top edge it would like in a mode; for margin cards x stays where it was chosen. */
+function slot(mode: Mode, side: Side, px: number, py: number, w: number, h: number, marginX: number): { x: number; want: number } {
+  if (mode === 'margin') return { x: marginX, want: py - h * 0.4 };
+  if (mode === 'beside') return { x: side === 'right' ? px + BESIDE : px - BESIDE - w, want: py - h * 0.4 };
+  return { x: clampX(px - w / 2, w), want: mode === 'above' ? py - BESIDE - h : py + BESIDE };
+}
+
+/** A free top edge for the slot, or null; cards over or under the place must stay on their side of it. */
+function fit(mode: Mode, x: number, want: number, py: number, w: number, h: number, blocked: Box[]): number | null {
+  if (x < EDGE || x + w > innerWidth - EDGE) return null;
+  const y = freeTop(x, w, h, want, blocked);
+  if (y === null) return null;
+  if (mode === 'above' && y + h > py - RING) return null;
+  if (mode === 'below' && y < py + RING) return null;
+  return y;
+}
+
+/**
+ * Where a card goes when it appears: next to the globe on the side of its place if there is room, else beside
+ * the place, else (on a phone) over or under it.
+ */
 function choosePlacement(px: number, py: number, w: number, h: number, prefer: Side, disc: Disc, obstacles: Box[]): Placement | null {
   const blocked = [...obstacles, ringBox(px, py)];
   let best: (Placement & { cost: number }) | null = null;
+  const consider = (mode: Mode, side: Side, x: number, want: number, extra: number) => {
+    const y = fit(mode, x, want, py, w, h, blocked);
+    if (y === null) return;
+    const box = { left: x, top: y, right: x + w, bottom: y + h };
+    const ax = Math.min(Math.max(px, box.left), box.right), ay = Math.min(Math.max(py, box.top), box.bottom);
+    const cost = Math.hypot(ax - px, ay - py) + (overlapsDisc(box, disc) ? 320 : 0) + (side === prefer ? 0 : 80) + extra;
+    if (!best || cost < best.cost) best = { mode, side, x, y, cost };
+  };
   for (const side of ['left', 'right'] as const) {
-    const xs: { x: number; margin: boolean }[] = [];
     const edge = side === 'right' ? disc.x + disc.r + 28 : disc.x - disc.r - 28 - w;
-    for (let k = 0; k < 10; k++) xs.push({ x: edge + (side === 'right' ? k : -k) * 40, margin: true }); // next to the globe, then further out
-    xs.push({ x: side === 'right' ? px + BESIDE : px - BESIDE - w, margin: false });
-    for (const c of xs) {
-      if (c.x < EDGE || c.x + w > innerWidth - EDGE) continue;
-      const y = freeTop(c.x, w, h, py - h * 0.4, blocked);
-      if (y === null) continue;
-      const box = { left: c.x, top: y, right: c.x + w, bottom: y + h };
-      const ax = Math.min(Math.max(px, box.left), box.right), ay = Math.min(Math.max(py, box.top), box.bottom);
-      const cost = Math.hypot(ax - px, ay - py) + (overlapsDisc(box, disc) ? 320 : 0) + (side === prefer ? 0 : 80);
-      if (!best || cost < best.cost) best = { side, margin: c.margin, x: c.x, y, cost };
-    }
+    for (let k = 0; k < 10; k++) consider('margin', side, edge + (side === 'right' ? k : -k) * 40, py - h * 0.4, 0); // next to the globe, then further out
+    const b = slot('beside', side, px, py, w, h, 0);
+    consider('beside', side, b.x, b.want, 0);
   }
-  return best && { side: best.side, margin: best.margin, x: best.x, y: best.y };
+  for (const mode of ['above', 'below'] as const) {
+    const s = slot(mode, prefer, px, py, w, h, 0);
+    consider(mode, prefer, s.x, s.want, 40);
+  }
+  const chosen = best as (Placement & { cost: number }) | null;
+  return chosen && { mode: chosen.mode, side: chosen.side, x: chosen.x, y: chosen.y };
 }
 
-/** Where the card is in this frame: it keeps its side, follows its place up and down, and on the globe also sideways. */
+/** Where the card is in this frame: it keeps its mode and side and follows its place. */
 function follow(p: Placement, px: number, py: number, w: number, h: number, obstacles: Box[]): { x: number; y: number } | null {
-  const x = p.margin ? p.x : Math.min(Math.max(p.side === 'right' ? px + BESIDE : px - BESIDE - w, EDGE), innerWidth - EDGE - w);
-  const y = freeTop(x, w, h, py - h * 0.4, [...obstacles, ringBox(px, py)]);
+  const s = slot(p.mode, p.side, px, py, w, h, p.x);
+  const x = p.mode === 'beside' ? clampX(s.x, w) : s.x;
+  const y = fit(p.mode, x, s.want, py, w, h, [...obstacles, ringBox(px, py)]);
   return y === null ? null : { x, y };
 }
 
