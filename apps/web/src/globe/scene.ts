@@ -378,12 +378,14 @@ export class GlobeScene {
   private renderCountries(): void {
     const coop = new Set(this.visibleCoop().map(p => p.countryCode));
     const guests = new Set([...this.guests.values()].map(g => g.countryCode));
+    // one blue for both layers, so the globe stays in the palette: the scene's subject lit, the other one faint
+    // (a warm tint at this strength reads as grey on the dark globe)
+    const [main, other] = this.mode === 'cooperation' ? [coop, guests] : [guests, coop];
     this.globe.polygonCapColor((f: object) => {
       const iso = (f as CountryFeature).properties.iso2;
       if (iso === ORIGIN.countryCode) return 'rgba(255,255,255,.55)';
-      if (coop.has(iso) && this.mode === 'cooperation') return 'rgba(86,128,255,.42)';
-      if (guests.has(iso)) return 'rgba(255,217,160,.22)';
-      if (coop.has(iso)) return 'rgba(86,128,255,.2)';
+      if (main.has(iso)) return 'rgba(86,128,255,.42)';
+      if (other.has(iso)) return 'rgba(86,128,255,.2)';
       return 'rgba(14,26,78,.55)';
     });
   }
