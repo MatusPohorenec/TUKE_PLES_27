@@ -1,0 +1,58 @@
+.join {
+  position: relative; min-height: 100%; max-width: 620px; margin: 0 auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 72px) var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 40px);
+  display: grid; gap: 22px; align-content: start;
+}
+.join > * { position: relative; }
+.join-head h1 { font: italic 500 clamp(38px, 9vw, 60px)/1 var(--font-display); margin-top: 6px; }
+.join-head p { color: var(--silver-dim); margin: 12px 0 0; max-width: 52ch; }
+.join-brand { font-size: 12px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--silver-dim); text-decoration: none; }
+.join-note { padding: 14px 16px; border-radius: var(--radius); border: 1px solid var(--line-strong); background: var(--panel); }
+
+.join-card {
+  display: grid; gap: 22px; padding: 22px; border-radius: var(--radius);
+  border: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(8px);
+}
+.join-field { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.join-field legend, .join-field > label { font-weight: 700; margin-bottom: 4px; padding: 0; }
+.join-field input:not([type="radio"]), .join-field select, .place-search input {
+  width: 100%; min-height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line-strong);
+  background: rgba(2, 6, 23, 0.65); color: var(--silver); font: inherit; font-size: 16px; /* 16px: no zoom on iOS */
+}
+.small { font-size: 12.5px; margin: 0; }
+
+.place-search { position: relative; display: grid; gap: 6px; }
+.place-search-state { position: absolute; right: 14px; top: 14px; font-size: 13px; }
+.place-hits { list-style: none; margin: 0; padding: 4px; border-radius: 12px; border: 1px solid var(--line); background: var(--deep); }
+.place-hits button {
+  width: 100%; display: flex; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 0; border-radius: 8px;
+  background: transparent; text-align: left; cursor: pointer;
+}
+.place-hits button.active { background: rgba(79, 125, 255, 0.18); }
+.place-hits .muted { flex: none; font-size: 13px; }
+
+.join-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.join-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 6px 6px 12px; border-radius: 99px;
+  border: 1px solid rgba(255, 217, 160, 0.45); color: var(--warm); background: rgba(255, 217, 160, 0.08); font-weight: 600; font-size: 14px;
+}
+.join-chip.lit { padding-right: 12px; box-shadow: 0 0 18px rgba(255, 210, 150, 0.35); }
+.join-chip button { width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.08); cursor: pointer; font-size: 16px; line-height: 1; }
+
+.join-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.join-option {
+  display: inline-flex; align-items: center; min-height: 42px; padding: 0 14px; border-radius: 99px;
+  border: 1px solid var(--line-strong); cursor: pointer; font-weight: 500; user-select: none;
+}
+.join-option input { position: absolute; opacity: 0; pointer-events: none; }
+.join-option.on { border-color: var(--warm); color: var(--warm); background: rgba(255, 217, 160, 0.1); }
+.join-option:has(input:focus-visible) { outline: 2px solid var(--glow); outline-offset: 2px; }
+
+.join-submit { width: 100%; min-height: 54px; font-size: 17px; }
+.join-done h2 { font: italic 500 34px/1.05 var(--font-display); color: var(--warm); }
+.join-done p { margin: 0; }
+.join-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.join-foot { text-align: center; color: var(--silver-dim); }
+.join-foot a { color: var(--silver-dim); }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

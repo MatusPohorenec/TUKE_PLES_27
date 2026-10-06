@@ -1,0 +1,27 @@
+{
+  "name": "@ples/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Postgres schema (Drizzle), migrations, seed and the database client",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "migrate": "tsx src/cli/migrate.ts",
+    "seed": "tsx src/cli/seed.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@neondatabase/serverless": "^1.2.0",
+    "@ples/shared": "*",
+    "drizzle-orm": "^0.45.3",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.0",
+    "drizzle-kit": "^0.31.11"
+  }
+}

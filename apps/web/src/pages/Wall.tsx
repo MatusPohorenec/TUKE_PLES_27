@@ -1,0 +1,129 @@
+/**
+ * The wall: what the LED screen at the ball shows. Open with ?kiosk=1 on the playback PC
+ * (no links, no comment button, cursor hidden). ?k=CODE puts the event access code into the QR link.
+ */
+import { useEffect, useMemo, useState } from 'react';
+import { DEFAULT_EVENT } from '@ples/shared/constants';
+import type { GlobePlace } from '@ples/shared';
+import { useGlobeScene } from '../globe/useGlobeScene.ts';
+import { GlobeTooltip } from '../components/GlobeTooltip.tsx';
+import { QrCode } from '../components/QrCode.tsx';
+import { Starfield } from '../components/Starfield.tsx';
+import { useGlobeData } from '../lib/useGlobeData.ts';
+import { useGuests } from '../lib/useGuests.ts';
+import { Link, queryParam } from '../lib/router.tsx';
+import './wall.css';
+
+const fmt = (n: number) => n.toLocaleString('sk');
+
+export default function Wall() {
+  const kiosk = queryParam('kiosk') !== null;
+  const slug = queryParam('event') ?? DEFAULT_EVENT;
+  const code = queryParam('k');
+  const { ref, scene } = useGlobeScene();
+  const { data, error } = useGlobeData();
+  const [visible, setVisible] = useState<GlobePlace[]>([]);
+  const guests = useGuests(scene, slug);
+  const mode = guests.event?.displayScene ?? 'cooperation';
+
+  useEffect(() => {
+    if (!scene || !data) return;
+    scene.onCoopChange = setVisible;
+    scene.setCooperation(data.places, { reveal: true });
+  }, [scene, data]);
+
+  useEffect(() => { scene?.setMode(mode); }, [scene, mode]);
+
+  // replay the reveal with R (handy when rehearsing on the venue screen)
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => { if (e.key.toLowerCase() === 'r') scene?.replay(); };
+    addEventListener('keydown', key);
+    return () => removeEventListener('keydown', key);
+  }, [scene]);
+
+  // kiosk: keep the screen awake and hide the cursor when idle
+  useEffect(() => {
+    if (!kiosk) return;
+    let lock: WakeLockSentinel | undefined;
+    navigator.wakeLock?.request('screen').then(l => { lock = l; }).catch(() => {});
+    let timer = 0;
+    const show = () => { document.body.style.cursor = ''; clearTimeout(timer); timer = window.setTimeout(() => { document.body.style.cursor = 'none'; }, 3000); };
+    show();
+    addEventListener('pointermove', show);
+    return () => { lock?.release().catch(() => {}); removeEventListener('pointermove', show); clearTimeout(timer); document.body.style.cursor = ''; };
+  }, [kiosk]);
+
+  const counts = useMemo(() => ({
+    countries: new Set(visible.map(p => p.countryCode)).size,
+    places: visible.length,
+    institutions: visible.reduce((s, p) => s + p.institutions, 0),
+  }), [visible]);
+
+  const joinUrl = `${location.origin}/zapoj-sa${code ? `?k=${encodeURIComponent(code)}` : ''}`;
+  const collecting = guests.available && (guests.event?.status === 'open' || guests.event?.status === 'live');
+
+  return (
+    <div className={`wall mode-${mode}${kiosk ? ' kiosk' : ''}`}>
+      <div className="stage-light" />
+      <Starfield />
+      <div className="globe-host" ref={ref} />
+      {!kiosk && <GlobeTooltip scene={scene} host={ref.current} />}
+
+      <header className="wall-title title-block">
+        <small>TECHNICKÁ UNIVERZITA V KOŠICIACH</small>
+        <h1>rozsvieťme mapu sveta</h1>
+      </header>
+
+      <section className="wall-stats" aria-label="Počty">
+        {mode === 'live' ? (
+          <>
+            <Stat value={guests.totals.pins} label="svetiel hostí" warm />
+            <Stat value={guests.totals.places} label="miest" />
+            <Stat value={guests.totals.countries} label="krajín" />
+          </>
+        ) : (
+          <>
+            <Stat value={counts.countries} label="krajín" />
+            <Stat value={counts.places} label="miest" />
+            <Stat value={counts.institutions} label="partnerských inštitúcií" />
+            {guests.totals.pins > 0 && <Stat value={guests.totals.pins} label="svetiel hostí" warm small />}
+          </>
+        )}
+      </section>
+
+      {collecting && (
+        <aside className="wall-join">
+          <QrCode value={joinUrl} size={kiosk ? 150 : 112} />
+          <div>
+            <b>Pridaj svoje svetlo</b>
+            <span>Naskenuj kód a označ, kde všade si bol/a.</span>
+            {guests.recent.length > 0 && (
+              <ul className="wall-recent" aria-live="polite">
+                {guests.recent.slice(0, 3).map(p => <li key={p.id}>{p.name}</li>)}
+              </ul>
+            )}
+          </div>
+        </aside>
+      )}
+
+      {!kiosk && (
+        <nav className="wall-nav">
+          <Link className="chip" href="/mapa">Preskúmať mapu</Link>
+          <Link className="chip" href="/zapoj-sa">Zapoj sa</Link>
+          <Link className="chip" href="/o-projekte">O projekte</Link>
+          <button type="button" className="chip" onClick={() => scene?.replay()}>↻ Znova (R)</button>
+        </nav>
+      )}
+      {error && !data && <p className="wall-error error">{error}</p>}
+    </div>
+  );
+}
+
+function Stat({ value, label, warm, small }: { value: number; label: string; warm?: boolean; small?: boolean }) {
+  return (
+    <div className={`stat${warm ? ' warm' : ''}${small ? ' small' : ''}`}>
+      <b>{fmt(value)}</b>
+      <span>{label}</span>
+    </div>
+  );
+}

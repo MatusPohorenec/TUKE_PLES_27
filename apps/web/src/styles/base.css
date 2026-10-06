@@ -1,0 +1,96 @@
+/* Night of the ball: midnight blue with silver. One deliberate dark look for every screen. */
+:root {
+  --midnight: #020617;
+  --deep: #06103a;
+  --ink: #0b1640;
+  --panel: rgba(6, 16, 58, 0.72);
+  --silver: #dfe7ff;
+  --silver-dim: rgba(223, 231, 255, 0.62);
+  --silver-faint: rgba(223, 231, 255, 0.38);
+  --line: rgba(190, 210, 255, 0.16);
+  --line-strong: rgba(190, 210, 255, 0.32);
+  --glow: #4f7dff;
+  --warm: #ffd9a0;
+  --danger: #ff8f9c;
+  --ok: #8ff0c4;
+
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --radius: 14px;
+  --gutter: clamp(16px, 3vw, 40px);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--midnight);
+  color: var(--silver);
+  font: 400 15px/1.55 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* stage light behind the globe */
+.stage-light {
+  position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(60vmax 60vmax at 50% 55%, rgba(40, 80, 255, 0.2), transparent 60%),
+    radial-gradient(40vmax 40vmax at 85% 10%, rgba(150, 90, 255, 0.1), transparent 60%),
+    radial-gradient(40vmax 40vmax at 10% 90%, rgba(60, 160, 255, 0.08), transparent 60%);
+}
+.starfield { position: fixed; inset: 0; pointer-events: none; }
+.globe-host { position: fixed; inset: 0; }
+
+.title-block { text-align: center; pointer-events: none; }
+.title-block small {
+  display: block; letter-spacing: 0.5em; font-weight: 500; font-size: clamp(10px, 0.95vw, 16px); color: var(--silver-dim);
+}
+.title-block h1 {
+  font: italic 500 clamp(32px, 4.6vw, 84px)/1 var(--font-display);
+  margin-top: 0.2em;
+  background: linear-gradient(180deg, #fff, #b9c8ff 70%, #7f95e6);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 22px rgba(120, 160, 255, 0.55));
+}
+
+.chip {
+  display: inline-flex; align-items: center; gap: 0.6em; padding: 0.45em 0.95em;
+  border: 1px solid var(--line); border-radius: 99px; background: var(--panel);
+  font: 500 13px var(--font-ui); color: var(--silver); cursor: pointer; text-decoration: none;
+  backdrop-filter: blur(6px); transition: opacity 0.3s, border-color 0.2s;
+}
+.chip:hover { border-color: var(--line-strong); }
+.chip i { width: 0.7em; height: 0.7em; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+.chip.off { opacity: 0.32; }
+.chip em { font-style: normal; color: var(--silver-dim); font-variant-numeric: tabular-nums; }
+
+.button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
+  min-height: 46px; padding: 0 1.4em; border-radius: 99px; border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, #2b4cff, #1a2fb8); color: #fff; font-weight: 600; cursor: pointer;
+  box-shadow: 0 0 24px rgba(79, 125, 255, 0.45);
+}
+.button:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
+.button.ghost { background: transparent; box-shadow: none; }
+
+.tip {
+  position: fixed; z-index: 20; pointer-events: none; max-width: 340px;
+  padding: 0.7em 0.9em; border-radius: 10px; background: rgba(2, 6, 23, 0.9); border: 1px solid var(--line);
+  font: 500 13px/1.45 var(--font-ui);
+}
+.tip b { font-size: 15px; }
+.tip .muted { color: var(--silver-dim); }
+
+.muted { color: var(--silver-dim); }
+.error { color: var(--danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

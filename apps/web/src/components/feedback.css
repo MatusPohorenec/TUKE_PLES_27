@@ -1,0 +1,20 @@
+.feedback-open {
+  position: fixed; z-index: 30;
+  left: var(--gutter); top: calc(env(safe-area-inset-top, 0px) + 18px);
+}
+.feedback-dialog {
+  width: min(520px, calc(100vw - 32px));
+  padding: 0; border: 1px solid var(--line-strong); border-radius: var(--radius);
+  background: var(--deep); color: var(--silver);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+.feedback-dialog::backdrop { background: rgba(2, 6, 23, 0.7); backdrop-filter: blur(3px); }
+.feedback-body { display: grid; gap: 10px; padding: 22px; }
+.feedback-body h2 { font: italic 500 30px/1.1 var(--font-display); }
+.feedback-body p { margin: 0; }
+.feedback-body label { font-weight: 600; font-size: 13px; margin-top: 6px; }
+.feedback-body textarea, .feedback-body input {
+  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line-strong);
+  background: rgba(2, 6, 23, 0.6); color: var(--silver); font: inherit; resize: vertical;
+}
+.feedback-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 8px; }

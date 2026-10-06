@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.vercel/
+.data/
+.env
+.env.*
+!.env.example
+*.log
+__pycache__/
+.DS_Store
+.claude/
+
+# large downloads, rebuilt by scripts (see data/README.md)
+data/cache/cordis/
+data/cache/hei/
+data/cache/geonames/

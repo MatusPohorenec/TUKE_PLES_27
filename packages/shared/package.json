@@ -1,0 +1,17 @@
+{
+  "name": "@ples/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Contracts shared by the web app and the API: constants, zod schemas, response types",
+  "exports": {
+    ".": "./src/index.ts",
+    "./constants": "./src/constants.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}

@@ -1,0 +1,667 @@
+[
+ {
+  "number": "SK-AT-0013-08",
+  "name": "Aktívny korózny manažment v automobilovom priemysle: Stanovenie koróznej aktivity bimetalických povlakov spriahnutím ANN s ENM",
+  "recipient": "Technická Univerzita v Košiciach, Hutnícka fakulta",
+  "call": "Slovensko – Rakúsko 2008",
+  "zk": ""
+ },
+ {
+  "number": "SK-AT-0021-12",
+  "name": "Implementácia modelu nanometrologického riadenia procesu pre hodnotenie kvality reznej časti nástroja pri presnom obrábaní",
+  "recipient": "Strojnícka fakulta TUKE",
+  "call": "Slovensko – Rakúsko 2012",
+  "zk": ""
+ },
+ {
+  "number": "SK-AT-0024-10",
+  "name": "Identifikácia sústav neceločíselného rádu s využitím ortogonálnej regresie",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Rakúsko 2010",
+  "zk": ""
+ },
+ {
+  "number": "SK-AT-0024-12",
+  "name": "Pokročilá výučba softvérového inžinierstva - metódy a nástroje",
+  "recipient": "Fakulta elektrotechniky a informatiky TUKE",
+  "call": "Slovensko – Rakúsko 2012",
+  "zk": ""
+ },
+ {
+  "number": "SK-AT-2015-0020",
+  "name": "Včlenenie nanometrologického procesu do hodnotenia kvality stopkových fréz malých priemerov",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Rakúsko 2015",
+  "zk": ""
+ },
+ {
+  "number": "SK-AT-2017-0012",
+  "name": "Sémantické technológie pre výučbu informatiky",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Rakúsko 2017",
+  "zk": ""
+ },
+ {
+  "number": "SK-AT-2017-0015",
+  "name": "Sústavy neceločíselného rádu: metódy pre vedecko-technické výpočty, softvérové rozhranie a aplikácie",
+  "recipient": "Technická univerzita v Košiciach - Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Rakúsko 2017",
+  "zk": ""
+ },
+ {
+  "number": "SK-AT-2017-0021",
+  "name": "Znalostné modelovanie dátovo analytických procesov",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Rakúsko 2017",
+  "zk": ""
+ },
+ {
+  "number": "SK-AT-2017-0023",
+  "name": "Architektúra obnovy škôl pre budúcnosť",
+  "recipient": "Technická univerzita v Košiciach - Stavebná fakulta",
+  "call": "Slovensko – Rakúsko 2017",
+  "zk": ""
+ },
+ {
+  "number": "SK-AT-23-0008",
+  "name": "Výskum aditívne vyrábaných bunkových štruktúr",
+  "recipient": "Technická univerzita v Košiciach - Fakulta výrobných technológií, Prešov",
+  "call": "Slovensko – Rakúsko 2023",
+  "zk": ""
+ },
+ {
+  "number": "SK-BG-0010-08",
+  "name": "Využitie FACTS zariadení v elektrizačných sústavách",
+  "recipient": "Technická univerzita v Košiciach, Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Bulharsko 2008",
+  "zk": ""
+ },
+ {
+  "number": "SK-BG-23-0015",
+  "name": "Inteligentný systém riadenia banskej vody",
+  "recipient": "Technická univerzita v Košiciach - Stavebná fakulta",
+  "call": "Slovensko – Bulharsko 2023",
+  "zk": ""
+ },
+ {
+  "number": "SK-BG-23-0020",
+  "name": "Inteligentné systémy kvality pre bezchybnú výrobu kritických dielcov trieskovým obrábaním",
+  "recipient": "Technická univerzita v Košiciach - Strojnícka fakulta",
+  "call": "Slovensko – Bulharsko 2023",
+  "zk": ""
+ },
+ {
+  "number": "SK-CN-21-0043",
+  "name": "Štúdium technológií prilákania rýb na vstupe do rybovodov",
+  "recipient": "Technická univerzita v Košiciach - Stavebná fakulta",
+  "call": "Slovensko – Čína 2021",
+  "zk": ""
+ },
+ {
+  "number": "SK-CN-21-0046",
+  "name": "Výskum hybridného femtosekundového laserového, ultrazvukového a abrazívneho spracovania mikroštrukturných povrchov tvrdých krehkých materiálov",
+  "recipient": "Technická univerzita v Košiciach - Fakulta výrobných technológií, Prešov",
+  "call": "Slovensko – Čína 2021",
+  "zk": ""
+ },
+ {
+  "number": "SK-CN-23-0037",
+  "name": "Dátami riadené inteligentné hodnotenie mostnej infraštruktúry",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Čína 2023",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-0009-09",
+  "name": "Identifikácia a riadenie zložitých nelineárnych systémov s využitím metód umelej inteligencie",
+  "recipient": "Strojnícka fakulta TUKE",
+  "call": "Slovensko – Česko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-0054-09",
+  "name": "Modelovanie rizík výstavbového procesu",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-0065-07",
+  "name": "Diagnostika a optimalizácia použitia ekologických materiálov pre vodivé spájanie v elektronike",
+  "recipient": "Fakulta elektrotechniky a informatiky TUKE",
+  "call": "Slovensko – Česko 2007",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-0073-09",
+  "name": "Teoretická a experimentálna analýza oceľobetónových tlačených prútov",
+  "recipient": "Stavebná fakulta TUKE",
+  "call": "Slovensko – Česko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-0095-07",
+  "name": "Spolupráca v oblasti návrhu a implementácie jazykových systémov",
+  "recipient": "Fakulta elektrotechniky a informatiky TUKE",
+  "call": "Slovensko – Česko 2007",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-0108-07",
+  "name": "Aplikácia sférickej inštrumentovanej indentácie na hodnotenie pevnostných vlastností a húževnatosti konštrukčných materiálov",
+  "recipient": "Hutnícka fakulta TUKE",
+  "call": "Slovensko – Česko 2007",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-0221-11",
+  "name": "Meranie deformačných charakteristík automobilových plechov a termoplastov s nanokompozitmi neštandardnými metódami",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2011",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-2013-0062",
+  "name": "Moderné informetrické metódy hodnotenia vedeckého výskumu",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-2013-0065",
+  "name": "Multifyzikálne výpočty v elektrických pohonoch",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-2013-0095",
+  "name": "Výskum algoritmov optimalizácie ekologického spaľovania biomasy s použitím inteligentných a štatistických metód riadenia procesov",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-2013-0138",
+  "name": "Modelovanie a simulácia elektropneumatických mechatronických sústav na báze umelých svalov",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-2013-0144",
+  "name": "Vývoj metodiky štúdia lokálnych a globálnych mechanických vlastností prírodných materiálov",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-2013-0169",
+  "name": "Hodnotenie efektivity nasadzovania kontinuálnych ekologických systémov dopravy surovín v priemyselných podnikoch",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-2013-0171",
+  "name": "Teoretická analýza a experimentálny výskum uzlov priehradových konštrukcií",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-2013-0188",
+  "name": "Voda - základná surovina udržateľnej spoločnosti 21. storočia",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Česko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-RD-21-0028",
+  "name": "Prediktívna alokácia výpočtových prostriedkov na hrane siete pre autonómne riadenie",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Česko RD 2021",
+  "zk": ""
+ },
+ {
+  "number": "SK-CZ-RD-21-0056",
+  "name": "Bioresorbovateľné materiály pre aditívnu výrobu cievnych náhrad a ich biomechanická charakterizácia",
+  "recipient": "Technická univerzita v Košiciach - Strojnícka fakulta",
+  "call": "Slovensko – Česko RD 2021",
+  "zk": ""
+ },
+ {
+  "number": "SK-FR-0037-09",
+  "name": "Výskum kmitavých samopodobných elektrických obvodov (fractance): aplikácie na SPADD-CRONE",
+  "recipient": "Technická univerzita v Košiciach, Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Francúzsko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-HU-0012-08",
+  "name": "Optimalizácia rôznych frakcionačných postupov a aplikácia biotestov pri charakterizácii a hodnotení záťaže environmentálnych vzoriek ťažkými kovmi",
+  "recipient": "Technická univerzita v Košiciach, Hutnícka fakulta",
+  "call": "Slovensko – Maďarsko 2008",
+  "zk": ""
+ },
+ {
+  "number": "SK-HU-0016-08",
+  "name": "Implementácia technologických princípov pre CAD/CAM podporu obrábania voľných plôch",
+  "recipient": "Technická Univerzita v Košiciach, Strojnícka fakulta",
+  "call": "Slovensko – Maďarsko 2008",
+  "zk": ""
+ },
+ {
+  "number": "SK-HU-2013-0015",
+  "name": "Výskum a vývoj modulov pre jazykovo-adaptívne multimodálne rozhrania",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Maďarsko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-HU-24-0036",
+  "name": "Riadenie procesu obrábania ťažko obrobiteľných materiálov založené na princípoch Industry 4.0",
+  "recipient": "Technická univerzita v Košiciach - Strojnícka fakulta",
+  "call": "Slovensko – Maďarsko 2024",
+  "zk": ""
+ },
+ {
+  "number": "SK-HU-24-0037",
+  "name": "Vývoj realistickej projektovej simulácie a inteligentného asistenta vlastníka produktu s cieľom vylepšenia výučby informatiky",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Maďarsko 2024",
+  "zk": ""
+ },
+ {
+  "number": "SK-MAD-01606",
+  "name": "Návrh samoučiacich sa algoritmov pre adaptáciu systémov výpočtovej inteligencie",
+  "recipient": "Fakulta elektrotechniky a informatiky, TU v Košiciach",
+  "call": "Slovensko – Maďarsko 2006",
+  "zk": ""
+ },
+ {
+  "number": "SK-MAD-01706",
+  "name": "Štúdium reznosti a kvality povrchov pri obrábaní tvrdých materiálov nástrojmi na báze PCNB a reznej keramiky",
+  "recipient": "Strojnícka fakulta, TU v Košiciach",
+  "call": "Slovensko – Maďarsko 2006",
+  "zk": ""
+ },
+ {
+  "number": "SK-MAD-02406",
+  "name": "Frakcionačná a špeciačná analýza environmentálne relevantných vzoriek",
+  "recipient": "Hutnícka fakulta, TU v Košiciach",
+  "call": "Slovensko – Maďarsko 2006",
+  "zk": ""
+ },
+ {
+  "number": "SK-MNE-25-0012",
+  "name": "Multimodálne hodnotenie kvality jedlého oleja",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Čierna Hora 2025",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-0011-09",
+  "name": "Mechanické a mikroštruktúrne charakteristiky ultrajemných zliatin ľahkých kovov",
+  "recipient": "Hutnícka fakulta TUKE",
+  "call": "Slovensko – Poľsko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-0019-09",
+  "name": "Mechanické vlastnosti častíc v oceliach",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Poľsko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-0022-09",
+  "name": "Environmentálne hodnotenie prostredia metódami rizikovej analýzy",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Poľsko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-0033-09",
+  "name": "Moderné trendy v rozvoji metód organizácie a manažmentu v stavebníctve",
+  "recipient": "Stavebná fakulta TUKE",
+  "call": "Slovensko – Poľsko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-0052-09",
+  "name": "Neceločíselné metódy v riadení a v spracovaní signálov",
+  "recipient": "Fakulta baníctva, ekológie, riadenia a geotechnológií TUKE",
+  "call": "Slovensko – Poľsko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-0066-12",
+  "name": "Neceločíselná analýza v modelovaní a riadení systémov s rozloženými parametrami",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Poľsko 2012",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-18-0018",
+  "name": "Procesy formujúce delty v horských plesách: príklad Zeleného Kežmarského plesa (Slovensko)",
+  "recipient": "Technická univerzita v Košiciach - Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Poľsko 2018",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-18-0033",
+  "name": "Posúdenie environmentálneho rizika v súvislosti s prispôsobením sa zmene klímy",
+  "recipient": "Technická univerzita v Košiciach - Stavebná fakulta",
+  "call": "Slovensko – Poľsko 2018",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-18-0074",
+  "name": "Korózia žiaruvzdorných materiálov vo vysokoteplotných agregátoch a možnosti efektívnej recyklácie opotrebených žiaruvzdorných materiálov.",
+  "recipient": "Technická univerzita v Košiciach - Fakulta materiálov, metalurgie a recyklácie",
+  "call": "Slovensko – Poľsko 2018",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-2015-0038",
+  "name": "Modelovanie, identifikácia a simulácia necoločíselných difúznych procesov",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Poľsko 2015",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-2015-0040",
+  "name": "Bezpečnosť nanotechnológií: životnosť nanočastíc a vplyv antioxidantov na ich redox vlastnosti",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Poľsko 2015",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-21-0033",
+  "name": "Výskum inovatívnych metód tvárnenia a spájania tenkostenných komponentov",
+  "recipient": "Technická univerzita v Košiciach - Strojnícka fakulta",
+  "call": "Slovensko – Poľsko 2021",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-23-0040",
+  "name": "Výskum možností tvárnenia a spájania inovatívnych kompozitov kov-plast pri výrobe ľahkých tenkostenných konštrukcií",
+  "recipient": "Technická univerzita v Košiciach - Strojnícka fakulta",
+  "call": "Slovensko – Poľsko 2023",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-23-0052",
+  "name": "Modelovanie priečnych vibrácií pásu a diagnostika potrubných dopravníkov",
+  "recipient": "Technická univerzita v Košiciach - Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Poľsko 2023",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-23-0060",
+  "name": "Posudzovanie Klimatickej Zraniteľnosti a Vytváranie Klimatickej Odolnosti: Metodický Rámec pre Udržateľné Investície a Projekty",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Poľsko 2023",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-25-0016",
+  "name": "Leadership pre dvojitú transformáciu: perspektíva sektora zdravotníctva",
+  "recipient": "Technická univerzita v Košiciach - Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Poľsko 2025",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-25-0067",
+  "name": "Vylepšená vysokorýchlostná 3D digitálna obrazová korelácia na identifikáciu štrukturálnych poškodení",
+  "recipient": "Technická univerzita v Košiciach - Strojnícka fakulta",
+  "call": "Slovensko – Poľsko 2025",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-25-0094",
+  "name": "Inovatívne prístupy k problematike interakcie konštrukcií a konštrukčných prvkov",
+  "recipient": "Technická univerzita v Košiciach - Stavebná fakulta",
+  "call": "Slovensko – Poľsko 2025",
+  "zk": ""
+ },
+ {
+  "number": "SK-PL-25-0118",
+  "name": "Výskum možností tvárnenia a spájania inovatívnych vrstevnatých kompozitov vyrobených na báze postindustriálneho odpadu",
+  "recipient": "Technická univerzita v Košiciach - Strojnícka fakulta",
+  "call": "Slovensko – Poľsko 2025",
+  "zk": ""
+ },
+ {
+  "number": "SK-PT-0001-12",
+  "name": "Hydrologické riziká - povodne a suchá",
+  "recipient": "Technická univerzita v Košiciach, Stavebná fakulta",
+  "call": "Slovensko – Portugalsko 2012",
+  "zk": ""
+ },
+ {
+  "number": "SK-PT-0025-10",
+  "name": "Sústavy neceločíselného rádu: metódy pre identifikáciu a implementáciu",
+  "recipient": "Fakulta baníctva, ekológie, riadenia a geotechnológií TUKE",
+  "call": "Slovensko – Portugalsko 2010",
+  "zk": ""
+ },
+ {
+  "number": "SK-PT-0025-12",
+  "name": "Neceločíselná analýza v bioinžinierskych a biomedicínskych aplikáciách",
+  "recipient": "Technická univerzita v Košiciach, Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Portugalsko 2012",
+  "zk": ""
+ },
+ {
+  "number": "SK-PT-18-0008",
+  "name": "Hydrologické riziko: od prebytku po nedostatok vody",
+  "recipient": "Technická univerzita v Košiciach - Stavebná fakulta",
+  "call": "Slovensko – Portugalsko 2018",
+  "zk": ""
+ },
+ {
+  "number": "SK-PT-2015-0007",
+  "name": "Posudzovanie rizika extrémnych hydrologických javov",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Portugalsko 2015",
+  "zk": ""
+ },
+ {
+  "number": "SK-PT-2015-0037",
+  "name": "Nová inžinierska disciplína: zelený softvér",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Portugalsko 2015",
+  "zk": ""
+ },
+ {
+  "number": "SK-RO-0010-10",
+  "name": "Energetická hospodárnosť vetracieho systému",
+  "recipient": "Stavebná fakulta TUKE",
+  "call": "Slovensko – Rumunsko 2010",
+  "zk": ""
+ },
+ {
+  "number": "SK-RO-0025-10",
+  "name": "Jav degradácie bezolovnatých spájkovacích spojov vplyvom času a vnútorných pnutí",
+  "recipient": "Fakulta elektrotechniky a informatiky TUKE",
+  "call": "Slovensko – Rumunsko 2010",
+  "zk": ""
+ },
+ {
+  "number": "SK-SI-0003-10",
+  "name": "Jazykové vzory v evolúcii doménovo-špecifických jazykov",
+  "recipient": "Fakulta elektrotechniky a informatiky TUKE",
+  "call": "Slovensko – Slovinsko 2010",
+  "zk": ""
+ },
+ {
+  "number": "SK-SI-0004-08",
+  "name": "Evolúcia softvéru na základe adaptácie jazyka",
+  "recipient": "Technická univerzita v Košiciach Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Slovinsko 2008",
+  "zk": ""
+ },
+ {
+  "number": "SK-SI-0023-10",
+  "name": "Smerom k multi-agentnemu systému schopného inkrementálneho učenia sa.",
+  "recipient": "Fakulta elektrotechniky a informatiky TUKE",
+  "call": "Slovensko – Slovinsko 2010",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-003-07",
+  "name": "Informačné systémy a ich efektívne využívanie pri riadení dopravy nerastných surovín",
+  "recipient": "Fakulta BERG TU Košice",
+  "call": "Slovensko – Srbsko 2005",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-0034-09",
+  "name": "Návrh logistického modelu ťažobného podniku s aplikáciou princípov dopravnej a reverznej logistiky",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko –Srbsko 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-18-0011",
+  "name": "Aplikácia metód neceločíselnej analýzy na strojové učenie",
+  "recipient": "Technická univerzita v Košiciach - Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Srbsko 2018",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-18-0053",
+  "name": "Podnikateľské hry - rozvoj aktívnych a inovatívnych výučbových a výcvikových metód určených pre vzdelávanie v oblasti logistiky a podnikania",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Srbsko 2018",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-2013-0037",
+  "name": "Implementácia umelej inteligencie pre optimalizáciu parametrov vybranych pokročilých procesov obrábania",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Srbsko 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-2016-0030",
+  "name": "Spracovanie signálov pomocou metód neceločíselného rádu a aplikácie",
+  "recipient": "Technická univerzita v Košiciach - Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Srbsko 2016",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-2016-0045",
+  "name": "Včlenenie metód umelej inteligencie do inovačných postupov frézovania",
+  "recipient": "Technická univerzita v Košiciach - Strojnícka fakulta",
+  "call": "Slovensko – Srbsko 2016",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-2016-0053",
+  "name": "Návrh logistických nástrojov pre projektovanie dopravných systémov na báze zelenej logistiky",
+  "recipient": "Technická univerzita v Košiciach - Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Srbsko 2016",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-21-0028",
+  "name": "Pokročilé modelovanie reálnych materiálov a javov využitím vlnovej rovnice neceločíselného rádu",
+  "recipient": "Technická univerzita v Košiciach - Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Srbsko 2021",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-21-0052",
+  "name": "Inovatívne prístupy k hodnoteniu a manažmentu rizika sucha v dôsledku zmeny klímy",
+  "recipient": "Technická univerzita v Košiciach - Stavebná fakulta",
+  "call": "Slovensko – Srbsko 2021",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-23-0029",
+  "name": "Detekcia astrofyzikálnych a geofyzikálnych fenoménov z rádiových VLF meraní pomocou metód strojového učenia",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Srbsko 2023",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-23-0054",
+  "name": "Univerzitný kampus ako logistické živé laboratórium : metodologický prístup",
+  "recipient": "Technická univerzita v Košiciach - Fakulta baníctva, ekológie, riadenia a geotechnológií",
+  "call": "Slovensko – Srbsko 2023",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-25-0032",
+  "name": "AI v praxi: Automatizácia procesu detekcie ionosférických VLF/LF rušení pomocou strojového učenia",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Srbsko 2025",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-25-0035",
+  "name": "Pokročilé fotokatalytické lúhovanie chalkopyritu",
+  "recipient": "Technická univerzita v Košiciach - Fakulta materiálov, metalurgie a recyklácie",
+  "call": "Slovensko – Srbsko 2025",
+  "zk": ""
+ },
+ {
+  "number": "SK-SRB-25-0062",
+  "name": "Transformácia mestskej krajiny: Inovatívne riešenia na zmiernenie dôsledkov zmeny klímy a dosiahnutie nulových emisií uhlíka",
+  "recipient": "Technická univerzita v Košiciach - Stavebná fakulta",
+  "call": "Slovensko – Srbsko 2025",
+  "zk": ""
+ },
+ {
+  "number": "SK-TW-2017-0005",
+  "name": "Hlboké učenie pre pokročilé rečové aplikácie",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Taiwan 2017",
+  "zk": ""
+ },
+ {
+  "number": "SK-TW-21-0002",
+  "name": "Technológie pre podporu generovania odpovede pre viacjazyčného inteligentného agenta",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Taiwan 2021",
+  "zk": ""
+ },
+ {
+  "number": "SK-UA-0026-07",
+  "name": "Formálne špecifikácie programových systémov",
+  "recipient": "Fakulta elektrotechniky a informatiky TU v Košiciach",
+  "call": "Slovensko – Ukrajina 2007",
+  "zk": ""
+ },
+ {
+  "number": "SK-UA-0042-09",
+  "name": "Numerické metódy pre identifikáciu a modelovanie sústav neceločíselného rádu s využitím ortogonálnej regresie",
+  "recipient": "Fakulta baníctva, ekológie, riadenia a geotechnológií TUKE",
+  "call": "Slovensko – Ukrajina 2009",
+  "zk": ""
+ },
+ {
+  "number": "SK-UA-2013-0013",
+  "name": "Výskum porušenia a zákonov opotrebenia materiálov hutníckych zariadení",
+  "recipient": "Technická univerzita v Košiciach",
+  "call": "Slovensko – Ukrajina 2013",
+  "zk": ""
+ },
+ {
+  "number": "SK-UA-21-0024",
+  "name": "Vylepšenie energetického manažmentu hybridných fotovoltických systémov využitím akumulačných zariadení",
+  "recipient": "Technická univerzita v Košiciach - Fakulta elektrotechniky a informatiky",
+  "call": "Slovensko – Ukrajina 2021",
+  "zk": ""
+ },
+ {
+  "number": "SK-UA-21-0060",
+  "name": "Zdokonalenie plánovania produkcie implementáciou počítačom podporovaného systému pre dizajn prípravkov",
+  "recipient": "Technická univerzita v Košiciach - Fakulta výrobných technológií, Prešov",
+  "call": "Slovensko – Ukrajina 2021",
+  "zk": ""
+ }
+]

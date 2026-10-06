@@ -1,0 +1,1002 @@
+{
+"AF": {
+"region": "Asia",
+"sub_region": "Southern Asia"
+},
+"AX": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"AL": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"DZ": {
+"region": "Africa",
+"sub_region": "Northern Africa"
+},
+"AS": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"AD": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"AO": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"AI": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"AQ": {
+"region": "",
+"sub_region": ""
+},
+"AG": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"AR": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"AM": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"AW": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"AU": {
+"region": "Oceania",
+"sub_region": "Australia and New Zealand"
+},
+"AT": {
+"region": "Europe",
+"sub_region": "Western Europe"
+},
+"AZ": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"BS": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"BH": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"BD": {
+"region": "Asia",
+"sub_region": "Southern Asia"
+},
+"BB": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"BY": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"BE": {
+"region": "Europe",
+"sub_region": "Western Europe"
+},
+"BZ": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"BJ": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"BM": {
+"region": "Americas",
+"sub_region": "Northern America"
+},
+"BT": {
+"region": "Asia",
+"sub_region": "Southern Asia"
+},
+"BO": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"BQ": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"BA": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"BW": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"BV": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"BR": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"IO": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"BN": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"BG": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"BF": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"BI": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"CV": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"KH": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"CM": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"CA": {
+"region": "Americas",
+"sub_region": "Northern America"
+},
+"KY": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"CF": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"TD": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"CL": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"CN": {
+"region": "Asia",
+"sub_region": "Eastern Asia"
+},
+"CX": {
+"region": "Oceania",
+"sub_region": "Australia and New Zealand"
+},
+"CC": {
+"region": "Oceania",
+"sub_region": "Australia and New Zealand"
+},
+"CO": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"KM": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"CG": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"CD": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"CK": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"CR": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"CI": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"HR": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"CU": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"CW": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"CY": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"CZ": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"DK": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"DJ": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"DM": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"DO": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"EC": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"EG": {
+"region": "Africa",
+"sub_region": "Northern Africa"
+},
+"SV": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"GQ": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"ER": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"EE": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"SZ": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"ET": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"FK": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"FO": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"FJ": {
+"region": "Oceania",
+"sub_region": "Melanesia"
+},
+"FI": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"FR": {
+"region": "Europe",
+"sub_region": "Western Europe"
+},
+"GF": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"PF": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"TF": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"GA": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"GM": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"GE": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"DE": {
+"region": "Europe",
+"sub_region": "Western Europe"
+},
+"GH": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"GI": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"GR": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"GL": {
+"region": "Americas",
+"sub_region": "Northern America"
+},
+"GD": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"GP": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"GU": {
+"region": "Oceania",
+"sub_region": "Micronesia"
+},
+"GT": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"GG": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"GN": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"GW": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"GY": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"HT": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"HM": {
+"region": "Oceania",
+"sub_region": "Australia and New Zealand"
+},
+"VA": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"HN": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"HK": {
+"region": "Asia",
+"sub_region": "Eastern Asia"
+},
+"HU": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"IS": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"IN": {
+"region": "Asia",
+"sub_region": "Southern Asia"
+},
+"ID": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"IR": {
+"region": "Asia",
+"sub_region": "Southern Asia"
+},
+"IQ": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"IE": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"IM": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"IL": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"IT": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"JM": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"JP": {
+"region": "Asia",
+"sub_region": "Eastern Asia"
+},
+"JE": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"JO": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"KZ": {
+"region": "Asia",
+"sub_region": "Central Asia"
+},
+"KE": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"KI": {
+"region": "Oceania",
+"sub_region": "Micronesia"
+},
+"KP": {
+"region": "Asia",
+"sub_region": "Eastern Asia"
+},
+"KR": {
+"region": "Asia",
+"sub_region": "Eastern Asia"
+},
+"KW": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"KG": {
+"region": "Asia",
+"sub_region": "Central Asia"
+},
+"LA": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"LV": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"LB": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"LS": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"LR": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"LY": {
+"region": "Africa",
+"sub_region": "Northern Africa"
+},
+"LI": {
+"region": "Europe",
+"sub_region": "Western Europe"
+},
+"LT": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"LU": {
+"region": "Europe",
+"sub_region": "Western Europe"
+},
+"MO": {
+"region": "Asia",
+"sub_region": "Eastern Asia"
+},
+"MG": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"MW": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"MY": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"MV": {
+"region": "Asia",
+"sub_region": "Southern Asia"
+},
+"ML": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"MT": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"MH": {
+"region": "Oceania",
+"sub_region": "Micronesia"
+},
+"MQ": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"MR": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"MU": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"YT": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"MX": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"FM": {
+"region": "Oceania",
+"sub_region": "Micronesia"
+},
+"MD": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"MC": {
+"region": "Europe",
+"sub_region": "Western Europe"
+},
+"MN": {
+"region": "Asia",
+"sub_region": "Eastern Asia"
+},
+"ME": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"MS": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"MA": {
+"region": "Africa",
+"sub_region": "Northern Africa"
+},
+"MZ": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"MM": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"NA": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"NR": {
+"region": "Oceania",
+"sub_region": "Micronesia"
+},
+"NP": {
+"region": "Asia",
+"sub_region": "Southern Asia"
+},
+"NL": {
+"region": "Europe",
+"sub_region": "Western Europe"
+},
+"NC": {
+"region": "Oceania",
+"sub_region": "Melanesia"
+},
+"NZ": {
+"region": "Oceania",
+"sub_region": "Australia and New Zealand"
+},
+"NI": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"NE": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"NG": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"NU": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"NF": {
+"region": "Oceania",
+"sub_region": "Australia and New Zealand"
+},
+"MK": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"MP": {
+"region": "Oceania",
+"sub_region": "Micronesia"
+},
+"NO": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"OM": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"PK": {
+"region": "Asia",
+"sub_region": "Southern Asia"
+},
+"PW": {
+"region": "Oceania",
+"sub_region": "Micronesia"
+},
+"PS": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"PA": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"PG": {
+"region": "Oceania",
+"sub_region": "Melanesia"
+},
+"PY": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"PE": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"PH": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"PN": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"PL": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"PT": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"PR": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"QA": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"RE": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"RO": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"RU": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"RW": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"BL": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"SH": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"KN": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"LC": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"MF": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"PM": {
+"region": "Americas",
+"sub_region": "Northern America"
+},
+"VC": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"WS": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"SM": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"ST": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"SA": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"SN": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"RS": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"SC": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"SL": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"SG": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"SX": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"SK": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"SI": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"SB": {
+"region": "Oceania",
+"sub_region": "Melanesia"
+},
+"SO": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"ZA": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"GS": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"SS": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"ES": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+},
+"LK": {
+"region": "Asia",
+"sub_region": "Southern Asia"
+},
+"SD": {
+"region": "Africa",
+"sub_region": "Northern Africa"
+},
+"SR": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"SJ": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"SE": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"CH": {
+"region": "Europe",
+"sub_region": "Western Europe"
+},
+"SY": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"TW": {
+"region": null,
+"sub_region": null
+},
+"TJ": {
+"region": "Asia",
+"sub_region": "Central Asia"
+},
+"TZ": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"TH": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"TL": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"TG": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"TK": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"TO": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"TT": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"TN": {
+"region": "Africa",
+"sub_region": "Northern Africa"
+},
+"TR": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"TM": {
+"region": "Asia",
+"sub_region": "Central Asia"
+},
+"TC": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"TV": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"UG": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"UA": {
+"region": "Europe",
+"sub_region": "Eastern Europe"
+},
+"AE": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"GB": {
+"region": "Europe",
+"sub_region": "Northern Europe"
+},
+"US": {
+"region": "Americas",
+"sub_region": "Northern America"
+},
+"UM": {
+"region": "Oceania",
+"sub_region": "Micronesia"
+},
+"UY": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"UZ": {
+"region": "Asia",
+"sub_region": "Central Asia"
+},
+"VU": {
+"region": "Oceania",
+"sub_region": "Melanesia"
+},
+"VE": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"VN": {
+"region": "Asia",
+"sub_region": "South-eastern Asia"
+},
+"VG": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"VI": {
+"region": "Americas",
+"sub_region": "Latin America and the Caribbean"
+},
+"WF": {
+"region": "Oceania",
+"sub_region": "Polynesia"
+},
+"EH": {
+"region": "Africa",
+"sub_region": "Northern Africa"
+},
+"YE": {
+"region": "Asia",
+"sub_region": "Western Asia"
+},
+"ZM": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"ZW": {
+"region": "Africa",
+"sub_region": "Sub-Saharan Africa"
+},
+"XK": {
+"region": "Europe",
+"sub_region": "Southern Europe"
+}
+}

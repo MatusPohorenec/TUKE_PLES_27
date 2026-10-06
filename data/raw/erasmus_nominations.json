@@ -1,0 +1,1182 @@
+{
+ "source": "https://erasmus.tuke.sk (PDF výsledky nominácií 2022–2026)",
+ "files": 88,
+ "destinations": [
+  {
+   "erasmus_code": "F NICE42",
+   "student": 55,
+   "staff": 10,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "CZ PRAHA02",
+   "student": 14,
+   "staff": 31,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "E SEVILLA01",
+   "student": 15,
+   "staff": 14,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "CZ PRAHA10",
+   "student": 18,
+   "staff": 9,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "PL KRAKOW03",
+   "student": 20,
+   "staff": 5,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "E MALAGA01",
+   "student": 25,
+   "staff": 0,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "SF HELSINK40",
+   "student": 13,
+   "staff": 11,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "CZ PLZEN01",
+   "student": 10,
+   "staff": 12,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "D BERLIN06",
+   "student": 8,
+   "staff": 11,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "HR RIJEKA01",
+   "student": 12,
+   "staff": 7,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "E VALENCI01",
+   "student": 18,
+   "staff": 0,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "B ANTWERP59",
+   "student": 18,
+   "staff": 0,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "P PORTO07",
+   "student": 16,
+   "staff": 1,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "PL POZNAN02",
+   "student": 2,
+   "staff": 13,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "E SEVILLA10",
+   "student": 15,
+   "staff": 0,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "E VALENCI02",
+   "student": 15,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "I GENOVA01",
+   "student": 7,
+   "staff": 8,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "A INNSBRU08",
+   "student": 10,
+   "staff": 5,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "P LISBOA109",
+   "student": 14,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "PL RZESZOW01",
+   "student": 0,
+   "staff": 14,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "PL GLIWICE01",
+   "student": 6,
+   "staff": 8,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "P LISBOA52",
+   "student": 12,
+   "staff": 1,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "PL KRAKOW02",
+   "student": 4,
+   "staff": 9,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "RO CLUJNAP05",
+   "student": 0,
+   "staff": 13,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "CY NICOSIA23",
+   "student": 4,
+   "staff": 8,
+   "first": "2022",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "A LINZ01",
+   "student": 12,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "PL ZIELONA01",
+   "student": 0,
+   "staff": 12,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "P AVEIRO01",
+   "student": 12,
+   "staff": 0,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "G PIREAS01",
+   "student": 11,
+   "staff": 0,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "SF VAASA01",
+   "student": 7,
+   "staff": 4,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "SF OULU01",
+   "student": 10,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "E MADRID05",
+   "student": 4,
+   "staff": 5,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "CZ OSTRAVA01",
+   "student": 3,
+   "staff": 6,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "CZ PARDUB01",
+   "student": 2,
+   "staff": 7,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "A KLAGENF01",
+   "student": 9,
+   "staff": 0,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "I GENOA01",
+   "student": 9,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "P BRAGA01",
+   "student": 7,
+   "staff": 1,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "CZ BRNO10",
+   "student": 0,
+   "staff": 8,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "I ROMA26",
+   "student": 5,
+   "staff": 3,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "CZ ZLIN01",
+   "student": 5,
+   "staff": 3,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "CZ BRNO01",
+   "student": 7,
+   "staff": 1,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "I CATANIA03",
+   "student": 7,
+   "staff": 0,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "PL KIELCE01",
+   "student": 2,
+   "staff": 5,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "PL KATOWIC08",
+   "student": 7,
+   "staff": 0,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "D WISMAR01",
+   "student": 7,
+   "staff": 0,
+   "first": "2025",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "SI LJUBLJA01",
+   "student": 6,
+   "staff": 0,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "SI MARIBOR01",
+   "student": 5,
+   "staff": 1,
+   "first": "2022",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "CZ PRAHA09",
+   "student": 2,
+   "staff": 4,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "CZ PRAHA07",
+   "student": 0,
+   "staff": 6,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "D WUPPERT01",
+   "student": 5,
+   "staff": 0,
+   "first": "2022",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "F PARIS483",
+   "student": 5,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "LV RIGA02",
+   "student": 3,
+   "staff": 2,
+   "first": "2022",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "P COVILHA01",
+   "student": 5,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "HU BUDAPES01",
+   "student": 5,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "I NAPOLI03",
+   "student": 3,
+   "staff": 2,
+   "first": "2022",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "CZ USTINAD01",
+   "student": 1,
+   "staff": 4,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "CZ BRNO05",
+   "student": 3,
+   "staff": 2,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "P PORTO02",
+   "student": 0,
+   "staff": 5,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "HU BUDAPES16",
+   "student": 5,
+   "staff": 0,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "SF KUOPIO12",
+   "student": 4,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "F PARIS270",
+   "student": 4,
+   "staff": 0,
+   "first": "2022",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "A GRAZ09",
+   "student": 4,
+   "staff": 0,
+   "first": "2022",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "I TRENTO01",
+   "student": 4,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "G ATHINE02",
+   "student": 2,
+   "staff": 2,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "CZ LIBEREC01",
+   "student": 2,
+   "staff": 2,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "A WIEN78",
+   "student": 3,
+   "staff": 1,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "P LISBOA15",
+   "student": 0,
+   "staff": 4,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "EE TARTU02",
+   "student": 4,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "PL WROCLAW03",
+   "student": 4,
+   "staff": 0,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "LT KAUNAS02",
+   "student": 4,
+   "staff": 0,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "I MILANO02",
+   "student": 4,
+   "staff": 0,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "D WILDAU01",
+   "student": 1,
+   "staff": 2,
+   "first": "2022",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "E BARCEL003",
+   "student": 3,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "ES VALENCI01",
+   "student": 3,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "FR NICE41",
+   "student": 3,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "HU BUDAPES20",
+   "student": 3,
+   "staff": 0,
+   "first": "2022",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "P LISBOA46",
+   "student": 3,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "I SALERNO01",
+   "student": 3,
+   "staff": 0,
+   "first": "2022",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "CZ PRAHA12",
+   "student": 0,
+   "staff": 3,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "HR SPLIT01",
+   "student": 0,
+   "staff": 3,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "HR DUBROVN01",
+   "student": 2,
+   "staff": 1,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "PL WARSZAW02",
+   "student": 1,
+   "staff": 2,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "N BERGEN14",
+   "student": 0,
+   "staff": 3,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "CZ BRNO02",
+   "student": 0,
+   "staff": 3,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "PL KATOWICE08",
+   "student": 1,
+   "staff": 2,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "CZ CESKE04",
+   "student": 0,
+   "staff": 3,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "E CIUDA-R01",
+   "student": 3,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "PL DEBLIN01",
+   "student": 3,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "TR ISTANBU07",
+   "student": 3,
+   "staff": 0,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "LT VILNIUS01",
+   "student": 3,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "N TRONDHE01",
+   "student": 3,
+   "staff": 0,
+   "first": "2024",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "CZ PRAHA03",
+   "student": 3,
+   "staff": 0,
+   "first": "2025",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "P PORTO05",
+   "student": 3,
+   "staff": 0,
+   "first": "2025",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "I CAGLIAR01",
+   "student": 3,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "G THESSAL01",
+   "student": 3,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "HU BUDAPES02",
+   "student": 3,
+   "staff": 0,
+   "first": "2026",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "PT LISBOA15",
+   "student": 2,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "ES VALENCI02",
+   "student": 2,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "D FRANKFU04",
+   "student": 2,
+   "staff": 0,
+   "first": "2022",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "A INNSBRUCK08",
+   "student": 2,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "RS BELGRAD15",
+   "student": 0,
+   "staff": 2,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "F STRASBO31",
+   "student": 1,
+   "staff": 1,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "PL KRAKOW04",
+   "student": 0,
+   "staff": 2,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "I FOGGIA03",
+   "student": 0,
+   "staff": 2,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "P PORTO01",
+   "student": 0,
+   "staff": 2,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "RO CUJNAP05",
+   "student": 0,
+   "staff": 2,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "F TARBES03",
+   "student": 2,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "F AUBIERE04",
+   "student": 2,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "TR ISTANBU06",
+   "student": 2,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "CZ PREROV01",
+   "student": 2,
+   "staff": 0,
+   "first": "2024",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "PL WARSAW02",
+   "student": 2,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "SI LJUBLIA01",
+   "student": 2,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "CY NICOZIA23",
+   "student": 2,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "SF LAPPEEN01",
+   "student": 2,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "I L-AQUIL03",
+   "student": 2,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "CZ PRAHA01",
+   "student": 0,
+   "staff": 2,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "N TROMSO01",
+   "student": 0,
+   "staff": 2,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "RO CLUJNAP01",
+   "student": 0,
+   "staff": 2,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "D FREIBER01",
+   "student": 2,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "A GRAZ10",
+   "student": 2,
+   "staff": 0,
+   "first": "2026",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "MT MALTA02",
+   "student": 2,
+   "staff": 0,
+   "first": "2026",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "SI LJUBLJA02",
+   "student": 1,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "EE TALLINN05",
+   "student": 1,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "G PATRA01",
+   "student": 1,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "LT VILNIUS02",
+   "student": 1,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "F VERSAIL11",
+   "student": 1,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "PL KRAKOW10",
+   "student": 1,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "D TRIER02",
+   "student": 1,
+   "staff": 0,
+   "first": "2022",
+   "last": "2022"
+  },
+  {
+   "erasmus_code": "TR SAMSUN03",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "P ACORES01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "B LEUVEN01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "SI LJUBLJ01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "SF TURKU01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "HU KALOCSA01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "RO ORADEA01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "F STRASBO48",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "PL LEGNICA01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "I SASSARI01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "P FUNCHAL08",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "CZ OSTRAVA02",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "I BARI01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "G KRITIS01",
+   "student": 0,
+   "staff": 1,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "G TRIPOLI03",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "G EGALEO02",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "PL BIALYST01",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "I BARI05",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "P FARO02",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "F PARIS222",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "HU BUSAPES02",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "TR KONYA01",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "D SCHMALK01",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "P ARCOZEL01",
+   "student": 1,
+   "staff": 0,
+   "first": "2024",
+   "last": "2024"
+  },
+  {
+   "erasmus_code": "D MUNSTER01",
+   "student": 0,
+   "staff": 1,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "RS NOVISAD07",
+   "student": 0,
+   "staff": 1,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "P LEIRIA01",
+   "student": 0,
+   "staff": 1,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "P FUNCHAL03",
+   "student": 1,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "PL BIALYST04",
+   "student": 1,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "PL LUBLIN03",
+   "student": 1,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "HR ZAGREB01",
+   "student": 1,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "I MILANO016",
+   "student": 1,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "F COMPIEG01",
+   "student": 1,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "PL WARSZAW07",
+   "student": 1,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "E BARCELO03",
+   "student": 1,
+   "staff": 0,
+   "first": "2025",
+   "last": "2025"
+  },
+  {
+   "erasmus_code": "E MALGA01",
+   "student": 1,
+   "staff": 0,
+   "first": "2026",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "EE TARTU03",
+   "student": 1,
+   "staff": 0,
+   "first": "2026",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "E HUELVA01",
+   "student": 1,
+   "staff": 0,
+   "first": "2026",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "D DRESDEN02",
+   "student": 1,
+   "staff": 0,
+   "first": "2026",
+   "last": "2026"
+  },
+  {
+   "erasmus_code": "I MARIBOR01",
+   "student": 1,
+   "staff": 0,
+   "first": "2026",
+   "last": "2026"
+  }
+ ]
+}

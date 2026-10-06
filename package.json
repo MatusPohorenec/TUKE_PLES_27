@@ -1,0 +1,28 @@
+{
+  "name": "tuke-ples-2027",
+  "private": true,
+  "type": "module",
+  "description": "S TUKE rozsvieťme mapu sveta – živá zemeguľa pre Ples TUKE 2027",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "node tools/dev.mjs",
+    "build": "npm run build -w @ples/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:generate": "npm run generate -w @ples/db",
+    "db:migrate": "npm run migrate -w @ples/db",
+    "db:seed": "npm run seed -w @ples/db --",
+    "vercel-build": "npm run db:migrate && npm run db:seed -- --if-needed && node tools/build-vercel.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3"
+  }
+}

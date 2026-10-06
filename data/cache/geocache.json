@@ -1,0 +1,2927 @@
+{
+"graz|at": {
+"lat": 47.07087,
+"lon": 15.43828,
+"display": "Graz, Styria, Austria"
+},
+"innsbruck|at": {
+"lat": 47.26543,
+"lon": 11.39277,
+"display": "Innsbruck, Tyrol, Austria"
+},
+"klagenfurt|at": {
+"lat": 46.62394,
+"lon": 14.3076,
+"display": "Klagenfurt, Carinthia, Austria"
+},
+"linz|at": {
+"lat": 48.30591,
+"lon": 14.2862,
+"display": "Linz, Upper Austria, Austria"
+},
+"wien|at": {
+"lat": 48.20835,
+"lon": 16.3725,
+"display": "Vienna, Austria"
+},
+"antwerpen|be": {
+"lat": 51.22111,
+"lon": 4.39971,
+"display": "Antwerp, Flanders, Belgium"
+},
+"plovdiv|bg": {
+"lat": 42.14185,
+"lon": 24.74993,
+"display": "Plovdiv, 4000, Bulgaria"
+},
+"ruse|bg": {
+"lat": 43.84804,
+"lon": 25.95421,
+"display": "Ruse, Bulgaria"
+},
+"sofia|bg": {
+"lat": 42.6977,
+"lon": 23.32174,
+"display": "Sofia, Sredec, Stolichna, Sofia-City, Bulgaria"
+},
+"svishtov|bg": {
+"lat": 43.61588,
+"lon": 25.35095,
+"display": "Svishtov, Veliko Tarnovo, 5250, Bulgaria"
+},
+"varna|bg": {
+"lat": 43.20739,
+"lon": 27.91667,
+"display": "Varna, Odessos, Varna, Bulgaria"
+},
+"veliko tarnovo|bg": {
+"lat": 43.08206,
+"lon": 25.63213,
+"display": "Veliko Tarnovo, Bulgaria"
+},
+"jemeppe|be": {
+"lat": 50.61809,
+"lon": 5.49972,
+"display": "Jemeppe-sur-Meuse, Seraing, Liège, Wallonia, 4100, Belgium"
+},
+"lemesós|cy": {
+"lat": 34.68529,
+"lon": 33.03327,
+"display": "Limassol, Limassol Municipality, Limassol District, Cyprus, 3085, Cyprus"
+},
+"pallouriotissa lefkosia|cy": {
+"lat": 35.17429,
+"lon": 33.37975,
+"display": "Pallouriotissa, Kaimakli, Nicosia, Nicosia Muncipality, Nicosia District, Cyprus, 1040, Cyprus"
+},
+"brno stred|cz": {
+"lat": 49.18803,
+"lon": 16.59485,
+"display": "Brno-střed, Brno, okres Brno-město, South Moravian Region, Czechia"
+},
+"brno sever|cz": {
+"lat": 49.23607,
+"lon": 16.62593,
+"display": "Brno-sever, Brno, okres Brno-město, South Moravian Region, Czechia"
+},
+"brno|cz": {
+"lat": 49.19224,
+"lon": 16.61134,
+"display": "Brno, okres Brno-město, South Moravian Region, Czechia"
+},
+"ceske budejovice|cz": {
+"lat": 48.97474,
+"lon": 14.47429,
+"display": "České Budějovice, okres České Budějovice, South Bohemian Region, Southwest, Czechia"
+},
+"hradec kralove|cz": {
+"lat": 50.20921,
+"lon": 15.83275,
+"display": "Hradec Králové, okres Hradec Králové, Hradec Králové Region, Czechia"
+},
+"liberec|cz": {
+"lat": 50.77026,
+"lon": 15.05839,
+"display": "Liberec, okres Liberec, Liberec Region, Czechia"
+},
+"mlada boleslav|cz": {
+"lat": 50.41162,
+"lon": 14.90313,
+"display": "Mladá Boleslav, okres Mladá Boleslav, Central Bohemian Region, Czechia"
+},
+"olomouc|cz": {
+"lat": 49.59406,
+"lon": 17.25114,
+"display": "Olomouc, okres Olomouc, Olomouc Region, Czechia"
+},
+"ostrava poruba|cz": {
+"lat": 49.81241,
+"lon": 18.1513,
+"display": "ctPark Ostrava - Poruba, Poruba, Ostrava, okres Ostrava-město, Moravian-Silesian Region, Czechia"
+},
+"pardubice|cz": {
+"lat": 50.03858,
+"lon": 15.77914,
+"display": "Pardubice, okres Pardubice, Pardubice Region, Czechia"
+},
+"pilsen|cz": {
+"lat": 49.74774,
+"lon": 13.37752,
+"display": "Pilsen, okres Plzeň-město, Plzeň Region, Southwest, Czechia"
+},
+"praha|cz": {
+"lat": 50.08747,
+"lon": 14.42125,
+"display": "Prague, Czechia"
+},
+"prerov|cz": {
+"lat": 49.45538,
+"lon": 17.45086,
+"display": "Přerov, okres Přerov, Olomouc Region, Czechia"
+},
+"usti nad labem|cz": {
+"lat": 50.66033,
+"lon": 14.03814,
+"display": "Ústí nad Labem, okres Ústí nad Labem, Ústí nad Labem Region, Czechia"
+},
+"zlin|cz": {
+"lat": 49.22677,
+"lon": 17.66674,
+"display": "Zlín, okres Zlín, Zlín Region, Czechia"
+},
+"aachen|de": {
+"lat": 50.77635,
+"lon": 6.08386,
+"display": "Aachen, Aachen (district), North Rhine-Westphalia, Germany"
+},
+"berlin|de": {
+"lat": 52.51739,
+"lon": 13.39513,
+"display": "Berlin, Germany"
+},
+"bochum|de": {
+"lat": 51.48181,
+"lon": 7.21966,
+"display": "Bochum, North Rhine-Westphalia, Germany"
+},
+"dresden|de": {
+"lat": 51.04933,
+"lon": 13.73814,
+"display": "Dresden, Saxony, Germany"
+},
+"frankfurt am main|de": {
+"lat": 50.11064,
+"lon": 8.68209,
+"display": "Frankfurt, Hesse, Germany"
+},
+"freiberg|de": {
+"lat": 50.91694,
+"lon": 13.34289,
+"display": "Freiberg, Mittelsachsen, Saxony, 09599, Germany"
+},
+"lörrach|de": {
+"lat": 47.61209,
+"lon": 7.66072,
+"display": "Lörrach, VVG der Stadt Lörrach, Landkreis Lörrach, Baden-Württemberg, Germany"
+},
+"potsdam|de": {
+"lat": 52.40093,
+"lon": 13.05914,
+"display": "Potsdam, Brandenburg, Germany"
+},
+"schmalkalden|de": {
+"lat": 50.72136,
+"lon": 10.45105,
+"display": "Schmalkalden, Landkreis Schmalkalden-Meiningen, Thuringia, 98574, Germany"
+},
+"trier|de": {
+"lat": 49.75962,
+"lon": 6.64419,
+"display": "Trier, Trierweiler, Rhineland-Palatinate, Germany"
+},
+"wildau|de": {
+"lat": 52.32144,
+"lon": 13.63487,
+"display": "Wildau, Schenkendorf-Krummensee, Dahme-Spreewald, Brandenburg, 15745, Germany"
+},
+"wismar|de": {
+"lat": 53.89098,
+"lon": 11.46479,
+"display": "Wismar, Nordwestmecklenburg, Mecklenburg-Vorpommern, Germany"
+},
+"wuppertal|de": {
+"lat": 51.26402,
+"lon": 7.17804,
+"display": "Wuppertal, North Rhine-Westphalia, Germany"
+},
+"barcelona|es": {
+"lat": 41.38258,
+"lon": 2.17707,
+"display": "Barcelona, Barcelonès, Barcelona, Catalonia, Spain"
+},
+"ciudad real|es": {
+"lat": 38.98542,
+"lon": -3.92851,
+"display": "Ciudad Real, Castile-La Mancha, Spain"
+},
+"tartu|ee": {
+"lat": 58.37795,
+"lon": 26.729,
+"display": "Tartu, Tartu linn, Tartu County, Estonia"
+},
+"kambja vald, tartumaa|ee": {
+"lat": 58.24858,
+"lon": 26.73628,
+"display": "Kambja vald, Tartu County, Estonia"
+},
+"huelva|es": {
+"lat": 37.25759,
+"lon": -6.94849,
+"display": "Huelva, Comarca Metropolitana de Huelva, Huelva, Andalusia, Spain"
+},
+"las palmas de gran canaria|es": {
+"lat": 28.12887,
+"lon": -15.4349,
+"display": "Las Palmas, Canary Islands, Spain"
+},
+"madrid|es": {
+"lat": 40.41678,
+"lon": -3.70351,
+"display": "Madrid, Community of Madrid, Spain"
+},
+"málaga|es": {
+"lat": 36.76479,
+"lon": -4.4422,
+"display": "Málaga, Málaga-Costa del Sol, Malaga, Andalusia, Spain"
+},
+"mondragon|es": {
+"lat": 43.06568,
+"lon": -2.49008,
+"display": "Arrasate / Mondragón, Gipuzkoa, Autonomous Community of the Basque Country, 20500, Spain"
+},
+"sevilla|es": {
+"lat": 37.38863,
+"lon": -5.99534,
+"display": "Seville, Sevilla, Andalusia, Spain"
+},
+"tarragona|es": {
+"lat": 41.11724,
+"lon": 1.25461,
+"display": "Tarragona, Tarragonès, Tarragona, Catalonia, Spain"
+},
+"valencia|es": {
+"lat": 39.46971,
+"lon": -0.37634,
+"display": "Valencia, Comarca de València, Valencia, Valencian Community, Spain"
+},
+"aubiere|fr": {
+"lat": 45.75126,
+"lon": 3.11442,
+"display": "Aubière, Clermont-Ferrand, Puy-de-Dôme, Auvergne-Rhône-Alpes, Metropolitan France, 63170, France"
+},
+"sevenans|fr": {
+"lat": 47.58583,
+"lon": 6.86545,
+"display": "Sevenans, Belfort, Territoire-de-Belfort, Bourgogne – Franche-Comté, Metropolitan France, 90400, France"
+},
+"cergy-pontoise|fr": {
+"lat": 49.05275,
+"lon": 2.03887,
+"display": "Cergy, Pontoise, Val-d'Oise, Ile-de-France, Metropolitan France, France"
+},
+"cergy|fr": {
+"lat": 49.05275,
+"lon": 2.03887,
+"display": "Cergy, Pontoise, Val-d'Oise, Ile-de-France, Metropolitan France, France"
+},
+"compiègne|fr": {
+"lat": 49.41795,
+"lon": 2.82632,
+"display": "Compiègne, Oise, Hauts-de-France, Metropolitan France, 60200, France"
+},
+"le havre|fr": {
+"lat": 49.4939,
+"lon": 0.10797,
+"display": "Le Havre, Seine-Maritime, Normandy, Metropolitan France, France"
+},
+"lille|fr": {
+"lat": 50.63657,
+"lon": 3.06353,
+"display": "Lille, Nord, Hauts-de-France, Metropolitan France, France"
+},
+"nancy|fr": {
+"lat": 48.69372,
+"lon": 6.18341,
+"display": "Nancy, Meurthe-et-Moselle, Grand Est, Metropolitan France, 54100, France"
+},
+"nice|fr": {
+"lat": 43.70094,
+"lon": 7.26839,
+"display": "Nice, Maritime Alps, Provence-Alpes-Côte d'Azur, Metropolitan France, France"
+},
+"paris|fr": {
+"lat": 48.8535,
+"lon": 2.34839,
+"display": "Paris, Ile-de-France, Metropolitan France, France"
+},
+"courbevoie|fr": {
+"lat": 48.89533,
+"lon": 2.25616,
+"display": "Courbevoie, Nanterre, Hauts-de-Seine, Ile-de-France, Metropolitan France, 92400, France"
+},
+"marne-la-vallee|fr": {
+"lat": 48.8593,
+"lon": 2.5989,
+"display": "Marne-la-Vallée, Centre Ville, Champs-sur-Marne, Torcy, Seine-et-Marne, Ile-de-France, Metropolitan France, 77420, France"
+},
+"strasbourg|fr": {
+"lat": 48.58461,
+"lon": 7.75071,
+"display": "Strasbourg, Bas-Rhin, European Collectivity of Alsace, Grand Est, Metropolitan France, France"
+},
+"tarbes|fr": {
+"lat": 43.23286,
+"lon": 0.0781,
+"display": "Tarbes, Hautes Pyrenees, Occitania, Metropolitan France, 65000, France"
+},
+"versailles|fr": {
+"lat": 48.80354,
+"lon": 2.12669,
+"display": "Versailles, Yvelines, Ile-de-France, Metropolitan France, 78000, France"
+},
+"athína|gr": {
+"lat": 37.97556,
+"lon": 23.73483,
+"display": "Athens, Municipality of Athens, Regional Unit of Central Athens, Attica, 105 57, Greece"
+},
+"mytilini|gr": {
+"lat": 39.10374,
+"lon": 26.55479,
+"display": "Mytilene, Mytilene Municipal Unit, Municipality of Mytilene, Lesbos Regional Unit, Northern Aegean, Aegean, 811 00, Greece"
+},
+"aigaleo|gr": {
+"lat": 37.99157,
+"lon": 23.68188,
+"display": "Egaleo, Municipality of Aigaleo, Regional Unit of West Athens, Attica, 122 42, Greece"
+},
+"kozani|gr": {
+"lat": 40.30073,
+"lon": 21.78831,
+"display": "Kozani, Municipality of Kozani, Kozani Regional Unit, Western Macedonia, Epirus and Western Macedonia, 501 00, Greece"
+},
+"irákleio|gr": {
+"lat": 35.33908,
+"lon": 25.13328,
+"display": "Heraklion, Heraklion Municipal Unit, Municipality of Heraklion, Heraklion Regional Unit, Region of Crete, 712 02, Greece"
+},
+"peiraiás|gr": {
+"lat": 37.94316,
+"lon": 23.64706,
+"display": "Piraeus, Municipality of Piraeus, Regional Unit of Piraeus, Attica, 185 35, Greece"
+},
+"thessaloniki|gr": {
+"lat": 40.64032,
+"lon": 22.93527,
+"display": "Thessaloniki, Thessaloniki Municipal Unit, Municipality of Thessaloniki, Thessaloniki Regional Unit, Central Macedonia, Macedonia and Thrace, 540 12, Greece"
+},
+"tripolis|gr": {
+"lat": 37.52647,
+"lon": 22.34874,
+"display": "Municipality of Tripoli, Arcadia Regional Unit, Peloponnese Region, Peloponnese, Western Greece and the Ionian, Greece"
+},
+"volos|gr": {
+"lat": 39.36248,
+"lon": 22.94019,
+"display": "Volos Municipality, Magnesia Regional Unit, Thessaly, Thessaly and Central Greece, Greece"
+},
+"dubrovnik|hr": {
+"lat": 42.6491,
+"lon": 18.09395,
+"display": "Dubrovnik, Dubrovnik-Neretva County, Croatia"
+},
+"osijek|hr": {
+"lat": 45.55488,
+"lon": 18.69537,
+"display": "Osijek, Grad Osijek, Osijek-Baranja County, Croatia"
+},
+"pula|hr": {
+"lat": 44.87023,
+"lon": 13.84553,
+"display": "Grad Pula, Istria County, Croatia"
+},
+"rijeka|hr": {
+"lat": 45.3268,
+"lon": 14.44221,
+"display": "Grad Rijeka, Primorje-Gorski Kotar County, Croatia"
+},
+"slavonski brod|hr": {
+"lat": 45.15843,
+"lon": 18.01256,
+"display": "Slavonski Brod, Grad Slavonski Brod, Brod-Posavina County, Croatia"
+},
+"split|hr": {
+"lat": 43.51164,
+"lon": 16.43997,
+"display": "Split, Grad Split, Split-Dalmatia County, Croatia"
+},
+"vukovar|hr": {
+"lat": 45.34441,
+"lon": 19.00238,
+"display": "Vukovar, Vukovar-Srijem County, Croatia"
+},
+"zagreb|hr": {
+"lat": 45.8131,
+"lon": 15.97728,
+"display": "City of Zagreb, Croatia"
+},
+"budapest|hu": {
+"lat": 47.49788,
+"lon": 19.04024,
+"display": "Budapest, Central Hungary, Hungary"
+},
+"budapesti|hu": {
+"lat": 47.49788,
+"lon": 19.04024,
+"display": "Budapest, Central Hungary, Hungary"
+},
+"eger|hu": {
+"lat": 47.89899,
+"lon": 20.37437,
+"display": "Eger, Egri járás, Heves, North Hungary, Great Plain and North, Hungary"
+},
+"kecskemet|hu": {
+"lat": 46.90754,
+"lon": 19.69223,
+"display": "Kecskemét, Kecskeméti járás, Bács-Kiskun, South Great Plain, Great Plain and North, Hungary"
+},
+"miskolc|hu": {
+"lat": 48.10306,
+"lon": 20.79004,
+"display": "Miskolc, Miskolci járás, Borsod-Abaúj-Zemplén, North Hungary, Great Plain and North, Hungary"
+},
+"nyiregyhaza|hu": {
+"lat": 47.95578,
+"lon": 21.7168,
+"display": "Nyíregyháza, Nyíregyházi járás, Szabolcs-Szatmár-Bereg, North Great Plain, Great Plain and North, Hungary"
+},
+"sopron|hu": {
+"lat": 47.68031,
+"lon": 16.59835,
+"display": "Sopron, Soproni járás, Győr-Moson-Sopron, Western Transdanubia, Transdanubia, Hungary"
+},
+"veszprem|hu": {
+"lat": 47.09338,
+"lon": 17.90804,
+"display": "Veszprém, Veszprémi járás, Veszprém, Central Transdanubia, Transdanubia, Hungary"
+},
+"bari|it": {
+"lat": 41.12578,
+"lon": 16.86203,
+"display": "Bari, Apulia, Italy"
+},
+"benevento|it": {
+"lat": 41.12956,
+"lon": 14.78246,
+"display": "Benevento, Campania, 82100, Italy"
+},
+"cagliari|it": {
+"lat": 39.2172,
+"lon": 9.11331,
+"display": "Cagliari, Casteddu/Cagliari, Sardinia, Italy"
+},
+"catania|it": {
+"lat": 37.50236,
+"lon": 15.08737,
+"display": "Catania, Sicily, Italy"
+},
+"arcavacata di rende|it": {
+"lat": 39.35811,
+"lon": 16.21145,
+"display": "Arcavacata, Rende, Cosenza, Calabria, 87036, Italy"
+},
+"genova|it": {
+"lat": 44.40726,
+"lon": 8.93386,
+"display": "Genoa, Liguria, Italy"
+},
+"l'aquila|it": {
+"lat": 42.34892,
+"lon": 13.39797,
+"display": "L'Aquila, Abruzzo, Italy"
+},
+"milano|it": {
+"lat": 45.46419,
+"lon": 9.18963,
+"display": "Milan, Rodano, Milan, Lombardy, Italy"
+},
+"napoli|it": {
+"lat": 40.83588,
+"lon": 14.24877,
+"display": "Naples, Campania, Italy"
+},
+"caserta|it": {
+"lat": 41.07205,
+"lon": 14.33129,
+"display": "Caserta, Campania, Italy"
+},
+"roma|it": {
+"lat": 41.89332,
+"lon": 12.48293,
+"display": "Rome, Roma Capitale, Lazio, Italy"
+},
+"fisciano sa|it": {
+"lat": 40.77281,
+"lon": 14.79944,
+"display": "Fisciano, Salerno, Campania, Italy"
+},
+"trento|it": {
+"lat": 46.06642,
+"lon": 11.12576,
+"display": "Trento, Territorio Val d'Adige, Provincia di Trento, Trentino – Alto Adige/Südtirol, Italy"
+},
+"kaunas|lt": {
+"lat": 54.89821,
+"lon": 23.90448,
+"display": "Kaunas, Kauno miesto savivaldybė, Kaunas County, Lithuania"
+},
+"vilnius|lt": {
+"lat": 54.68705,
+"lon": 25.28291,
+"display": "Vilnius, Vilnius city municipality, Vilnius County, Lithuania"
+},
+"luxembourg|lu": {
+"lat": 49.61128,
+"lon": 6.1298,
+"display": "Luxembourg, Canton Luxembourg, Luxembourg"
+},
+"rīga|lv": {
+"lat": 56.9494,
+"lon": 24.10518,
+"display": "Riga, Latvia"
+},
+"bitola|mk": {
+"lat": 41.0316,
+"lon": 21.33025,
+"display": "Bitola, Municipality of Bitola, 7000, North Macedonia"
+},
+"stip|mk": {
+"lat": 41.73747,
+"lon": 22.19359,
+"display": "Shtip, Municipality of Shtip, 2000, North Macedonia"
+},
+"msida|mt": {
+"lat": 35.89569,
+"lon": 14.48918,
+"display": "Msida, Eastern Region, Malta"
+},
+"paola|mt": {
+"lat": 35.8718,
+"lon": 14.50737,
+"display": "Paola, Port Region, Malta"
+},
+"bergen|no": {
+"lat": 60.39431,
+"lon": 5.32592,
+"display": "Bergen, Vestland, Norway"
+},
+"kristiansand|no": {
+"lat": 58.08563,
+"lon": 7.93186,
+"display": "Kristiansand, Agder, Norway"
+},
+"enschede|nl": {
+"lat": 52.22099,
+"lon": 6.89405,
+"display": "Enschede, Overijssel, Netherlands"
+},
+"tromso|no": {
+"lat": 69.65163,
+"lon": 18.95586,
+"display": "Tromsø, Troms, Norway"
+},
+"trondheim|no": {
+"lat": 63.43045,
+"lon": 10.39521,
+"display": "Trondheim, Trøndelag, Norway"
+},
+"barcelos|pt": {
+"lat": 41.53145,
+"lon": -8.61923,
+"display": "Barcelos, Braga, Portugal"
+},
+"aveiro|pt": {
+"lat": 40.6405,
+"lon": -8.65378,
+"display": "Aveiro, Portugal"
+},
+"braga|pt": {
+"lat": 41.55106,
+"lon": -8.428,
+"display": "Braga, Portugal"
+},
+"castelo branco|pt": {
+"lat": 39.82663,
+"lon": -7.49193,
+"display": "Castelo Branco, Portugal"
+},
+"covilha|pt": {
+"lat": 40.2804,
+"lon": -7.50419,
+"display": "Covilhã, Castelo Branco, Portugal"
+},
+"faro|pt": {
+"lat": 37.01629,
+"lon": -7.93518,
+"display": "Faro, Portugal"
+},
+"białystok|pl": {
+"lat": 53.1324,
+"lon": 23.15917,
+"display": "Białystok, Podlachia Voivodeship, Poland"
+},
+"częstochowa|pl": {
+"lat": 50.81205,
+"lon": 19.11321,
+"display": "Częstochowa, Silesian Voivodeship, Poland"
+},
+"dąbrowa górnicza|pl": {
+"lat": 50.33087,
+"lon": 19.20789,
+"display": "Dąbrowa Górnicza, Metropolis GZM, Silesian Voivodeship, Poland"
+},
+"dęblin|pl": {
+"lat": 51.56249,
+"lon": 21.86544,
+"display": "Dęblin, Ryki County, Lublin Voivodeship, Poland"
+},
+"gdańsk|pl": {
+"lat": 54.34829,
+"lon": 18.65402,
+"display": "Gdańsk, Pomeranian Voivodeship, Poland"
+},
+"gliwice|pl": {
+"lat": 50.29411,
+"lon": 18.66573,
+"display": "Gliwice, Metropolis GZM, Silesian Voivodeship, Poland"
+},
+"gorzów wielkopolski|pl": {
+"lat": 52.73099,
+"lon": 15.24005,
+"display": "Gorzow, Lubusz Voivodeship, Poland"
+},
+"lisboa|pt": {
+"lat": 38.70775,
+"lon": -9.13659,
+"display": "Lisbon, Portugal"
+},
+"katowice|pl": {
+"lat": 50.2599,
+"lon": 19.02159,
+"display": "Katowice, Metropolis GZM, Silesian Voivodeship, Poland"
+},
+"kielce|pl": {
+"lat": 50.87199,
+"lon": 20.63105,
+"display": "Kielce, Holy Cross Voivodeship, Poland"
+},
+"kraków|pl": {
+"lat": 50.06195,
+"lon": 19.93686,
+"display": "Krakow, Lesser Poland Voivodeship, Poland"
+},
+"legnica|pl": {
+"lat": 51.20816,
+"lon": 16.16032,
+"display": "Legnica, Lower Silesian Voivodeship, 59-220, Poland"
+},
+"łódź|pl": {
+"lat": 51.76873,
+"lon": 19.45699,
+"display": "Łódź, Łódź Voivodeship, Poland"
+},
+"lublin|pl": {
+"lat": 51.25056,
+"lon": 22.5701,
+"display": "Lublin, Lublin Voivodeship, Poland"
+},
+"olsztyn|pl": {
+"lat": 53.77668,
+"lon": 20.47651,
+"display": "Olsztyn, Warmian-Masurian Voivodeship, Poland"
+},
+"opole|pl": {
+"lat": 50.66682,
+"lon": 17.92364,
+"display": "Opole, Opole Voivodeship, Poland"
+},
+"poznań|pl": {
+"lat": 52.40827,
+"lon": 16.93352,
+"display": "Poznan, Greater Poland Voivodeship, Poland"
+},
+"przemyśl|pl": {
+"lat": 49.78227,
+"lon": 22.77497,
+"display": "Przemyśl, Subcarpathian Voivodeship, Poland"
+},
+"radom|pl": {
+"lat": 51.40226,
+"lon": 21.15415,
+"display": "Radom, Masovian Voivodeship, Poland"
+},
+"rzeszów|pl": {
+"lat": 50.03745,
+"lon": 22.00472,
+"display": "Rzeszów, Subcarpathian Voivodeship, Poland"
+},
+"sanok|pl": {
+"lat": 49.56091,
+"lon": 22.20703,
+"display": "Sanok, Sanok County, Subcarpathian Voivodeship, 38-500, Poland"
+},
+"suwałki|pl": {
+"lat": 54.09906,
+"lon": 22.92794,
+"display": "Suwałki, Podlachia Voivodeship, Poland"
+},
+"szczecin|pl": {
+"lat": 53.43018,
+"lon": 14.55096,
+"display": "Szczecin, West Pomeranian Voivodeship, Poland"
+},
+"toruń|pl": {
+"lat": 53.01027,
+"lon": 18.60481,
+"display": "Toruń, Kuyavian-Pomeranian Voivodeship, Poland"
+},
+"warszawa|pl": {
+"lat": 52.23196,
+"lon": 21.00672,
+"display": "Warsaw, Masovian Voivodeship, Poland"
+},
+"wrocław|pl": {
+"lat": 51.10898,
+"lon": 17.03267,
+"display": "Wrocław, Lower Silesian Voivodeship, Poland"
+},
+"zielona góra|pl": {
+"lat": 51.93838,
+"lon": 15.50504,
+"display": "Zielona Góra, Lubusz Voivodeship, Poland"
+},
+"porto|pt": {
+"lat": 41.15022,
+"lon": -8.61035,
+"display": "Porto, Portugal"
+},
+"santarém|pt": {
+"lat": 39.23636,
+"lon": -8.68671,
+"display": "Santarém, Portugal"
+},
+"alba iulia|ro": {
+"lat": 46.06828,
+"lon": 23.56648,
+"display": "Alba Iulia, Alba, Romania"
+},
+"cluj-napoca|ro": {
+"lat": 46.76938,
+"lon": 23.58995,
+"display": "Cluj-Napoca, Cluj Metropolitan Area, Cluj, Romania"
+},
+"iasi|ro": {
+"lat": 47.16156,
+"lon": 27.58378,
+"display": "Iași, Iași Metropolitan Area, Iași, Romania"
+},
+"oradea|ro": {
+"lat": 47.05492,
+"lon": 21.92852,
+"display": "Oradea, Oradea Metropolitan Area, Bihor, 410100, Romania"
+},
+"suceava|ro": {
+"lat": 47.647,
+"lon": 26.25226,
+"display": "Suceava, Romania"
+},
+"targoviste|ro": {
+"lat": 44.92677,
+"lon": 25.46282,
+"display": "Târgoviște, Dâmbovița, Romania"
+},
+"targu mures|ro": {
+"lat": 46.54463,
+"lon": 24.5612,
+"display": "Târgu Mureș, Targu Mures Metropolitan Area, Mureș, Romania"
+},
+"beograd|rs": {
+"lat": 44.81781,
+"lon": 20.4569,
+"display": "Belgrade, Stari Grad Urban Municipality, City of Belgrade, Central Serbia, 11000, Serbia"
+},
+"novi sad|rs": {
+"lat": 45.25513,
+"lon": 19.84518,
+"display": "Novi Sad, City of Novi Sad, South Backa Administrative District, Vojvodina, Serbia"
+},
+"helsinki|fi": {
+"lat": 60.16662,
+"lon": 24.94354,
+"display": "Helsinki, Helsinki sub-region, Uusimaa, Mainland Finland, Finland"
+},
+"kuopio|fi": {
+"lat": 62.89246,
+"lon": 27.67836,
+"display": "Kuopio, Kuopio sub-region, North Savo, Mainland Finland, Finland"
+},
+"lappeenranta|fi": {
+"lat": 61.05834,
+"lon": 28.18623,
+"display": "Lappeenranta, Lappeenranta sub-region, South Karelia, Mainland Finland, Finland"
+},
+"oulu|fi": {
+"lat": 65.01179,
+"lon": 25.4702,
+"display": "Oulu, Oulu sub-region, North Ostrobothnia, Mainland Finland, Finland"
+},
+"vaasa|fi": {
+"lat": 63.09577,
+"lon": 21.61592,
+"display": "Vaasa, Vaasa sub-region, Ostrobothnia, Mainland Finland, Finland"
+},
+"ljubljana|si": {
+"lat": 46.05003,
+"lon": 14.50693,
+"display": "Ljubljana, Upravna Enota Ljubljana, 1000, Slovenia"
+},
+"maribor|si": {
+"lat": 46.55764,
+"lon": 15.64559,
+"display": "Maribor, 2000, Slovenia"
+},
+"novo mesto|si": {
+"lat": 45.80405,
+"lon": 15.16967,
+"display": "Novo Mesto, Novo mesto, 8000, Slovenia"
+},
+"afyonkarahisar|tr": {
+"lat": 38.75686,
+"lon": 30.5387,
+"display": "Afyonkarahisar, Aegean Region, Turkey"
+},
+"ankara|tr": {
+"lat": 39.92078,
+"lon": 32.85405,
+"display": "Ankara, Çankaya, Ankara, Central Anatolia Region, 06420, Turkey"
+},
+"bilecik|tr": {
+"lat": 40.14351,
+"lon": 29.97529,
+"display": "Bilecik, Marmara Region, Turkey"
+},
+"çorum|tr": {
+"lat": 40.54991,
+"lon": 34.95373,
+"display": "Çorum, Black Sea Region, Turkey"
+},
+"diyarbakır|tr": {
+"lat": 37.91622,
+"lon": 40.23635,
+"display": "Diyarbakır, Sur, Diyarbakır, Southeastern Anatolia Region, 21300, Turkey"
+},
+"erzincan|tr": {
+"lat": 39.74676,
+"lon": 39.49103,
+"display": "Erzincan, Eastern Anatolia Region, Turkey"
+},
+"giresun|tr": {
+"lat": 40.91763,
+"lon": 38.38415,
+"display": "Giresun, Black Sea Region, 28100, Turkey"
+},
+"i̇skenderun|tr": {
+"lat": 36.59023,
+"lon": 36.17104,
+"display": "İskenderun, Hatay, Mediterranean Region, Turkey"
+},
+"isparta|tr": {
+"lat": 37.76367,
+"lon": 30.55506,
+"display": "Isparta, Mediterranean Region, Turkey"
+},
+"i̇stanbul|tr": {
+"lat": 41.00638,
+"lon": 28.97587,
+"display": "Istanbul, Fatih, Istanbul, Marmara Region, 34122, Turkey"
+},
+"izmir|tr": {
+"lat": 38.41925,
+"lon": 27.12847,
+"display": "İzmir, Konak, Izmir, Aegean Region, 35250, Turkey"
+},
+"karabük|tr": {
+"lat": 41.19554,
+"lon": 32.62312,
+"display": "Karabük, Black Sea Region, Turkey"
+},
+"kirklareli|tr": {
+"lat": 41.73702,
+"lon": 27.22355,
+"display": "Kırklareli, Marmara Region, Turkey"
+},
+"izmit kocaeli|tr": {
+"lat": 40.76539,
+"lon": 29.94074,
+"display": "Kocaeli, İzmit, Kocaeli, Marmara Region, 41040, Turkey"
+},
+"selcuklu konya|tr": {
+"lat": 37.87273,
+"lon": 32.49244,
+"display": "Konya, Selçuklu, Konya, Central Anatolia Region, 42040, Turkey"
+},
+"samsun|tr": {
+"lat": 41.29461,
+"lon": 36.33206,
+"display": "Samsun, İlkadım, Samsun, Black Sea Region, 55030, Turkey"
+},
+"usak|tr": {
+"lat": 38.67404,
+"lon": 29.40584,
+"display": "Uşak, Aegean Region, Turkey"
+},
+"yozgat|tr": {
+"lat": 39.8222,
+"lon": 34.8081,
+"display": "Yozgat, Central Anatolia Region, 66100, Turkey"
+},
+"zonguldak|tr": {
+"lat": 41.45268,
+"lon": 31.7876,
+"display": "Zonguldak, Black Sea Region, Turkey"
+},
+"hitchin - herts|gb": {
+"lat": 51.94869,
+"lon": -0.27791,
+"display": "Hitchin, North Hertfordshire, Hertfordshire, England, SG5 1HP, United Kingdom"
+},
+"flums|ch": {
+"lat": 47.09397,
+"lon": 9.34359,
+"display": "Flums, Wahlkreis Sarganserland, St. Gallen, Switzerland"
+},
+"milano mi|it": {
+"lat": 45.46419,
+"lon": 9.18963,
+"display": "Milan, Rodano, Milan, Lombardy, Italy"
+},
+"blagnac|fr": {
+"lat": 43.63435,
+"lon": 1.39864,
+"display": "Blagnac, Toulouse, Haute-Garonne, Occitania, Metropolitan France, 31700, France"
+},
+"athina|gr": {
+"lat": 37.97556,
+"lon": 23.73483,
+"display": "Athens, Municipality of Athens, Regional Unit of Central Athens, Attica, 105 57, Greece"
+},
+"paris 13|fr": {
+"lat": 48.82901,
+"lon": 2.36361,
+"display": "13th Arrondissement, Paris, Ile-de-France, Metropolitan France, 75013, France"
+},
+"coimbra|pt": {
+"lat": 40.21119,
+"lon": -8.42915,
+"display": "Coimbra, Portugal"
+},
+"istanbul|tr": {
+"lat": 41.00638,
+"lon": 28.97587,
+"display": "Istanbul, Fatih, Istanbul, Marmara Region, 34122, Turkey"
+},
+"zurich|ch": {
+"lat": 47.37445,
+"lon": 8.54104,
+"display": "Zurich, District Zurich, Zurich, Switzerland"
+},
+"dublin|ie": {
+"lat": 53.34938,
+"lon": -6.26056,
+"display": "Dublin, County Dublin, Leinster, Ireland"
+},
+"bilbao|es": {
+"lat": 43.263,
+"lon": -2.935,
+"display": "Bilbao, Biscay, Autonomous Community of the Basque Country, Spain"
+},
+"luenen|de": {
+"lat": 51.61425,
+"lon": 7.52281,
+"display": "Lünen, Kreis Unna, North Rhine-Westphalia, Germany"
+},
+"modena|it": {
+"lat": 44.64589,
+"lon": 10.92557,
+"display": "Modena, Emilia-Romagna, Italy"
+},
+"wedel|de": {
+"lat": 53.58102,
+"lon": 9.70388,
+"display": "Wedel, Kreis Pinneberg, Schleswig-Holstein, 22880, Germany"
+},
+"ploiesti|ro": {
+"lat": 44.94175,
+"lon": 26.02365,
+"display": "Ploiești, Prahova, Romania"
+},
+"glasgow|gb": {
+"lat": 55.86115,
+"lon": -4.25017,
+"display": "Glasgow, Glasgow City, Scotland, G2 1AR, United Kingdom"
+},
+"den haag|nl": {
+"lat": 52.07998,
+"lon": 4.31135,
+"display": "The Hague, South Holland, Netherlands"
+},
+"stockholm|se": {
+"lat": 59.32512,
+"lon": 18.07109,
+"display": "Stockholm, Stockholm Municipality, Stockholm County, 111 29, Sweden"
+},
+"stavanger|no": {
+"lat": 58.96997,
+"lon": 5.73181,
+"display": "Stavanger, Rogaland, Norway"
+},
+"birchwood|gb": {
+"lat": 53.42187,
+"lon": -2.52236,
+"display": "Birchwood, Warrington, England, United Kingdom"
+},
+"bad neuenahr-ahrweiler|de": {
+"lat": 50.54446,
+"lon": 7.11867,
+"display": "Bad Neuenahr-Ahrweiler, Brohl-Lützing, Landkreis Ahrweiler, Rhineland-Palatinate, 53474, Germany"
+},
+"leoben|at": {
+"lat": 47.38051,
+"lon": 15.09478,
+"display": "Leoben, Bezirk Leoben, Styria, 8700, Austria"
+},
+"tussenhausen mattsies|de": {
+"lat": 48.08669,
+"lon": 10.54702,
+"display": "Mattsies, Tussenhausen, Landkreis Unterallgäu, Bavaria, 86874, Germany"
+},
+"jena|de": {
+"lat": 50.92817,
+"lon": 11.58794,
+"display": "Jena, Thuringia, Germany"
+},
+"bad zwischenahn|de": {
+"lat": 53.16142,
+"lon": 8.04602,
+"display": "Bad Zwischenahn, Landkreis Ammerland, Lower Saxony, 26160, Germany"
+},
+"bucuresti|ro": {
+"lat": 44.43614,
+"lon": 26.10268,
+"display": "Bucharest, Romania"
+},
+"kilkis|gr": {
+"lat": 40.99359,
+"lon": 22.87415,
+"display": "Kilkis, Kilkis Municipality, Kilkis Regional Unit, Central Macedonia, Macedonia and Thrace, 611 00, Greece"
+},
+"braunschweig|de": {
+"lat": 52.26466,
+"lon": 10.52361,
+"display": "Brunswick, Lower Saxony, Germany"
+},
+"tel aviv|il": {
+"lat": 32.0853,
+"lon": 34.78181,
+"display": "Tel-Aviv, Tel Aviv Subdistrict, Tel-Aviv District, Israel"
+},
+"moscow|ru": {
+"lat": 55.75054,
+"lon": 37.61748,
+"display": "Moscow, Central Federal District, Russia"
+},
+"muenchen|de": {
+"lat": 48.13711,
+"lon": 11.57538,
+"display": "Munich, Bavaria, Germany"
+},
+"bukkaranyos|hu": {
+"lat": 47.98532,
+"lon": 20.78042,
+"display": "Bükkaranyos, Miskolci járás, Borsod-Abaúj-Zemplén, North Hungary, Great Plain and North, 3554, Hungary"
+},
+"nuremberg|de": {
+"lat": 49.45387,
+"lon": 11.0773,
+"display": "Nuremberg, Bavaria, Germany"
+},
+"milanese san donato milanese|it": {
+"lat": 45.41807,
+"lon": 9.27165,
+"display": "San Donato Milanese, Rodano, Milan, Lombardy, Italy"
+},
+"cornella de llobregat|es": {
+"lat": 41.35572,
+"lon": 2.07062,
+"display": "Cornellà de Llobregat, Baix Llobregat, Barcelona, Catalonia, 08940, Spain"
+},
+"brussel|be": {
+"lat": 50.84674,
+"lon": 4.35249,
+"display": "Brussels, Brussels-Capital, Belgium"
+},
+"ramat-hasharon|il": {
+"lat": 32.14313,
+"lon": 34.83809,
+"display": "Ramat HaSharon, Tel Aviv Subdistrict, Tel-Aviv District, Israel"
+},
+"koln|de": {
+"lat": 50.93836,
+"lon": 6.95997,
+"display": "Cologne, North Rhine-Westphalia, Germany"
+},
+"chapel en le frith|gb": {
+"lat": 53.32325,
+"lon": -1.91484,
+"display": "Chapel-en-le-Frith, Wash, High Peak, Derbyshire, East Midlands, England, United Kingdom"
+},
+"zürich|ch": {
+"lat": 47.37445,
+"lon": 8.54104,
+"display": "Zurich, District Zurich, Zurich, Switzerland"
+},
+"trieste|it": {
+"lat": 45.64965,
+"lon": 13.77728,
+"display": "Trieste, Friuli – Venezia Giulia, 34121-34151, Italy"
+},
+"geel|be": {
+"lat": 51.16108,
+"lon": 4.99032,
+"display": "Geel, Laakdal, Turnhout, Antwerp, Flanders, 2440, Belgium"
+},
+"cesson-sevigne|fr": {
+"lat": 48.11978,
+"lon": -1.60388,
+"display": "Cesson-Sévigné, Rennes, Ille-et-Vilaine, Brittany, Metropolitan France, 35510, France"
+},
+"herlev|dk": {
+"lat": 55.73375,
+"lon": 12.42945,
+"display": "Herlev Municipality, Capital Region of Denmark, 2730, Denmark"
+},
+"eskisehir|tr": {
+"lat": 39.77439,
+"lon": 30.51912,
+"display": "Eskisehir, Odunpazarı, Eskişehir, Central Anatolia Region, 26010, Turkey"
+},
+"raunheim|de": {
+"lat": 50.00977,
+"lon": 8.44994,
+"display": "Raunheim, Kreis Groß-Gerau, Hesse, 65479, Germany"
+},
+"london|gb": {
+"lat": 51.50745,
+"lon": -0.12777,
+"display": "Greater London, England, United Kingdom"
+},
+"paris la defense|fr": {
+"lat": 48.86432,
+"lon": 2.30494,
+"display": "L'Épopée de Défense Polonaise, Esplanade d'Arménie, Quartier des Champs-Élysées, 8th Arrondissement of Paris, Paris, Ile-de-France, Metropolitan France, 75008, France"
+},
+"walhain|be": {
+"lat": 50.61801,
+"lon": 4.69534,
+"display": "Walhain, Nivelles, Walloon Brabant, Wallonia, 1457, Belgium"
+},
+"pinkafeld|at": {
+"lat": 47.37254,
+"lon": 16.12342,
+"display": "Pinkafeld, Bezirk Oberwart, Burgenland, 7423, Austria"
+},
+"bielsko biala|pl": {
+"lat": 49.82212,
+"lon": 19.04489,
+"display": "Bielsko-Biala, Silesian Voivodeship, Poland"
+},
+"sigmaringendorf|de": {
+"lat": 48.06688,
+"lon": 9.2632,
+"display": "Sigmaringendorf, GVV Sigmaringen, Landkreis Sigmaringen, Baden-Württemberg, 72517, Germany"
+},
+"vreta kloster|se": {
+"lat": 58.49348,
+"lon": 15.50271,
+"display": "Vreta kloster, Linköpings kommun, Östergötland County, Sweden"
+},
+"macau|mo": {
+"lat": 22.17576,
+"lon": 113.55141,
+"display": "Macau, China"
+},
+"foggia|it": {
+"lat": 41.46205,
+"lon": 15.54326,
+"display": "Foggia, Apulia, Italy"
+},
+"tallinn|ee": {
+"lat": 59.43724,
+"lon": 24.75727,
+"display": "Tallinn, Harju County, Estonia"
+},
+"ponta delgada s miguel acores|pt": {
+"lat": 37.7425,
+"lon": -25.65526,
+"display": "Casa FC Porto São Miguel / Açores, 9, Rua da Boa Nova, Ponta Delgada (São Pedro), Ponta Delgada, Azores, 9500-296, Portugal"
+},
+"leuven|be": {
+"lat": 50.8792,
+"lon": 4.70117,
+"display": "Leuven, Flemish Brabant, Flanders, Belgium"
+},
+"turku|fi": {
+"lat": 60.45159,
+"lon": 22.267,
+"display": "Turku, Turku sub-region, Southwest Finland, Mainland Finland, Finland"
+},
+"sassari|it": {
+"lat": 40.72347,
+"lon": 8.56127,
+"display": "Tàttari/Sassari, Sardinia, 07100, Italy"
+},
+"madeira|pt": {
+"lat": 32.75175,
+"lon": -16.98175,
+"display": "Madeira, Portugal"
+},
+"ostrava|cz": {
+"lat": 49.8354,
+"lon": 18.29298,
+"display": "Ostrava, okres Ostrava-město, Moravian-Silesian Region, Czechia"
+},
+"rethimno|gr": {
+"lat": 35.36765,
+"lon": 24.47361,
+"display": "Rethymno, Municipality of Rethymnon, Rethymno Regional Unit, Region of Crete, 741 32, Greece"
+},
+"münster|de": {
+"lat": 51.96251,
+"lon": 7.62519,
+"display": "Münster, North Rhine-Westphalia, Germany"
+},
+"leiria|pt": {
+"lat": 39.74379,
+"lon": -8.80711,
+"display": "Leiria, Portugal"
+},
+"sarajevo|ba": {
+"lat": 43.85707,
+"lon": 18.41261,
+"display": "Sarajevo, Mjesna zajednica Trg oslobođenja-Centar, Centar Municipality, City of Sarajevo, Sarajevo Canton, Federation of Bosnia and Herzegovina, 71000, Bosnia and Herzegovina"
+},
+"istocno sarajevo, republika srpska|ba": {
+"lat": 43.8024,
+"lon": 18.42884,
+"display": "Istočno Novo Sarajevo Municipality, City of Istočno Sarajevo, Republika Srpska, Bosnia and Herzegovina"
+},
+"vladimira perica valtera 4|rs": {
+"lat": 45.24464,
+"lon": 19.85108,
+"display": "Висока пословна школа струковних студија, 4, Владимира Перића Валтера, МЗ Лиман, Liman, Novi Sad, City of Novi Sad, South Backa Administrative District, Vojvodina, 21101, Serbia"
+},
+"zenica|ba": {
+"lat": 44.19983,
+"lon": 17.9093,
+"display": "Zenica, City of Zenica, Zenica-Doboj Canton, Federation of Bosnia and Herzegovina, 72000, Bosnia and Herzegovina"
+},
+"tuzla|ba": {
+"lat": 44.5393,
+"lon": 18.67493,
+"display": "Tuzla, City of Tuzla, Tuzla Canton, Federation of Bosnia and Herzegovina, 75000, Bosnia and Herzegovina"
+},
+"chisinau|md": {
+"lat": 47.02451,
+"lon": 28.83229,
+"display": "Chișinău, Buiucani Sector, Chișinău Municipality, Moldova"
+},
+"koszalin|pl": {
+"lat": 54.19092,
+"lon": 16.17707,
+"display": "Koszalin, West Pomeranian Voivodeship, Poland"
+},
+"velenje|si": {
+"lat": 46.35929,
+"lon": 15.11503,
+"display": "Velenje, 3320, Slovenia"
+},
+"tirana|al": {
+"lat": 41.32815,
+"lon": 19.81844,
+"display": "Tirana, Tirana Municipality, Tirana County, 1001-1028, Albania"
+},
+"cluj-napoca, cluj county|ro": {
+"lat": 46.77106,
+"lon": 23.59901,
+"display": "County Public Prosecutor's Office, 2-4, Calea Dorobanților, Center, Cluj-Napoca, Cluj Metropolitan Area, Cluj, 400117, Romania"
+},
+"cluj napoca|ro": {
+"lat": 46.76938,
+"lon": 23.58995,
+"display": "Cluj-Napoca, Cluj Metropolitan Area, Cluj, Romania"
+},
+"subotica|rs": {
+"lat": 46.10021,
+"lon": 19.66533,
+"display": "Subotica, City of Subotica, North Backa Administrative District, Vojvodina, 24000, Serbia"
+},
+"rousse|bg": {
+"lat": 43.84804,
+"lon": 25.95421,
+"display": "Ruse, Bulgaria"
+},
+"sárospatak|hu": {
+"lat": 48.32168,
+"lon": 21.56555,
+"display": "Sárospatak, Sárospataki járás, Borsod-Abaúj-Zemplén, North Hungary, Great Plain and North, 3950, Hungary"
+},
+"cracow|pl": {
+"lat": 50.06195,
+"lon": 19.93686,
+"display": "Krakow, Lesser Poland Voivodeship, Poland"
+},
+"bucharest|ro": {
+"lat": 44.43614,
+"lon": 26.10268,
+"display": "Bucharest, Romania"
+},
+"timis county|ro": {
+"lat": 45.75499,
+"lon": 21.25214,
+"display": "Timiș County Library \"Sorin Titel\" - Children and youth department, Strada Iepurelui, Fabric, Timișoara, Timiș, 307200, Romania"
+},
+"târgu mures, mures|ro": {
+"lat": 46.54463,
+"lon": 24.5612,
+"display": "Târgu Mureș, Targu Mures Metropolitan Area, Mureș, Romania"
+},
+"nis|rs": {
+"lat": 43.31627,
+"lon": 21.92123,
+"display": "Ниш (Медијана), Градска општина Медијана, City of Niš, Nisava Administrative District, Central Serbia, Serbia"
+},
+"bielsko-biala|pl": {
+"lat": 49.82212,
+"lon": 19.04489,
+"display": "Bielsko-Biala, Silesian Voivodeship, Poland"
+},
+"chelm|pl": {
+"lat": 51.13392,
+"lon": 23.47115,
+"display": "Chełm, Lublin Voivodeship, Poland"
+},
+"brasov, brasov county|ro": {
+"lat": 45.64224,
+"lon": 25.58891,
+"display": "County History Museum, Piața Sfatului, Brașov Historical Centre, Brasov, Zona Metropolitană Brașov, Brașov, 500025, Romania"
+},
+"galati, galati county|ro": null,
+"salzburg|at": {
+"lat": 47.79813,
+"lon": 13.04648,
+"display": "Salzburg, Austria"
+},
+"wroclaw|pl": {
+"lat": 51.10898,
+"lon": 17.03267,
+"display": "Wrocław, Lower Silesian Voivodeship, Poland"
+},
+"durrës|al": {
+"lat": 41.31325,
+"lon": 19.44623,
+"display": "Bashkia Durrës, Durrës County, Albania"
+},
+"gödöllo|hu": {
+"lat": 47.60153,
+"lon": 19.3477,
+"display": "Gödöllő, Gödöllő Regional Unit, Pest, Central Hungary, 2100, Hungary"
+},
+"poznan|pl": {
+"lat": 52.40827,
+"lon": 16.93352,
+"display": "Poznan, Greater Poland Voivodeship, Poland"
+},
+"warsaw|pl": {
+"lat": 52.23196,
+"lon": 21.00672,
+"display": "Warsaw, Masovian Voivodeship, Poland"
+},
+"koper|si": {
+"lat": 45.54799,
+"lon": 13.73048,
+"display": "Koper / Capodistria, Upravna enota Koper / Unità amministrativa Capodistria, 6000, Slovenia"
+},
+"bihac|ba": {
+"lat": 44.81466,
+"lon": 15.86896,
+"display": "Bihać, City of Bihać, Una-Sana Canton, Federation of Bosnia and Herzegovina, Bosnia and Herzegovina"
+},
+"gdynia|pl": {
+"lat": 54.5165,
+"lon": 18.54027,
+"display": "Gdynia, Pomeranian Voivodeship, Poland"
+},
+"czestochowa|pl": {
+"lat": 50.81205,
+"lon": 19.11321,
+"display": "Częstochowa, Silesian Voivodeship, Poland"
+},
+"mostar|ba": {
+"lat": 43.34359,
+"lon": 17.80766,
+"display": "Mostar, Local community Centar II, City of Mostar, Herzegovina-Neretva County, Federation of Bosnia and Herzegovina, Bosnia and Herzegovina"
+},
+"sibiu, romania|ro": {
+"lat": 45.79739,
+"lon": 24.15192,
+"display": "Sibiu, Romania"
+},
+"kosovska mitrovica|rs": {
+"lat": 44.92192,
+"lon": 19.75258,
+"display": "Косовска, Jarak, City of Sremska Mitrovica, Srem Administrative District, Vojvodina, 22427, Serbia"
+},
+"šibenik|hr": {
+"lat": 43.73406,
+"lon": 15.89448,
+"display": "Grad Šibenik, Šibenik-Knin County, Croatia"
+},
+"constanta, constanta county|ro": {
+"lat": 44.18596,
+"lon": 28.64268,
+"display": "St. Andrew Constanța County Emergency Clinical Hospital, 145, Bulevardul Tomis, Tomis 2, Constanța, Constanta Metropolitan Area, Constanța, 900591, Romania"
+},
+"nova gorica|si": {
+"lat": 45.95815,
+"lon": 13.6475,
+"display": "Nova Gorica, 5000, Slovenia"
+},
+"ploiesti, prahova county|ro": {
+"lat": 44.93774,
+"lon": 26.02607,
+"display": "\"Ion Ionescu-Quintus\" Prahova County Art Museum, 1, Bulevardul Independenței, Ploiești, Centru, Ploiești, Prahova, 100028, Romania"
+},
+"pécs|hu": {
+"lat": 46.07651,
+"lon": 18.22803,
+"display": "Pécs, Pécsi járás, Baranya, Southern Transdanubia, Transdanubia, Hungary"
+},
+"eisenstadt|at": {
+"lat": 47.84548,
+"lon": 16.52493,
+"display": "Eisenstadt, Burgenland, 7000, Austria"
+},
+"prerov i - mesto|cz": {
+"lat": 49.45509,
+"lon": 17.45084,
+"display": "Město, Přerov, okres Přerov, Olomouc Region, 751 52, Czechia"
+},
+"krems|at": {
+"lat": 48.41084,
+"lon": 15.60037,
+"display": "Krems an der Donau, Lower Austria, Austria"
+},
+"varaždin|hr": {
+"lat": 46.30796,
+"lon": 16.33782,
+"display": "City of Varaždin, Varaždin County, Croatia"
+},
+"prishtina|xk": {
+"lat": 42.66388,
+"lon": 21.16408,
+"display": "Pristina, Municipality of Pristina, District of Prishtina, 10000, Kosovo"
+},
+"korçë|al": {
+"lat": 40.6159,
+"lon": 20.77722,
+"display": "Korçë, Bashkia Korçë, Korçë County, 7001, Albania"
+},
+"arad, arad county|ro": {
+"lat": 46.17717,
+"lon": 21.31239,
+"display": "Oncology Arad County Emergency Clinical Hospital, Strada Vincențiu Babeș, Centru, Arad, 310019, Romania"
+},
+"wiener neustadt|at": {
+"lat": 47.81318,
+"lon": 16.24412,
+"display": "Wiener Neustadt, Lower Austria, 2700, Austria"
+},
+"timisoara, timis county|ro": {
+"lat": 45.75499,
+"lon": 21.25214,
+"display": "Timiș County Library \"Sorin Titel\" - Children and youth department, Strada Iepurelui, Fabric, Timișoara, Timiș, 307200, Romania"
+},
+"casamassima|it": {
+"lat": 40.95713,
+"lon": 16.92039,
+"display": "Casamassima, Bari, Apulia, Italy"
+},
+"new delhi|in": {
+"lat": 28.6139,
+"lon": 77.20901,
+"display": "New Delhi, Delhi, India"
+},
+"hong kong|hk": {
+"lat": 22.34924,
+"lon": 114.18578,
+"display": "Hong Kong, China"
+},
+"rome|it": {
+"lat": 41.89332,
+"lon": 12.48293,
+"display": "Rome, Roma Capitale, Lazio, Italy"
+},
+"singapore|sg": {
+"lat": 1.28992,
+"lon": 103.85191,
+"display": "Singapore"
+},
+"noordwijk|nl": {
+"lat": 52.24109,
+"lon": 4.4462,
+"display": "Noordwijk, South Holland, Netherlands"
+},
+"roorkee|in": {
+"lat": 29.86935,
+"lon": 77.89021,
+"display": "Roorkee, Haridwar, Uttarakhand, 247667, India"
+},
+"melaka|my": {
+"lat": 2.19426,
+"lon": 102.24867,
+"display": "Malacca City, Central Malacca, Malacca, 75100, Malaysia"
+},
+"santander|es": {
+"lat": 43.46189,
+"lon": -3.81003,
+"display": "Santander, Cantabria, Spain"
+},
+"daegu|kr": {
+"lat": 35.8713,
+"lon": 128.6018,
+"display": "Daegu, South Korea"
+},
+"cheongju|kr": {
+"lat": 36.64212,
+"lon": 127.48917,
+"display": "Cheongju-si, North Chungcheong, South Korea"
+},
+"seoul|kr": {
+"lat": 37.56668,
+"lon": 126.97829,
+"display": "Seoul, South Korea"
+},
+"incheon|kr": {
+"lat": 37.456,
+"lon": 126.7052,
+"display": "Incheon, South Korea"
+},
+"anyang|kr": {
+"lat": 37.39385,
+"lon": 126.95706,
+"display": "Anyang-si, Gyeonggi, South Korea"
+},
+"pekan|my": {
+"lat": 3.48955,
+"lon": 103.3904,
+"display": "Pekan, Pahang, 26600, Malaysia"
+},
+"da nang|vn": {
+"lat": 16.0685,
+"lon": 108.22402,
+"display": "Đà Nẵng, Vietnam"
+},
+"lahti|fi": {
+"lat": 60.98263,
+"lon": 25.66134,
+"display": "Lahti, Lahti sub-region, Päijät-Häme, Mainland Finland, Finland"
+},
+"asan|kr": {
+"lat": 36.78995,
+"lon": 127.00268,
+"display": "Asan-si, South Chungcheong, South Korea"
+},
+"hsinchu|tw": {
+"lat": 24.80663,
+"lon": 120.96868,
+"display": "Hsinchu, Taiwan"
+},
+"chișinău|md": {
+"lat": 47.02451,
+"lon": 28.83229,
+"display": "Chișinău, Buiucani Sector, Chișinău Municipality, Moldova"
+},
+"magdeburg|de": {
+"lat": 52.13148,
+"lon": 11.64008,
+"display": "Magdeburg, Saxony-Anhalt, Germany"
+},
+"taoyuan|tw": {
+"lat": 24.993,
+"lon": 121.301,
+"display": "Taoyuan City, Taiwan"
+},
+"kharkiv|ua": {
+"lat": 49.99232,
+"lon": 36.23101,
+"display": "Kharkiv, Kharkiv Urban Hromada, Kharkiv Raion, Kharkiv Oblast, Ukraine"
+},
+"baranavichy|by": {
+"lat": 53.13229,
+"lon": 26.01842,
+"display": "Baranavichy, Brest Region, Belarus"
+},
+"ternopil|ua": {
+"lat": 49.55579,
+"lon": 25.59238,
+"display": "Ternopil, Ternopil Urban Hromada, Ternopil Raion, Ternopil Oblast, Ukraine"
+},
+"toyama|jp": {
+"lat": 36.69576,
+"lon": 137.21362,
+"display": "Toyama, Toyama Prefecture, Japan"
+},
+"kyiv|ua": {
+"lat": 50.45003,
+"lon": 30.52414,
+"display": "Kyiv, Ukraine"
+},
+"bucovat (timis)|ro": {
+"lat": 45.75536,
+"lon": 21.38142,
+"display": "Bucovăț, Timiș, Romania"
+},
+"granada|es": {
+"lat": 37.1735,
+"lon": -3.59953,
+"display": "Granada, Comarca de la Vega de Granada, Granada, Andalusia, Spain"
+},
+"sao joao da madeira|pt": {
+"lat": 40.90208,
+"lon": -8.48964,
+"display": "São João da Madeira, Aveiro, Portugal"
+},
+"yecla|es": {
+"lat": 38.6136,
+"lon": -1.11579,
+"display": "Yecla, Altiplano, Region of Murcia, 30510, Spain"
+},
+"chania|gr": {
+"lat": 35.51208,
+"lon": 24.01915,
+"display": "Chania, Municipality of Chania, Chania Regional Unit, Region of Crete, 731 35, Greece"
+},
+"nicosia|cy": {
+"lat": 35.17465,
+"lon": 33.36388,
+"display": "Nicosia, Nicosia Muncipality, Nicosia District, Cyprus, 1107, Cyprus"
+},
+"pavlodar|kz": {
+"lat": 52.28576,
+"lon": 76.9455,
+"display": "Pavlodar, Pavlodar Region, Kazakhstan"
+},
+"termez|uz": {
+"lat": 37.24425,
+"lon": 67.28315,
+"display": "Termez, Termiz District, Surxondaryo Region, Uzbekistan"
+},
+"namangan|uz": {
+"lat": 40.99965,
+"lon": 71.67262,
+"display": "Namangan City, Namangan Region, Uzbekistan"
+},
+"kulob|tj": {
+"lat": 37.9081,
+"lon": 69.77395,
+"display": "Kulob, Kulob District, Khatlon Region, 735140, Tajikistan"
+},
+"atyrau|kz": {
+"lat": 47.10672,
+"lon": 51.9139,
+"display": "Atyrau, Atyrau Region, 060000, Kazakhstan"
+},
+"astana|kz": {
+"lat": 51.12828,
+"lon": 71.43047,
+"display": "Astana, 010000, Kazakhstan"
+},
+"jizzakh|uz": {
+"lat": 40.13318,
+"lon": 67.82341,
+"display": "Jizzakh, Jizzakh Region, 130100, Uzbekistan"
+},
+"tashkent|uz": {
+"lat": 41.31234,
+"lon": 69.27871,
+"display": "Tashkent, Учтепинский район, 100000, Uzbekistan"
+},
+"lefkosia|cy": {
+"lat": 35.17465,
+"lon": 33.36388,
+"display": "Nicosia, Nicosia Muncipality, Nicosia District, Cyprus, 1107, Cyprus"
+},
+"athens|gr": {
+"lat": 37.97556,
+"lon": 23.73483,
+"display": "Athens, Municipality of Athens, Regional Unit of Central Athens, Attica, 105 57, Greece"
+},
+"pikermi|gr": {
+"lat": 38.00163,
+"lon": 23.94103,
+"display": "Pikermi, Pikermi Municipal Unit, Municipality of Rafina - Pikermi, Regional Unit of East Attica, Attica, 190 09, Greece"
+},
+"vila nova gaia|pt": {
+"lat": 41.12923,
+"lon": -8.60574,
+"display": "Vila Nova de Gaia, Porto, Portugal"
+},
+"rieti|it": {
+"lat": 42.40255,
+"lon": 12.86053,
+"display": "Rieti, Lazio, 02100, Italy"
+},
+"bayangol|mn": {
+"lat": 47.90927,
+"lon": 106.84812,
+"display": "Bayangol, Ulaanbaatar, Mongolia"
+},
+"darkhan|mn": {
+"lat": 49.49224,
+"lon": 105.93616,
+"display": "Darkhan, Darkhan-Uul, Mongolia"
+},
+"can tho|vn": {
+"lat": 10.0362,
+"lon": 105.78727,
+"display": "Cần Thơ, Vietnam"
+},
+"buon ma thuot city|vn": {
+"lat": 12.6797,
+"lon": 108.04467,
+"display": "Buon Ma Thuot, Đắk Lắk Province, 63119, Vietnam"
+},
+"erdenet|mn": {
+"lat": 49.0276,
+"lon": 104.04439,
+"display": "Erdenet, Bayan-Ondor, Orkhon, 61020, Mongolia"
+},
+"ho chi minh|vn": {
+"lat": 10.77373,
+"lon": 106.7166,
+"display": "Ho Chi Minh City, Vietnam"
+},
+"ulaanbaatar|mn": {
+"lat": 47.91847,
+"lon": 106.9177,
+"display": "Ulaanbaatar, Mongolia"
+},
+"danang|vn": {
+"lat": 16.0685,
+"lon": 108.22402,
+"display": "Đà Nẵng, Vietnam"
+},
+"timisoara|ro": {
+"lat": 45.75384,
+"lon": 21.22575,
+"display": "Timișoara, Timiș, Romania"
+},
+"winneba|gh": {
+"lat": 5.35006,
+"lon": -0.62134,
+"display": "Winneba, Effutu Municipal District, Central Region, Ghana"
+},
+"naxxar|mt": {
+"lat": 35.91334,
+"lon": 14.44329,
+"display": "Naxxar, Northern Region, Malta"
+},
+"limassol|cy": {
+"lat": 34.68529,
+"lon": 33.03327,
+"display": "Limassol, Limassol Municipality, Limassol District, Cyprus, 3085, Cyprus"
+},
+"kifisia|gr": {
+"lat": 38.08817,
+"lon": 23.81806,
+"display": "Nea Erythrea, Municipality of Kifisia, Regional Unit of North Athens, Attica, 146 71, Greece"
+},
+"podgorica|me": {
+"lat": 42.44152,
+"lon": 19.26211,
+"display": "Podgorica, Podgorica Capital City, Montenegro"
+},
+"branesti|ro": {
+"lat": 44.65791,
+"lon": 23.46633,
+"display": "Brănești, Gorj, Romania"
+},
+"palo alto|us": {
+"lat": 37.44433,
+"lon": -122.15985,
+"display": "Palo Alto, Santa Clara County, California, United States"
+},
+"uzhhorod|ua": {
+"lat": 48.62237,
+"lon": 22.30226,
+"display": "Uzhhorod, Uzhhorod Urban Hromada, Uzhhorod Raion, Zakarpattia Oblast, Ukraine"
+},
+"torun|pl": {
+"lat": 53.01027,
+"lon": 18.60481,
+"display": "Toruń, Kuyavian-Pomeranian Voivodeship, Poland"
+},
+"castletroy limerick|ie": {
+"lat": 52.66543,
+"lon": -8.57124,
+"display": "Castletroy, Ballysimon ED, The Metropolitan District of Limerick City, Limerick, County Limerick, Munster, Ireland"
+},
+"yakutsk|ru": {
+"lat": 62.02741,
+"lon": 129.73198,
+"display": "Yakutsk, Yakutsk Urban District, Sakha Republic, Far Eastern Federal District, Russia"
+},
+"kirkop|mt": {
+"lat": 35.84198,
+"lon": 14.48445,
+"display": "Kirkop, Western Region, Malta"
+},
+"rzeszow|pl": {
+"lat": 50.03745,
+"lon": 22.00472,
+"display": "Rzeszów, Subcarpathian Voivodeship, Poland"
+},
+"blagoevgrad|bg": {
+"lat": 42.01111,
+"lon": 23.09065,
+"display": "Blagoevgrad, 2700, Bulgaria"
+},
+"sundsvall|se": {
+"lat": 62.39076,
+"lon": 17.3071,
+"display": "Sundsvall, Sundsvall Municipality, Västernorrland County, Sweden"
+},
+"bielsko-biała|pl": {
+"lat": 49.82212,
+"lon": 19.04489,
+"display": "Bielsko-Biala, Silesian Voivodeship, Poland"
+},
+"pernik|bg": {
+"lat": 42.60922,
+"lon": 23.03095,
+"display": "Pernik, 2300, Bulgaria"
+},
+"горна оряховица|bg": {
+"lat": 43.12228,
+"lon": 25.68879,
+"display": "Gorna Oryahovitsa, Gorna Oriahovitsa, Veliko Tarnovo, Bulgaria"
+},
+"balti|md": {
+"lat": 47.7624,
+"lon": 27.9286,
+"display": "Bălți, Bălți Municipality, Moldova"
+},
+"gavar|am": {
+"lat": 40.3514,
+"lon": 45.12732,
+"display": "Gavar, Gavar boundary, Gavar community, Gegharkunik Province, 1201, Armenia"
+},
+"jalgaon|in": {
+"lat": 21.01007,
+"lon": 75.5696,
+"display": "Jalgaon, Jalgaon District, Maharashtra, 425001, India"
+},
+"rajkot gujarat|in": {
+"lat": 22.30533,
+"lon": 70.80284,
+"display": "Rajkot, Rajkot East Taluka, Rajkot, Gujarat, 360001, India"
+},
+"manesar gurgaon|in": {
+"lat": 28.32471,
+"lon": 76.92638,
+"display": "Manesar, Gurgaon, Haryana, India"
+},
+"vadodara|in": {
+"lat": 22.29731,
+"lon": 73.19426,
+"display": "Vadodara, Vadodara Rural Taluka, Vadodara, Gujarat, 390001, India"
+},
+"matosinhos|pt": {
+"lat": 41.18068,
+"lon": -8.6822,
+"display": "Matosinhos, Porto, Portugal"
+},
+"macerata|it": {
+"lat": 43.30073,
+"lon": 13.45359,
+"display": "Macerata, Marche, Italy"
+},
+"yenimahalle|tr": {
+"lat": 39.96611,
+"lon": 32.80878,
+"display": "Yenimahalle, Ankara, Central Anatolia Region, Turkey"
+},
+"cankaya|tr": {
+"lat": 39.88533,
+"lon": 32.8555,
+"display": "Çankaya, Ankara, Central Anatolia Region, Turkey"
+},
+"arta|gr": {
+"lat": 39.16132,
+"lon": 20.98626,
+"display": "Arta, Arta Municipality, Arta Regional Unit, Epirus, Epirus and Western Macedonia, 471 00, Greece"
+},
+"getxo bizkaia|es": {
+"lat": 43.34312,
+"lon": -3.00786,
+"display": "Getxo, Biscay, Autonomous Community of the Basque Country, Spain"
+},
+"focsani|ro": {
+"lat": 45.69727,
+"lon": 27.18569,
+"display": "Focșani, Vrancea, Romania"
+},
+"santa maria da feira|pt": {
+"lat": 40.92542,
+"lon": -8.54267,
+"display": "Santa Maria da Feira, Aveiro, Portugal"
+},
+"malå|se": {
+"lat": 65.2024,
+"lon": 18.75103,
+"display": "Malå kommun, Malå sameby, Västerbotten County, Sweden"
+},
+"joensuu|fi": {
+"lat": 62.60064,
+"lon": 29.76198,
+"display": "Joensuu, Joensuu sub-region, North Karelia, Mainland Finland, Finland"
+},
+"alfragide|pt": {
+"lat": 38.73183,
+"lon": -9.2157,
+"display": "Alfragide, Amadora, Lisbon, Portugal"
+},
+"patra|gr": {
+"lat": 38.24624,
+"lon": 21.73508,
+"display": "Patras, Municipal Unit of Patras, Municipality of Patras, Achaia Regional Unit, Western Greece, Peloponnese, Western Greece and the Ionian, 262 21, Greece"
+},
+"girona|es": {
+"lat": 41.9793,
+"lon": 2.81994,
+"display": "Girona, Gironès, Girona, Catalonia, Spain"
+},
+"rio patras|gr": {
+"lat": 38.29499,
+"lon": 21.79557,
+"display": "Patras General University Hospital, Ιπποκράτους, Rio, Community of Rio, Municipal Unit of Rio, Municipality of Patras, Achaia Regional Unit, Western Greece, Peloponnese, Western Greece and the Ionian, 265 04, Greece"
+},
+"aosta|it": {
+"lat": 45.73731,
+"lon": 7.3204,
+"display": "Aosta, Aosta Valley, 11100, Italy"
+},
+"rovaniemi|fi": {
+"lat": 66.50255,
+"lon": 25.73039,
+"display": "Rovaniemi, Rovaniemi sub-region, Lapland, Mainland Finland, Finland"
+},
+"cornwall|gb": {
+"lat": 50.44335,
+"lon": -4.62466,
+"display": "Cornwall, England, United Kingdom"
+},
+"grosspösna|de": {
+"lat": 51.25648,
+"lon": 12.47514,
+"display": "Großpösna, Landkreis Leipzig, Saxony, 04463, Germany"
+},
+"kajaani|fi": {
+"lat": 64.22469,
+"lon": 27.73393,
+"display": "Kajaani, Kajaani sub-region, Kainuu, Mainland Finland, Finland"
+},
+"oulun yliopisto (oulu)|fi": {
+"lat": 65.05933,
+"lon": 25.46736,
+"display": "University of Oulu, Kaitoväylä, Puulinnanmaa, Linnanmaa, Kaijonharju, Oulu, Oulu sub-region, North Ostrobothnia, Mainland Finland, 90570, Finland"
+},
+"constanta|ro": {
+"lat": 44.17672,
+"lon": 28.65076,
+"display": "Constanța, Constanta Metropolitan Area, Constanța, Romania"
+},
+"odessa|ua": {
+"lat": 46.4843,
+"lon": 30.73229,
+"display": "Odesa, Odesa Urban Hromada, Odesa Raion, Odesa Oblast, Ukraine"
+},
+"craiova|ro": {
+"lat": 44.31902,
+"lon": 23.79656,
+"display": "Craiova, Craiova Metropolitan Area, Dolj, Romania"
+},
+"constanţa|ro": {
+"lat": 44.17672,
+"lon": 28.65076,
+"display": "Constanța, Constanta Metropolitan Area, Constanța, Romania"
+},
+"vienna|at": {
+"lat": 48.20835,
+"lon": 16.3725,
+"display": "Vienna, Austria"
+},
+"belgrade|rs": {
+"lat": 44.81781,
+"lon": 20.4569,
+"display": "Belgrade, Stari Grad Urban Municipality, City of Belgrade, Central Serbia, 11000, Serbia"
+},
+"steyr|at": {
+"lat": 48.039,
+"lon": 14.41913,
+"display": "Steyr, Upper Austria, 4400, Austria"
+},
+"enns|at": {
+"lat": 48.21415,
+"lon": 14.47939,
+"display": "Enns, Bezirk Linz-Land, Upper Austria, 4470, Austria"
+},
+"bologna|it": {
+"lat": 44.49382,
+"lon": 11.34263,
+"display": "Bologna, Emilia-Romagna, Italy"
+},
+"ferrara|it": {
+"lat": 44.83727,
+"lon": 11.61865,
+"display": "Ferrara, Emilia-Romagna, 44121-44124, Italy"
+},
+"bsokivce|cz": null,
+"charleroi|be": {
+"lat": 50.41162,
+"lon": 4.44453,
+"display": "Charleroi, Hainaut, Wallonia, Belgium"
+},
+"karlsruhe|de": {
+"lat": 49.00687,
+"lon": 8.40342,
+"display": "Karlsruhe, Baden-Württemberg, Germany"
+},
+"ptuj|si": {
+"lat": 46.41981,
+"lon": 15.87174,
+"display": "Ptuj, 2250, Slovenia"
+},
+"dornbirn|at": {
+"lat": 47.41364,
+"lon": 9.74238,
+"display": "Dornbirn, Bezirk Dornbirn, Vorarlberg, 6850, Austria"
+},
+"győr|hu": {
+"lat": 47.6835,
+"lon": 17.63428,
+"display": "Gyor, Győri járás, Győr-Moson-Sopron, Western Transdanubia, Transdanubia, Hungary"
+},
+"salgótarján|hu": {
+"lat": 48.09607,
+"lon": 19.80056,
+"display": "Salgótarján, Salgótarjáni járás, Nógrád, North Hungary, Great Plain and North, Hungary"
+},
+"legénd|hu": {
+"lat": 47.87799,
+"lon": 19.31104,
+"display": "Legénd, Rétsági járás, Nógrád, North Hungary, Great Plain and North, 2619, Hungary"
+},
+"gödöllő|hu": {
+"lat": 47.60153,
+"lon": 19.3477,
+"display": "Gödöllő, Gödöllő Regional Unit, Pest, Central Hungary, 2100, Hungary"
+},
+"stuttgart|de": {
+"lat": 48.77845,
+"lon": 9.18001,
+"display": "Stuttgart, Baden-Württemberg, Germany"
+},
+"vratsa|bg": {
+"lat": 43.20282,
+"lon": 23.54803,
+"display": "Vratsa, 3002, Bulgaria"
+},
+"sibiu|ro": {
+"lat": 45.79739,
+"lon": 24.15192,
+"display": "Sibiu, Romania"
+},
+"bihać|ba": {
+"lat": 44.81466,
+"lon": 15.86896,
+"display": "Bihać, City of Bihać, Una-Sana Canton, Federation of Bosnia and Herzegovina, Bosnia and Herzegovina"
+},
+"praha 10|cz": {
+"lat": 50.06706,
+"lon": 14.48194,
+"display": "Praha 10, obvod Praha 10, Prague, Czechia"
+},
+"bucureşti|ro": {
+"lat": 44.43614,
+"lon": 26.10268,
+"display": "Bucharest, Romania"
+},
+"freiburg|de": {
+"lat": 47.99609,
+"lon": 7.8494,
+"display": "Freiburg im Breisgau, Baden-Württemberg, Germany"
+},
+"szeged|hu": {
+"lat": 46.25463,
+"lon": 20.1486,
+"display": "Szeged, Szegedi járás, Csongrád-Csanád, South Great Plain, Great Plain and North, Hungary"
+},
+"koprivnica|hr": {
+"lat": 46.16233,
+"lon": 16.83079,
+"display": "Grad Koprivnica, Koprivnica-Križevci County, Croatia"
+},
+"crnogorskih serdara 63podgorica|me": null,
+"marka marulica 2sarajewo|ba": null,
+"hagenberg|at": {
+"lat": 48.63483,
+"lon": 16.45414,
+"display": "Hagenberg, Fallbach, Bezirk Mistelbach, Lower Austria, 2133, Austria"
+},
+"ostrava-poruba|cz": {
+"lat": 49.81241,
+"lon": 18.1513,
+"display": "ctPark Ostrava - Poruba, Poruba, Ostrava, okres Ostrava-město, Moravian-Silesian Region, Czechia"
+},
+"kragujevac|rs": {
+"lat": 44.01318,
+"lon": 20.91964,
+"display": "Kragujevac, City of Kragujevac, Sumadija Administrative District, Central Serbia, Serbia"
+},
+"berane|me": {
+"lat": 42.84358,
+"lon": 19.87287,
+"display": "Berane, Berane Municipality, Montenegro"
+},
+"valenciennes|fr": {
+"lat": 50.35793,
+"lon": 3.52348,
+"display": "Valenciennes, Nord, Hauts-de-France, Metropolitan France, 59300, France"
+},
+"västerås|se": {
+"lat": 59.6111,
+"lon": 16.54637,
+"display": "Västerås, Västerås kommun, Västmanland County, 721 01, Sweden"
+},
+"zaragoza|es": {
+"lat": 41.69158,
+"lon": -0.91013,
+"display": "Zaragoza, Aragon, Spain"
+},
+"pistoia|it": {
+"lat": 43.93362,
+"lon": 10.91742,
+"display": "Pistoia, Tuscany, 51100, Italy"
+},
+"székesfehérvár|hu": {
+"lat": 47.19102,
+"lon": 18.41081,
+"display": "Székesfehérvár, Székesfehérvári járás, Fejér, Central Transdanubia, Transdanubia, Hungary"
+},
+"gotse delchev|bg": {
+"lat": 41.5733,
+"lon": 23.72811,
+"display": "Gotse Delchev, Blagoevgrad, 2900, Bulgaria"
+},
+"prijedor|ba": {
+"lat": 44.98014,
+"lon": 16.71237,
+"display": "Prijedor, MZ Prijedor centar, City of Prijedor, Republika Srpska, 79000, Bosnia and Herzegovina"
+},
+"ungheni|md": {
+"lat": 47.206,
+"lon": 27.79892,
+"display": "Ungheni, Ungheni District, Moldova"
+},
+"chişinău|md": {
+"lat": 47.02451,
+"lon": 28.83229,
+"display": "Chișinău, Buiucani Sector, Chișinău Municipality, Moldova"
+},
+"md 2028 chişinău|md": {
+"lat": 47.02451,
+"lon": 28.83229,
+"display": "Chișinău, Buiucani Sector, Chișinău Municipality, Moldova"
+},
+"gemona del friuli|it": {
+"lat": 46.27701,
+"lon": 13.1401,
+"display": "Gemona del Friuli, Udine, Friuli – Venezia Giulia, 33013, Italy"
+},
+"varazdin|hr": {
+"lat": 46.30796,
+"lon": 16.33782,
+"display": "City of Varaždin, Varaždin County, Croatia"
+},
+"udine|it": {
+"lat": 46.06346,
+"lon": 13.23584,
+"display": "Udine, Friuli – Venezia Giulia, 33100, Italy"
+},
+"kranj|si": {
+"lat": 46.24329,
+"lon": 14.35494,
+"display": "Kranj, 4000, Slovenia"
+},
+"lodz|pl": {
+"lat": 51.76873,
+"lon": 19.45699,
+"display": "Łódź, Łódź Voivodeship, Poland"
+},
+"praha 9|cz": {
+"lat": 50.10893,
+"lon": 14.50657,
+"display": "Praha 9, obvod Praha 9, Prague, Czechia"
+},
+"praha 4|cz": {
+"lat": 50.04063,
+"lon": 14.44496,
+"display": "Praha 4, obvod Praha 4, Prague, Czechia"
+},
+"ivano-frankivsk|ua": {
+"lat": 48.92248,
+"lon": 24.71033,
+"display": "Ivano-Frankivsk, Ivano-Frankivsk Urban Hromada, Ivano-Frankivsk Raion, Ivano-Frankivsk Oblast, Ukraine"
+},
+"baia mare|ro": {
+"lat": 47.65656,
+"lon": 23.57198,
+"display": "Baia Mare, Maramureș, 430282, Romania"
+},
+"esslingen a. n.|de": {
+"lat": 48.74276,
+"lon": 9.30717,
+"display": "Esslingen am Neckar, Landkreis Esslingen, Baden-Württemberg, Germany"
+},
+"bukarest|ro": {
+"lat": 44.43614,
+"lon": 26.10268,
+"display": "Bucharest, Romania"
+},
+"lj|si": {
+"lat": 46.07552,
+"lon": 14.4891,
+"display": "Mestna občina Lj. , služba za lok. samoupravo, 19a, Ljubeljska ulica, Zgornja Šiška, Četrtna skupnost Šiška, Ljubljana, Upravna Enota Ljubljana, 1000, Slovenia"
+},
+"šempeter-vrtojba|si": {
+"lat": 45.91781,
+"lon": 13.6517,
+"display": "Šempeter-Vrtojba, 5290, Slovenia"
+},
+"kaštel gomilica|hr": {
+"lat": 43.54854,
+"lon": 16.39942,
+"display": "Kaštel Gomilica, Grad Kaštela, Split-Dalmatia County, 21213, Croatia"
+},
+"venice|it": {
+"lat": 45.43719,
+"lon": 12.33459,
+"display": "Venice, Venezia, Veneto, 30121-30176, Italy"
+},
+"klagenfurt am wörthersee|at": {
+"lat": 46.62394,
+"lon": 14.3076,
+"display": "Klagenfurt, Carinthia, Austria"
+},
+"višnja gora|si": {
+"lat": 45.95544,
+"lon": 14.7441,
+"display": "Višnja Gora, Ivančna Gorica, 1294, Slovenia"
+},
+"celje|si": {
+"lat": 46.22939,
+"lon": 15.26168,
+"display": "Celje, 3000, Slovenia"
+},
+"treviso|it": {
+"lat": 45.66585,
+"lon": 12.24554,
+"display": "Treviso, Province of Treviso, Veneto, 31100, Italy"
+},
+"munich|de": {
+"lat": 48.13711,
+"lon": 11.57538,
+"display": "Munich, Bavaria, Germany"
+},
+"deggendorf|de": {
+"lat": 48.83335,
+"lon": 12.96205,
+"display": "Deggendorf, Landkreis Deggendorf, Bavaria, 94469, Germany"
+},
+"st. pölten|at": {
+"lat": 48.2044,
+"lon": 15.62291,
+"display": "Sankt Pölten, Lower Austria, Austria"
+},
+"prague 06 prague|cz": {
+"lat": 49.99867,
+"lon": 14.35343,
+"display": "Prague Ring, Praha-Lochkov, obvod Praha 5, Prague, 153 00, Czechia"
+},
+"tabor|cz": {
+"lat": 49.41415,
+"lon": 14.65872,
+"display": "Tábor, okres Tábor, South Bohemian Region, Southwest, Czechia"
+},
+"lignano sabbiadoro|it": {
+"lat": 45.69016,
+"lon": 13.14077,
+"display": "Lignano Sabbiadoro, Udine, Friuli – Venezia Giulia, 33054, Italy"
+},
+"krakow|pl": {
+"lat": 50.06195,
+"lon": 19.93686,
+"display": "Krakow, Lesser Poland Voivodeship, Poland"
+},
+"kuřim|cz": {
+"lat": 49.29879,
+"lon": 16.5314,
+"display": "Kuřim, okres Brno-venkov, South Moravian Region, 664 34, Czechia"
+},
+"pordenone|it": {
+"lat": 45.95625,
+"lon": 12.65972,
+"display": "Pordenone, Friuli – Venezia Giulia, 33170, Italy"
+},
+"freiburg im breisgau|de": {
+"lat": 47.99609,
+"lon": 7.8494,
+"display": "Freiburg im Breisgau, Baden-Württemberg, Germany"
+},
+"münchen|de": {
+"lat": 48.13711,
+"lon": 11.57538,
+"display": "Munich, Bavaria, Germany"
+},
+"steyr-gleink|at": {
+"lat": 48.06872,
+"lon": 14.41558,
+"display": "Gleink, Steyr, Upper Austria, 4407, Austria"
+},
+"vignola|it": {
+"lat": 44.47841,
+"lon": 11.00909,
+"display": "Vignola, Unione di comuni Terre di Castelli, Modena, Emilia-Romagna, Italy"
+},
+"petzenkirchen|at": {
+"lat": 48.14626,
+"lon": 15.15589,
+"display": "Petzenkirchen, Bezirk Melk, Lower Austria, Austria"
+},
+"comacchio|it": {
+"lat": 44.69587,
+"lon": 12.18125,
+"display": "Comacchio, Ferrara, Emilia-Romagna, 44022, Italy"
+},
+"jelenia gora|pl": {
+"lat": 50.9031,
+"lon": 15.73443,
+"display": "Jelenia Góra, Lower Silesian Voivodeship, Poland"
+},
+"forchheim|de": {
+"lat": 49.7123,
+"lon": 11.06643,
+"display": "Forchheim, Landkreis Forchheim, Bavaria, 91301, Germany"
+},
+"siófok|hu": {
+"lat": 46.90717,
+"lon": 18.05416,
+"display": "Siófok, Siófoki járás, Somogy, Southern Transdanubia, Transdanubia, 8600, Hungary"
+},
+"konstantynów łódzki|pl": {
+"lat": 51.74755,
+"lon": 19.32551,
+"display": "Konstantynów Łódzki, Pabianice County, Łódź Voivodeship, Poland"
+},
+"murska sobota|si": {
+"lat": 46.66246,
+"lon": 16.16553,
+"display": "Murska Sobota, 9000, Slovenia"
+},
+"karnburg (maria saal)|at": {
+"lat": 46.68321,
+"lon": 14.31533,
+"display": "Karnburg, Maria Saal, Bezirk Klagenfurt-Land, Carinthia, 9063, Austria"
+},
+"idrija|si": {
+"lat": 46.0024,
+"lon": 14.0273,
+"display": "Idrija, 5280, Slovenia"
+},
+"zadar|hr": {
+"lat": 44.11686,
+"lon": 15.23533,
+"display": "Zadar, Grad Zadar, Zadar County, Croatia"
+},
+"portogruaro|it": {
+"lat": 45.75774,
+"lon": 12.76912,
+"display": "Portogruaro, Venezia, Veneto, 30026, Italy"
+},
+"asti|it": {
+"lat": 44.90054,
+"lon": 8.20689,
+"display": "Asti, Piedmont, 14100, Italy"
+},
+"przywidz|pl": {
+"lat": 54.19682,
+"lon": 18.32364,
+"display": "Przywidz, gmina Przywidz, Gdańsk County, Pomeranian Voivodeship, 83-047, Poland"
+},
+"gdansk|pl": {
+"lat": 54.37069,
+"lon": 18.61298,
+"display": "Gdansk, Gdańsk, Pomeranian Voivodeship, Poland"
+},
+"české budejovice|cz": {
+"lat": 48.97474,
+"lon": 14.47429,
+"display": "České Budějovice, okres České Budějovice, South Bohemian Region, Southwest, Czechia"
+},
+"sremska mitrovica|rs": {
+"lat": 44.96856,
+"lon": 19.60839,
+"display": "Sremska Mitrovica, City of Sremska Mitrovica, Srem Administrative District, Vojvodina, 22000, Serbia"
+},
+"nyíregyháza|hu": {
+"lat": 47.95578,
+"lon": 21.7168,
+"display": "Nyíregyháza, Nyíregyházi járás, Szabolcs-Szatmár-Bereg, North Great Plain, Great Plain and North, Hungary"
+},
+"široki brijeg|ba": {
+"lat": 43.38319,
+"lon": 17.59292,
+"display": "Široki Brijeg, City of Široki Brijeg, West Herzegovina County, Federation of Bosnia and Herzegovina, 88220, Bosnia and Herzegovina"
+},
+"bad mergentheim|de": {
+"lat": 49.49079,
+"lon": 9.77317,
+"display": "Bad Mergentheim, VVG der Stadt Bad Mergentheim, Main-Tauber-Kreis, Baden-Württemberg, 97980, Germany"
+},
+"zaječar|rs": {
+"lat": 43.90311,
+"lon": 22.27855,
+"display": "Zajecar, City of Zaječar, Zajecar Administrative District, Central Serbia, 19000, Serbia"
+},
+"piatra neamt|ro": {
+"lat": 46.93199,
+"lon": 26.3695,
+"display": "Piatra-Neamț, Neamț, Romania"
+},
+"karlovy vary|cz": {
+"lat": 50.23062,
+"lon": 12.87014,
+"display": "Karlovy Vary, okres Karlovy Vary, Karlovy Vary Region, Czechia"
+},
+"horb a. n.|de": {
+"lat": 48.44479,
+"lon": 8.69148,
+"display": "Horb am Neckar, VVG der Stadt Horb am Neckar, Landkreis Freudenstadt, Baden-Württemberg, 72160, Germany"
+},
+"dnipro|ua": {
+"lat": 48.46802,
+"lon": 35.04177,
+"display": "Dnipro, Dnipro Urban Hromada, Dnipro Raion, Dnipropetrovsk Oblast, 49000, Ukraine"
+},
+"podpgorica|me": null,
+"villach|at": {
+"lat": 46.61673,
+"lon": 13.85003,
+"display": "Villach, Carinthia, Austria"
+},
+"banja luka|ba": {
+"lat": 44.77208,
+"lon": 17.19177,
+"display": "Banja Luka, City of Banja Luka, Republika Srpska, Bosnia and Herzegovina"
+},
+"čačak|rs": {
+"lat": 43.89143,
+"lon": 20.34916,
+"display": "Cacak, City of Čačak, Moravica Administrative District, Central Serbia, Serbia"
+},
+"brasov|ro": {
+"lat": 45.65251,
+"lon": 25.61057,
+"display": "Brasov, Zona Metropolitană Brașov, Brașov, Romania"
+},
+"niš|rs": {
+"lat": 43.32113,
+"lon": 21.89592,
+"display": "Niš, City of Niš, Nisava Administrative District, Central Serbia, Serbia"
+},
+"cetinje|me": {
+"lat": 42.38963,
+"lon": 18.92461,
+"display": "Cetinje, Old Royal Capital Cetinje, 81250, Montenegro"
+},
+"weissensee|at": {
+"lat": 46.69653,
+"lon": 13.3662,
+"display": "Weißensee, Bezirk Spittal an der Drau, Carinthia, 9762, Austria"
+},
+"cres|hr": {
+"lat": 44.96033,
+"lon": 14.40789,
+"display": "Grad Cres, Primorje-Gorski Kotar County, Croatia"
+},
+"križevci|hr": {
+"lat": 46.02474,
+"lon": 16.54578,
+"display": "Grad Križevci, Koprivnica-Križevci County, Croatia"
+},
+"dravograd|si": {
+"lat": 46.5915,
+"lon": 15.03835,
+"display": "Dravograd, Slovenia"
+},
+"gospić|hr": {
+"lat": 44.5464,
+"lon": 15.37542,
+"display": "Gospić, Grad Gospić, Lika-Senj County, 53000, Croatia"
+},
+"istočno sarajevo|ba": {
+"lat": 43.8024,
+"lon": 18.42884,
+"display": "Istočno Novo Sarajevo Municipality, City of Istočno Sarajevo, Republika Srpska, Bosnia and Herzegovina"
+},
+"uzhgorod|ua": {
+"lat": 48.62237,
+"lon": 22.30226,
+"display": "Uzhhorod, Uzhhorod Urban Hromada, Uzhhorod Raion, Zakarpattia Oblast, Ukraine"
+},
+"st. gallen|at": {
+"lat": 47.69235,
+"lon": 14.61729,
+"display": "Sankt Gallen, Bezirk Liezen, Styria, Austria"
+},
+"konjic|ba": {
+"lat": 43.65444,
+"lon": 17.96066,
+"display": "Konjic, City of Konjic, Herzegovina-Neretva County, Federation of Bosnia and Herzegovina, 88400, Bosnia and Herzegovina"
+},
+"donji milanovac|rs": {
+"lat": 44.46275,
+"lon": 22.1523,
+"display": "Donji Milanovac, Majdanpek Municipality, Bor Administrative District, Central Serbia, Serbia"
+},
+"schelklingen|de": {
+"lat": 48.37555,
+"lon": 9.73418,
+"display": "Schelklingen, Alb-Donau-Kreis, Baden-Württemberg, 89601, Germany"
+},
+"voćin|hr": {
+"lat": 45.6198,
+"lon": 17.54815,
+"display": "Voćin, Općina Voćin, Virovitica-Podravina County, 33522, Croatia"
+},
+"chrudim|cz": {
+"lat": 49.95115,
+"lon": 15.79476,
+"display": "Chrudim, okres Chrudim, Pardubice Region, Czechia"
+},
+"bad eisenkappel|at": {
+"lat": 46.4868,
+"lon": 14.59323,
+"display": "Bad Eisenkappel/Železna Kapla, Eisenkappel-Vellach, Bezirk Völkermarkt, Carinthia, 9135, Austria"
+},
+"berndorf|at": {
+"lat": 47.94559,
+"lon": 16.10936,
+"display": "Berndorf, Bezirk Baden, Lower Austria, 2560, Austria"
+},
+"resita|ro": {
+"lat": 45.28903,
+"lon": 21.88786,
+"display": "Reșița, Caraș-Severin, Romania"
+},
+"pilisborosjenő|hu": {
+"lat": 47.60728,
+"lon": 18.99203,
+"display": "Pilisborosjenő, Pilisvörösvári járás, Pest, Central Hungary, 2097, Hungary"
+},
+"caldes de montbui|es": {
+"lat": 41.63448,
+"lon": 2.16261,
+"display": "Caldes de Montbui, Vallès Oriental, Barcelona, Catalonia, 08140, Spain"
+},
+"mechelen|be": {
+"lat": 51.02814,
+"lon": 4.48035,
+"display": "Mechelen, Antwerp, Flanders, Belgium"
+},
+"české budějovice|cz": {
+"lat": 48.97474,
+"lon": 14.47429,
+"display": "České Budějovice, okres České Budějovice, South Bohemian Region, Southwest, Czechia"
+},
+"slovenia|si": {
+"lat": 46.11994,
+"lon": 14.81533,
+"display": "Slovenia"
+},
+"preslav 4”varna|bg": {
+"lat": 43.20228,
+"lon": 27.91478,
+"display": "Preslav, Гръцката махала, 8 микрорайон, Varna, Odessos, Varna, 9028, Bulgaria"
+},
+"nikšić|me": {
+"lat": 42.77394,
+"lon": 18.94881,
+"display": "Nikšić, Nikšić Municipality, Montenegro"
+},
+"konin|pl": {
+"lat": 52.23019,
+"lon": 18.25211,
+"display": "Konin, Greater Poland Voivodeship, Poland"
+},
+"torino|it": {
+"lat": 45.06776,
+"lon": 7.68249,
+"display": "Turin, Piedmont, Italy"
+},
+"hz arnhem|nl": {
+"lat": 51.98426,
+"lon": 5.91086,
+"display": "Arnhem, Gelderland, Netherlands"
+},
+"bremen|de": {
+"lat": 53.07582,
+"lon": 8.80716,
+"display": "Bremen, Germany"
+},
+"noáin|es": {
+"lat": 42.76278,
+"lon": -1.63412,
+"display": "Noáin / Noain, Valle de Elorz / Elortzibar, Iruñerria, Navarre, 31110, Spain"
+},
+"varese|it": {
+"lat": 45.81755,
+"lon": 8.82635,
+"display": "Varese, Lombardy, Italy"
+},
+"aa arnhem|nl": {
+"lat": 51.98426,
+"lon": 5.91086,
+"display": "Arnhem, Gelderland, Netherlands"
+},
+"brussels|be": {
+"lat": 50.84674,
+"lon": 4.35249,
+"display": "Brussels, Brussels-Capital, Belgium"
+},
+"busto arsizio (va)|it": {
+"lat": 45.61193,
+"lon": 8.85183,
+"display": "Busto Arsizio, Varese, Lombardy, 21052, Italy"
+},
+"chemnitz|de": {
+"lat": 50.83235,
+"lon": 12.91891,
+"display": "Chemnitz, Lichtenau, Saxony, Germany"
+},
+"alessandria|it": {
+"lat": 44.91299,
+"lon": 8.61546,
+"display": "Alessandria, Piedmont, Italy"
+},
+"- 926 łódź|pl": {
+"lat": 51.76873,
+"lon": 19.45699,
+"display": "Łódź, Łódź Voivodeship, Poland"
+},
+"most|cz": {
+"lat": 50.50327,
+"lon": 13.63611,
+"display": "Most, okres Most, Ústí nad Labem Region, Czechia"
+},
+"kisvárda|hu": {
+"lat": 48.22576,
+"lon": 22.07842,
+"display": "Kisvárda, Kisvárdai járás, Szabolcs-Szatmár-Bereg, North Great Plain, Great Plain and North, 4600, Hungary"
+},
+"solotvyno|ua": {
+"lat": 47.94702,
+"lon": 23.8747,
+"display": "Solotvyno, Solotvyno Settlement Hromada, Tiachiv Raion, Zakarpattia Oblast, 90575, Ukraine"
+},
+"sighetu marmației|ro": {
+"lat": 47.92832,
+"lon": 23.89156,
+"display": "Sighetu Marmatiei, Maramureș, Romania"
+},
+"berehovo|ua": {
+"lat": 48.2051,
+"lon": 22.64532,
+"display": "Berehove, Berehove Urban Hromada, Berehove Raion, Zakarpattia Oblast, Ukraine"
+},
+"sighetu marmatiei|ro": {
+"lat": 47.92832,
+"lon": 23.89156,
+"display": "Sighetu Marmatiei, Maramureș, Romania"
+},
+"wels|at": {
+"lat": 48.15655,
+"lon": 14.02438,
+"display": "Wels, Upper Austria, 4600, Austria"
+},
+"praha 3 – žižkov|cz": {
+"lat": 50.0843,
+"lon": 14.46876,
+"display": "Praha 3, 38/9, Olšanská, Žižkov, obvod Praha 3, Prague, 130 00, Czechia"
+},
+"glauchau|de": {
+"lat": 50.8199,
+"lon": 12.53979,
+"display": "Glauchau, Zwickau, Saxony, 08371, Germany"
+},
+"soroca|md": {
+"lat": 48.15427,
+"lon": 28.28835,
+"display": "Soroca, Soroca District, Moldova"
+},
+"debrecen|hu": {
+"lat": 47.5314,
+"lon": 21.62598,
+"display": "Debrecen, Debreceni járás, Hajdú-Bihar, North Great Plain, Great Plain and North, Hungary"
+},
+"frankfurt (oder)|de": {
+"lat": 52.34123,
+"lon": 14.54945,
+"display": "Frankfurt (Oder), Brandenburg, Germany"
+},
+"caracas|ve": {
+"lat": 10.50609,
+"lon": -66.9146,
+"display": "Caracas, Parroquia Catedral, Municipio Libertador, Caracas Metropolitan District, Capital District, Venezuela"
+},
+"zanjan|ir": {
+"lat": 36.67,
+"lon": 48.47954,
+"display": "Zanjan, بخش مرکزی, Zanjan County, Zanjan Province, Iran"
+},
+"kryvyi rih|ua": {
+"lat": 47.91027,
+"lon": 33.39177,
+"display": "Kryvyi Rih, Kryvyi Rih Urban Hromada, Kryvyi Rih Raion, Dnipropetrovsk Oblast, 50000-50479, Ukraine"
+},
+"magnitogorsk|ru": {
+"lat": 53.40702,
+"lon": 58.98113,
+"display": "Magnitogorsk, Chelyabinsk Oblast, Ural Federal District, 455000, Russia"
+},
+"kemerovo|ru": {
+"lat": 55.35509,
+"lon": 86.08712,
+"display": "Kemerovo, Kemerovsky Urban Okrug, Kemerovo Oblast–Kuzbass, Siberian Federal District, Russia"
+},
+"puebla|mx": {
+"lat": 19.0438,
+"lon": -98.19815,
+"display": "Puebla, Municipio de Puebla, Puebla, 72000, Mexico"
+},
+"kitami|jp": {
+"lat": 43.80294,
+"lon": 143.89464,
+"display": "Kitami, Okhotsk Subprefecture, Hokkaido Prefecture, Hokkaido Region, Japan"
+},
+"new taipei|tw": {
+"lat": 25.012,
+"lon": 121.46566,
+"display": "New Taipei, Taiwan"
+},
+"samarkand|uz": {
+"lat": 39.655,
+"lon": 66.9757,
+"display": "Samarkand City, Samarqand Region, 140000, Uzbekistan"
+},
+"mol|be": {
+"lat": 51.18404,
+"lon": 5.11553,
+"display": "Mol, Laakdal, Turnhout, Antwerp, Flanders, Belgium"
+},
+"gothenburg|se": {
+"lat": 57.70723,
+"lon": 11.96702,
+"display": "Gothenburg, Göteborgs Stad, Västra Götaland County, 411 10, Sweden"
+},
+"hamburg|de": {
+"lat": 53.55017,
+"lon": 10.00132,
+"display": "Hamburg, Germany"
+},
+"lisbon|pt": {
+"lat": 38.70775,
+"lon": -9.13659,
+"display": "Lisbon, Portugal"
+},
+"hanoi|vn": {
+"lat": 21.02833,
+"lon": 105.85404,
+"display": "Hà Nội, Vietnam"
+},
+"gebze|tr": {
+"lat": 40.80067,
+"lon": 29.43177,
+"display": "Gebze, Kocaeli, Marmara Region, 41400, Turkey"
+},
+"haifa|il": {
+"lat": 32.81912,
+"lon": 34.99839,
+"display": "Haifa, Haifa Subdistrict, Haifa District, Israel"
+},
+"west lafayette|us": {
+"lat": 40.42587,
+"lon": -86.90807,
+"display": "West Lafayette, Tippecanoe County, Indiana, United States"
+},
+"bangkok|th": {
+"lat": 13.75249,
+"lon": 100.49351,
+"display": "Bangkok, Thailand"
+},
+"changzhou|cn": {
+"lat": 31.81226,
+"lon": 119.96915,
+"display": "Changzhou, Jiangsu, 213000, China"
+},
+"réduit|mu": {
+"lat": -20.23451,
+"lon": 57.49766,
+"display": "Réduit, Moka, Moka VCA, East, Moka, Mauritius"
+},
+"riga|lv": {
+"lat": 56.9494,
+"lon": 24.10518,
+"display": "Riga, Latvia"
+},
+"calgary|ca": {
+"lat": 51.04561,
+"lon": -114.05754,
+"display": "Calgary, Alberta, Canada"
+},
+"tbilisi|ge": {
+"lat": 41.69346,
+"lon": 44.80145,
+"display": "Tbilisi, Georgia"
+},
+"vellore|in": {
+"lat": 12.90718,
+"lon": 79.13097,
+"display": "Vellore, Tamil Nadu, 632012, India"
+},
+"irbid|jo": {
+"lat": 32.55561,
+"lon": 35.8493,
+"display": "Irbid, حوارة, Irbid Qasabah District, Irbid, 21162, Jordan"
+},
+"harbin|cn": {
+"lat": 45.75936,
+"lon": 126.62762,
+"display": "Harbin, Xiangfang, Heilongjiang, China"
+},
+"dhanbad|in": {
+"lat": 23.79528,
+"lon": 86.43096,
+"display": "Dhanbad, Dhanbad-Cum-Kenduadih-Cum-Jagata, Dhanbad, Jharkhand, 826001, India"
+},
+"galați|ro": {
+"lat": 45.43382,
+"lon": 28.05494,
+"display": "Galați, Romania"
+},
+"boskovice|cz": {
+"lat": 49.4878,
+"lon": 16.66016,
+"display": "Boskovice, okres Blansko, South Moravian Region, Czechia"
+}
+}
