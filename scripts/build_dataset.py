@@ -127,6 +127,7 @@ for e in load("erasmus_eu.json") or []:
             "subjects": e["subjects"],
             "nominated_students": nom["student"] if nom else 0,
             "nominated_staff": nom["staff"] if nom else 0,
+            "since": nom["first"] if nom else "",  # first nomination there; the agreement itself is undated
             "source_url": "https://erasmus.tuke.sk/partnerske-institucie-v-eu-a-ehp/",
             "confidence": "high",
         },
@@ -154,6 +155,7 @@ for code, nom in nominations.items():
             "detail": f"Erasmus+ mobilita (nominácie); Erasmus kód {nom['erasmus_code']}",
             "nominated_students": nom["student"],
             "nominated_staff": nom["staff"],
+            "since": nom["first"],
             "source_url": "https://erasmus.tuke.sk/vyzvy-na-studentsku-mobilitu/",
             "confidence": "medium",
         },
@@ -161,6 +163,7 @@ for code, nom in nominations.items():
     )
 
 # 2) EU framework programme consortia (CORDIS)
+project_start = {str(x["project_id"]): (x.get("start") or "")[:4] for x in load("cordis_projects.json") or []}
 for p in load("cordis_partners.json") or []:
     if p["country_code"] == "SK":
         continue
@@ -172,6 +175,7 @@ for p in load("cordis_partners.json") or []:
             "tuke_units": ["TUKE"],
             "detail": f"{len(acr)} spoločných projektov: " + ", ".join(acr),
             "projects": p["projects"],
+            "since": min((project_start.get(str(x["project_id"]), "") for x in p["projects"]), key=lambda y: y or "9999"),
             "source_url": f"https://cordis.europa.eu/project/id/{p['projects'][0]['project_id']}",
             "confidence": "high",
         },
@@ -203,6 +207,7 @@ MIN_JOINT = 3
 # Universities and research facilities are matched reliably; other types only when the name is clearly a research body.
 RESEARCH_BODY = re.compile(r"academ|research|recherche|investigaci|forschung|helmholtz|fraunhofer|eurocontrol|telecomunica|cern|nuclear", re.I)
 oa = load("openalex_coauthors.json") or {"institutions": []}
+first_joint = {k: v.get("first") for k, v in (load("openalex_first_years.json") or {}).items()}
 for o in oa["institutions"]:
     if o["country_code"] in (None, "SK") or o["joint_works_core"] < MIN_JOINT:
         continue
@@ -213,8 +218,10 @@ for o in oa["institutions"]:
         {
             "category": "coauthorship",
             "tuke_units": ["TUKE"],
-            "detail": f"{o['joint_works_core']} spoločných publikácií od {oa['since']} (posledná {o['last_joint_year']})",
+            "detail": f"{o['joint_works_core']} spoločných publikácií od {oa['since']} (posledná {o['last_joint_year']})"
+            + (f"; prvá spoločná publikácia {first_joint[o['openalex_id']]}" if first_joint.get(o["openalex_id"]) else ""),
             "joint_works": o["joint_works_core"],
+            "since": str(first_joint.get(o["openalex_id"]) or ""),
             "source_url": f"https://openalex.org/works?filter=authorships.institutions.lineage:I183764125,authorships.institutions.lineage:{o['openalex_id']}",
             "confidence": "high",
         },

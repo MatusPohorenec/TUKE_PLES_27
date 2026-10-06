@@ -37,6 +37,13 @@ export const sortGroups = (groups: Iterable<string>): GroupCode[] =>
 
 export function snapshotGlobe(): GlobeResponse {
   const d = dataset();
+  const since = new Map<string, number>(); // earliest dated cooperation per place
+  for (const i of d.institutions) {
+    for (const l of i.links) {
+      const year = /^\d{4}/.test(l.since ?? '') ? Number(l.since!.slice(0, 4)) : NaN;
+      if (year && !(since.get(i.city_id)! <= year)) since.set(i.city_id, year);
+    }
+  }
   const places: GlobePlace[] = d.cities.map(c => ({
     id: c.id,
     name: c.city || c.country,
@@ -48,6 +55,7 @@ export function snapshotGlobe(): GlobeResponse {
     groups: sortGroups(c.categories.map(cat => groupOf.get(cat) ?? 'other')),
     institutions: c.institutions.length,
     links: c.links,
+    since: since.get(c.id) ?? null,
   }));
   return {
     version: `${d.generated}+snapshot`,

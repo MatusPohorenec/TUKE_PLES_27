@@ -60,6 +60,8 @@ export interface GlobePlace {
   groups: GroupCode[];
   institutions: number;
   links: number;
+  /** Year of the earliest dated cooperation here (first joint paper, project start, agreement…); null when no source gives a year. */
+  since: number | null;
 }
 
 export interface GlobeResponse {

@@ -23,6 +23,7 @@ async function globeFromDb(): Promise<GlobeResponse | null> {
     institutions: sql<number>`count(distinct ${institutions.id})::int`,
     links: sql<number>`count(${cooperationLinks.id})::int`,
     groups: sql<string[]>`array_agg(distinct ${categories.groupCode})`,
+    since: sql<number | null>`min(case when ${cooperationLinks.since} ~ '^[0-9]{4}' then substring(${cooperationLinks.since} from 1 for 4)::int end)`,
   })
     .from(coopPlaces)
     .innerJoin(countries, and(eq(countries.code, coopPlaces.countryCode), eq(countries.isHidden, false)))
