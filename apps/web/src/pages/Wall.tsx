@@ -28,11 +28,35 @@ export default function Wall() {
   const guests = useGuests(scene, slug);
   const mode = guests.event?.displayScene ?? 'cooperation';
 
+  // the opening runs through the years; a milestone stays readable for a few seconds after its year
+  const [year, setYear] = useState<{ year: number; milestone: string | null } | null>(null);
+  const shownYear = useRef<{ year: number; milestone: string | null }>({ year: 0, milestone: null });
+  const milestoneTimer = useRef(0);
+  const onYear = useCallback((y: number | null, milestone: string | null) => {
+    if (y === null) { setYear(null); return; }
+    if (milestone) {
+      clearTimeout(milestoneTimer.current);
+      milestoneTimer.current = window.setTimeout(() => setYear(v => v && { ...v, milestone: null }), 3200);
+    }
+    // the milestone keeps its own year in front, because the counter runs on while it is shown
+    setYear(v => ({ year: y, milestone: milestone ? `${y} · ${milestone}` : v?.milestone ?? null }));
+  }, []);
+  useEffect(() => () => clearTimeout(milestoneTimer.current), []);
+  if (year) shownYear.current = year; // keeps the last year on screen while it fades out
+  // after the fade the year leaves the layout, so the counters (and the cards' free space) are as before
+  const [yearShown, setYearShown] = useState(false);
+  useEffect(() => {
+    if (year) { setYearShown(true); return; }
+    const timer = window.setTimeout(() => setYearShown(false), 900);
+    return () => clearTimeout(timer);
+  }, [year]);
+
   useEffect(() => {
     if (!scene || !data) return;
     scene.onCoopChange = setVisible;
+    scene.onYear = onYear;
     scene.setCooperation(data.places, { reveal: true });
-  }, [scene, data]);
+  }, [scene, data, onYear]);
 
   useEffect(() => { scene?.setMode(mode); }, [scene, mode]);
 
@@ -106,6 +130,12 @@ export default function Wall() {
       </header>
 
       <section className="wall-stats" aria-label="Počty">
+        {yearShown && (
+          <div className={`wall-year${year ? ' on' : ''}`} aria-hidden={!year}>
+            <b>{shownYear.current.year || ''}</b>
+            <span key={shownYear.current.milestone ?? ''}>{shownYear.current.milestone ?? ''}</span>
+          </div>
+        )}
         {mode === 'live' ? (
           <>
             <Stat value={guests.totals.pins} label="svetiel hostí" short="svetiel" warm />

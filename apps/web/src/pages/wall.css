@@ -28,6 +28,23 @@
 .wall-recent li::before { content: "✦ "; }
 @keyframes arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
+/* the year of the opening timeline, at the top of the counters column */
+.wall-year { margin-bottom: 1.4vh; opacity: 0; transition: opacity 0.8s ease; }
+.wall-year.on { opacity: 1; }
+.wall-year b {
+  display: block; font: italic 500 clamp(64px, 8vw, 150px)/0.9 var(--font-display);
+  font-variant-numeric: lining-nums tabular-nums;
+  background: linear-gradient(180deg, #fff, #b9c8ff 70%, #7f95e6);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 24px rgba(120, 160, 255, 0.55));
+}
+.wall-year span {
+  display: block; max-width: 18em; min-height: 3em; margin-top: 0.9em;
+  font-size: clamp(11px, 0.95vw, 17px); line-height: 1.5; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver);
+  animation: milestone-in 0.6s ease-out;
+}
+@keyframes milestone-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
 .wall-nav {
   position: fixed; top: calc(env(safe-area-inset-top, 0px) + 18px); right: var(--gutter);
   display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; max-width: 60vw;
@@ -54,4 +71,8 @@
   .stat span { font-size: 9px; letter-spacing: 0.16em; }
   .stat .stat-long { display: none; }
   .stat .stat-short { display: inline; }
+  /* the year sits top right, next to the comment button */
+  .wall-year { position: fixed; right: var(--gutter); top: calc(env(safe-area-inset-top, 0px) + 14px); margin: 0; text-align: right; }
+  .wall-year b { font-size: 34px; }
+  .wall-year span { display: none; } /* no room for the milestones next to the title on a phone */
 }

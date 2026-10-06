@@ -9,7 +9,7 @@
  */
 import Globe, { type GlobeInstance } from 'globe.gl';
 import { DoubleSide, MeshBasicMaterial, SRGBColorSpace, Vector3, type LineSegments, type PerspectiveCamera } from 'three';
-import { CATEGORY_GROUPS, ORIGIN, type GroupCode } from '@ples/shared/constants';
+import { CATEGORY_GROUPS, MILESTONES, ORIGIN, TUKE_FOUNDED, type GroupCode } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
 import { ArcLayer } from './arcs.ts';
 import { createBorders } from './borders.ts';
@@ -42,7 +42,14 @@ const GLOBE_RADIUS = 100; // three-globe units
 const FOCUS_SPEED = 1.6; // × base speed at most while a card is on screen
 const REVEAL_SPEED = 0.3; // × base speed while the light spreads, so the beams can be followed
 const REVEAL_DELAY = 0.8; // s before the first beam leaves Košice
-const REVEAL_SPAN = 24; // s over which the beams leave, nearest places first
+const REVEAL_SPAN = 24; // s over which the beams leave, nearest places first (when the places have no years)
+// the timeline: every year from the founding to today gets its moment, longer when more places light up in it
+const YEAR_EMPTY = 0.09; // s for a year without new places
+const YEAR_BASE = 0.16; // s for a year with new places …
+const YEAR_PER_PLACE = 0.018; // … plus this per place
+const YEAR_MAX = 1.6; // s at most for one year
+const MILESTONE_HOLD = 1.8; // s at least for a year with a milestone, so it can be read
+const YEAR_AFTER = 3; // s the last year stays on screen after the last light has landed
 const COUNTRY_FADE = 0.8; // s for a country to light up
 const NOTIFY_MS = 150; // the counters follow the landings at most this often
 /** Seconds a beam needs from Košice to a place. */
@@ -89,6 +96,11 @@ export class GlobeScene {
   private frame = 0;
   /** Called whenever the set of visible cooperation places changes (reveal, filters). */
   onCoopChange?: (visible: GlobePlace[]) => void;
+  /** Called when the timeline moves to another year; null when the timeline is over. */
+  onYear?: (year: number | null, milestone: string | null) => void;
+  /** the timeline: when each year starts and ends, in seconds of the shader clock */
+  private years: { year: number; start: number; end: number }[] = [];
+  private shownYear: number | null = null;
 
   constructor(private readonly el: HTMLElement, countries: CountryFeature[], opts: { autoRotateSpeed?: number; altitude?: number } = {}) {
     this.globe = new Globe(el, { rendererConfig: { antialias: true, alpha: true, powerPreference: 'high-performance' } })
@@ -142,6 +154,7 @@ export class GlobeScene {
       last = now;
       this.adaptRotation(now);
       this.advanceReveal(now);
+      this.advanceYear(now / 1000);
       this.fadeCountries(now / 1000);
       this.arcs.update(now / 1000, dt);
       this.frame = requestAnimationFrame(tick);
@@ -288,22 +301,46 @@ export class GlobeScene {
   // ---------------------------------------------------------------- cooperation
 
   /**
-   * Places sorted by distance from Košice. With reveal the beams leave over REVEAL_SPAN seconds, nearest
-   * places first, so the light spreads outwards in about half a minute; without, everything is lit at once.
+   * With reveal the light spreads through time: every year from the founding of TUKE to today has its moment
+   * and each place lights up in the year of its earliest dated cooperation (places without a year at the end).
+   * Without years in the data the beams leave by distance instead. Without reveal everything is lit at once.
    */
   setCooperation(places: GlobePlace[], { reveal = false } = {}): void {
     const first = this.coop.length === 0;
-    this.coop = [...places].sort((a, b) => a.distanceKm - b.distanceKm);
     const t = seconds();
-    const n = this.coop.length;
     this.timing.clear();
-    this.landAt = this.coop.map((p, i) => {
+    this.years = [];
+    const byDistance = [...places].sort((a, b) => a.distanceKm - b.distanceKm);
+    const land = new Map<string, number>();
+    if (reveal && places.some(p => p.since)) {
+      const last = Math.max(new Date().getFullYear(), ...places.map(p => p.since ?? 0));
+      const yearOf = (p: GlobePlace) => Math.min(last, Math.max(TUKE_FOUNDED, p.since ?? last));
+      const perYear = new Map<number, GlobePlace[]>();
+      for (const p of byDistance) perYear.set(yearOf(p), [...(perYear.get(yearOf(p)) ?? []), p]); // nearest first within a year
+      const milestones = new Set(MILESTONES.map(m => m.year));
+      let at = t + REVEAL_DELAY;
+      for (let year = TUKE_FOUNDED; year <= last; year++) {
+        const list = perYear.get(year) ?? [];
+        let length = list.length ? Math.min(YEAR_MAX, YEAR_BASE + YEAR_PER_PLACE * list.length) : YEAR_EMPTY;
+        if (milestones.has(year)) length = Math.max(length, MILESTONE_HOLD);
+        list.forEach((p, i) => land.set(p.id, at + (length * (i + 0.5)) / list.length)); // the beam lands within its year
+        this.years.push({ year, start: at, end: at + length });
+        at += length;
+      }
+    } else if (reveal) {
+      byDistance.forEach((p, i) => land.set(p.id, t + REVEAL_DELAY + (REVEAL_SPAN * i) / Math.max(1, byDistance.length - 1) + beamSeconds(p.distanceKm)));
+    }
+    // landing order: the reveal counts places in this order (visibleCoop() is a prefix)
+    this.coop = reveal ? [...byDistance].sort((a, b) => land.get(a.id)! - land.get(b.id)!) : byDistance;
+    this.landAt = this.coop.map(p => {
       const travel = beamSeconds(p.distanceKm);
-      const launch = reveal ? t + REVEAL_DELAY + (REVEAL_SPAN * i) / Math.max(1, n - 1) : t - 3600;
-      this.timing.set(p.id, { launch, travel });
-      return launch + travel;
+      const landing = reveal ? land.get(p.id)! : t - 3600 + travel;
+      this.timing.set(p.id, { launch: landing - travel, travel });
+      return landing;
     });
-    this.coopShown = reveal ? 0 : n;
+    this.coopShown = reveal ? 0 : this.coop.length;
+    this.shownYear = null;
+    if (!this.years.length) this.onYear?.(null, null);
     if (reveal) {
       this.coopStars.clear();
       if (first) this.rotation.speed = this.rotation.base * REVEAL_SPEED; // the page opens calm; a replay slows down smoothly
@@ -312,6 +349,21 @@ export class GlobeScene {
     this.renderCoopStars();
     this.renderCountries();
     this.notifyCoop();
+  }
+
+  /** The timeline year on screen: from just before the first year until a few seconds after the last light. */
+  private advanceYear(t: number): void {
+    if (!this.years.length) return;
+    const lastYear = this.years.at(-1)!;
+    let year: number | null = this.years[0]!.year;
+    for (const y of this.years) if (t >= y.start) year = y.year;
+    if (!this.revealing() && t > Math.max(lastYear.end, this.landAt.at(-1) ?? 0) + YEAR_AFTER) {
+      year = null;
+      this.years = []; // done
+    }
+    if (year === this.shownYear) return;
+    this.shownYear = year;
+    this.onYear?.(year, year === null ? null : MILESTONES.find(m => m.year === year)?.text ?? null);
   }
 
   replay(): void { this.setCooperation(this.coop, { reveal: true }); }

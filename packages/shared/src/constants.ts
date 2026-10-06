@@ -1,6 +1,21 @@
 /** Origin of every arc on the globe. */
 export const ORIGIN = { name: 'Technická univerzita v Košiciach', city: 'Košice', countryCode: 'SK', lat: 48.7305, lon: 21.2455 } as const;
 
+/** The wall's opening runs through the years from the founding (8 July 1952, Government Decree No. 30/1952). */
+export const TUKE_FOUNDED = 1952;
+
+/**
+ * Moments of the 75 years shown under the year while the timeline runs.
+ * Sources: tuke.sk/en/history (1952, 1991), the Erasmus+ European Universities call 2020 (Ulysseus).
+ */
+export const MILESTONES: readonly { year: number; text: string }[] = [
+  { year: 1952, text: 'Vzniká Vysoká škola technická v Košiciach' },
+  { year: 1991, text: 'Premenovanie na Technickú univerzitu v Košiciach' },
+  { year: 2004, text: 'Slovensko vstupuje do Európskej únie' },
+  { year: 2020, text: 'TUKE spoluzakladá európsku univerzitu Ulysseus' },
+  { year: 2027, text: '75 rokov TUKE' },
+];
+
 /** Event slug used by the wall and the guest form when no other event is given. */
 export const DEFAULT_EVENT = 'ples-2027';
 
