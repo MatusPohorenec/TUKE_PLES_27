@@ -39,6 +39,39 @@
 .spot-card li { font-size: clamp(12px, 0.78vw, 15px); line-height: 1.35; }
 .spot-card li::before { content: "✦"; color: var(--silver-dim); margin-right: 8px; font-size: 0.8em; }
 
+/* docked (flat map): a lower third over the empty southern ocean, as wide as the dock (--dock-w) allows;
+   the place itself gets a small name tag. Line 1: group, name, country; line 2: the numbers and partners. */
+.spot-card.spot-dock {
+  width: max-content; max-width: min(1100px, var(--dock-w, 58vw));
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 6px clamp(14px, 1.1vw, 24px);
+  padding: clamp(10px, 0.7vw, 16px) clamp(16px, 1.2vw, 26px);
+}
+.spot-dock .spot-head { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 0 clamp(12px, 1vw, 20px); white-space: nowrap; }
+.spot-dock h3 { margin: 0; font-size: clamp(24px, 1.7vw, 38px); }
+.spot-dock .spot-meta { margin: 0; }
+.spot-dock .spot-stats { margin: 0; white-space: nowrap; }
+.spot-dock ul {
+  margin: 0; padding: 0 0 0 clamp(14px, 1.1vw, 24px); border-top: 0; border-left: 1px solid var(--line);
+  display: flex; gap: clamp(12px, 1vw, 20px); min-width: 0; overflow: hidden;
+}
+.spot-dock li { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* one line where the dock is low (laptop screens): name, country and distance, the numbers */
+.spot-card.spot-compact { grid-template-columns: auto auto; padding: 8px clamp(14px, 1.1vw, 22px); }
+.spot-compact .spot-head { grid-column: auto; }
+.spot-compact .spot-kicker, .spot-compact ul, .spot-compact .spot-long { display: none; }
+.spot-compact h3 { font-size: clamp(20px, 1.4vw, 30px); }
+.spot-compact .spot-stats { padding-left: clamp(14px, 1.1vw, 22px); border-left: 1px solid var(--line); }
+.spot-chip {
+  position: fixed; left: 0; top: 0; z-index: 5; pointer-events: none; white-space: nowrap;
+  padding: 3px 11px 4px; border-radius: 99px; border: 1px solid var(--line-strong);
+  background: rgba(6, 14, 48, 0.82); backdrop-filter: blur(6px);
+  font: italic 600 clamp(15px, 1vw, 22px)/1.2 var(--font-display);
+  animation: spot-in 0.5s ease-out both; transition: opacity 0.45s ease;
+}
+.spot-chip-guest { color: var(--warm); border-color: rgba(255, 217, 160, 0.45); }
+.spot-chip small { margin-left: 0.7em; font: 500 0.62em var(--font-ui); letter-spacing: 0.04em; font-style: normal; color: var(--silver-dim); }
+.spot-chip.leaving { opacity: 0; }
+
 @keyframes spot-in { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: none; } }
 @keyframes spot-ring { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
 

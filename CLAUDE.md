@@ -97,7 +97,7 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - Cards (PlaceSpotlight.tsx): none during the reveal; first card 4.5 s after the last landing; one per ~10 s (7 s shown) for
   a central place that stays visible; placement modes `margin` (free space next to the globe, preferred), `beside`,
   `above`/`below` (phones). Cards never cover the title text, counters, QR panel, buttons or their own place; coop cards show
-  country, distance, institutions/links and the top 3 partners; guest cards the guest count.
+  country, distance, institutions/links and the top 3 partners; guest cards the guest count. (The 2D map docks them, below.)
 - Countries: per-country MeshBasicMaterial with fades; palette blue only: scene subject `[86,128,255,.42]`, other layer
   `[86,128,255,.2]`, unlit `[14,26,78,.55]`, Slovakia white `.55`. (A warm tint at low alpha rendered grey: don't.)
 - Scenes (admin): `cooperation` (arcs + coop stars, guests beside) and `live` (arcs fade out, coop stars dimmed, guest countries
@@ -110,14 +110,24 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 ## 2D view (`?view=2d`, added 2026-10-07 to compare readability; decision pending)
 
-- MapScene draws the same wall on a Natural Earth projection (Antarctica left out): ocean shape with a blue rim, per-country
-  meshes (triangulated from d3-geo projected rings, holes handled) using the shared country materials, outlines as one
-  LineSegments, arcs bowing northwards (quadratic, same ArcLayer shader), stars with the same StarLayer (`sphere: false`),
-  guest beams as a one-shot ArcLayer (`ambient: false`).
+- MapScene draws the same wall on a Natural Earth projection (Antarctica left out): per-country meshes (triangulated from
+  d3-geo projected rings, holes handled) using the shared country materials, outlines as one LineSegments, arcs bowing
+  northwards (quadratic, same ArcLayer shader), stars with the same StarLayer (`sphere: false`), guest beams as a one-shot
+  ArcLayer (`ambient: false`). The sea is a lon/lat grid whose vertex alpha fades out at the antimeridian and the far
+  north/south, so the map floats in the night (the user disliked the hard cut-out edge: "okliestené").
+- Europe must not burn white on the whole-world view: stars scale with zoom (`setSizeScale`, 0.55·zoom^0.4), rays 0.45
+  (`setRays`), stars with many neighbours (within 16 units) are dimmer (`starDim`, faded out by `setDimAmount` when zoomed
+  in), short arcs keep less steady light after landing (`arcGlow` 0.2 → 1 between 400 and 3 500 km; the beam stays full).
 - No rotation. During the opening the view starts on Central Europe (12 % of the world's width) and only widens to hold
   Košice and every place whose beam is a third of the way there (+18 % padding), then shows the whole world.
 - Layout differences: on the flat map the bottom right is Australia, so the QR panel sits top right (empty Arctic,
-  Russia is hidden) as a narrow column (`.wall.view-2d .wall-join`). Cards sit on the map (no side margins).
+  Russia is hidden) as a narrow column (`.wall.view-2d .wall-join`).
+- Cards never cover the map (the user: cards over half the map). Like TV lower thirds / docked map panels
+  (Flightradar24, Esri dock, Datawrapper callouts), `MapScene.cardDock()` offers the empty southern ocean south of 38° S
+  between 52° W and 138° E (stars there narrow it); the card docks there as wide as the band (`--dock-w`) and the place gets
+  a name tag (`.spot-chip`) instead of a leader line. PlaceSpotlight measures and steps down: `dock` (two lines: group,
+  name, country / numbers, top partners; 1920×1080, 1280×720) → `compact` (one line; 1536×730) → `tag` (name tag with the
+  main number only; `cardsFloat() = false` on the map, phones). The globe keeps floating cards (`cardDock() = null`).
 - The nav has a 2D/3D switch (full page load). `/porovnanie` shows both in 1920×1080 iframes, scaled, restartable together.
 - Measured: 2D p95 frame 4.3 ms, longest 8.4 ms (lighter than the globe).
 
@@ -134,7 +144,14 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - The pane is portrait (~560–690 px wide), so its native size gets the phone layout. Use `resize_window` (1280×720, 1536×730 =
   laptop at 125 %, 1920×1080 = wall); large emulated sizes come back as tiny screenshots, so check layout numerically
   (`getBoundingClientRect`, `Range` rects of the title text) rather than by eye.
-- If the pane is hidden, rAF drops to ~1 fps and live timing tests are meaningless: measure fps first.
+- If the pane is hidden, rAF drops to ~1 fps and live timing tests are meaningless: measure fps first. Workaround: replace
+  `requestAnimationFrame`/`cancelAnimationFrame` with 16 ms timeouts, then remount the wall by SPA navigation
+  (`history.pushState` + `popstate` to `/o-projekte` and back) so the new scene uses them. A hidden pane also delivers no
+  ResizeObserver callbacks: after `resize_window` call `renderer.setSize(el.clientWidth, el.clientHeight)` + `placeCamera()`.
+- Visual check without screenshots: render the scene, draw the canvases into a 2D canvas, add the DOM as an SVG
+  `foreignObject` clone with inlined computed styles (remove `<style>` from the clone, else CSS animations keep cards at
+  opacity 0; skip animation/transition/opacity/filter/backdrop-filter) and POST the JPEG to a tiny local receiver
+  (python http.server on 127.0.0.1). Web fonts fall back there, so text may overlap in the picture but not on screen.
 - Reach the scene from JS: walk React fibers from `#root`'s `__reactContainer$…` key and pick the object having
   `coopStars`, `guestStars` and `globe` (production minifies class names). Perf: rAF frame-time stats +
   `PerformanceObserver({ type: 'longtask' })` + `scene.globe.renderer().info.render.calls`.
@@ -159,7 +176,9 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - bcbc65a: smooth reveal (GPU arcs, per-country fades, merged borders), countries light when the beam lands, mutual light.
 - 630c781: smooth count-up counters. 09d2c0f: no cards and slow rotation during the opening. 1eb2faa: phone layout.
 - tag `pred-casovou-osou` (= 1eb2faa). 1c00003: start years in the dataset. bebc50d: opening as the 1952–2027 timeline.
-- c5e0f22: this file. 2026-10-07: 2D view + /porovnanie, shared WallScene core, beams kept within 3 years of their landing.
+- c5e0f22: this file. f9744e8: 2D view + /porovnanie, shared WallScene core, beams kept within 3 years of their landing.
+- 2026-10-07: 2D calmer (soft sea edge, dimmer dense Europe, short arcs glow less), cards docked as a lower third,
+  `setCooperation` always clears star births (a replay without reveal showed no stars), year counter box fits the year.
 
 ## Open questions / next
 

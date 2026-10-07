@@ -13,6 +13,8 @@ export interface StarInput {
   color: string;
   /** seconds until the star lights up (e.g. when its arc arrives); negative: it has been lit for that long */
   delay?: number;
+  /** 0–1: dimmer stars in a dense cluster, so the cluster does not burn white (default 1) */
+  dim?: number;
 }
 
 export interface PlacedStar extends StarInput { pos: THREE.Vector3 }
@@ -30,11 +32,11 @@ export interface StarLayerOptions {
 }
 
 const VERTEX = /* glsl */ `
-  uniform float uTime, uPixelRatio, uRefDist, uMaxSize;
-  attribute float aSize, aPhase, aSpeed, aBorn, aSeed;
+  uniform float uTime, uPixelRatio, uRefDist, uMaxSize, uSizeScale;
+  attribute float aSize, aPhase, aSpeed, aBorn, aSeed, aDim;
   attribute vec3 aColor;
   varying vec3 vColor;
-  varying float vTwinkle, vGlint, vAppear, vAngle;
+  varying float vTwinkle, vGlint, vAppear, vAngle, vDim;
   void main() {
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     float age = uTime - aBorn;
@@ -45,15 +47,16 @@ const VERTEX = /* glsl */ `
     vGlint = max(glint, ignite);
     vAngle = (aSeed - 0.5) * 0.45 + 0.1 * sin(uTime * 0.35 + aPhase);
     vColor = aColor;
+    vDim = aDim;
     float zoom = pow(uRefDist / max(-mv.z, 1.0), 0.6);
-    gl_PointSize = min(aSize * (0.8 + 0.25 * vTwinkle + 0.85 * vGlint) * zoom * uPixelRatio, uMaxSize);
+    gl_PointSize = min(aSize * uSizeScale * (0.8 + 0.25 * vTwinkle + 0.85 * vGlint) * zoom * uPixelRatio, uMaxSize);
     gl_Position = projectionMatrix * mv;
   }`;
 
 const FRAGMENT = /* glsl */ `
-  uniform float uIntensity;
+  uniform float uIntensity, uRays, uDimAmount;
   varying vec3 vColor;
-  varying float vTwinkle, vGlint, vAppear, vAngle;
+  varying float vTwinkle, vGlint, vAppear, vAngle, vDim;
   float ray(vec2 p, float len, float width) {
     return exp(-abs(p.y) * width) * pow(max(0.0, 1.0 - abs(p.x) / len), 2.0);
   }
@@ -65,11 +68,11 @@ const FRAGMENT = /* glsl */ `
     vec2 q = mat2(c, s, -s, c) * p;
     vec2 d = mat2(0.70710678, 0.70710678, -0.70710678, 0.70710678) * q;
     float len = 0.72 + 0.28 * vGlint;
-    float spikes = (ray(q, len, 46.0) + ray(q.yx, len, 46.0)) * (0.8 + 0.8 * vGlint)
-                 + (ray(d, len * 0.5, 80.0) + ray(d.yx, len * 0.5, 80.0)) * (0.18 + 0.6 * vGlint);
+    float spikes = ((ray(q, len, 46.0) + ray(q.yx, len, 46.0)) * (0.8 + 0.8 * vGlint)
+                 + (ray(d, len * 0.5, 80.0) + ray(d.yx, len * 0.5, 80.0)) * (0.18 + 0.6 * vGlint)) * uRays;
     float core = exp(-r * r * 70.0);
     float halo = exp(-r * 6.5) * 0.5;
-    float light = (core * 1.6 + halo + spikes) * vTwinkle * (1.0 + 1.3 * vGlint) * vAppear * uIntensity;
+    float light = (core * 1.6 + halo + spikes) * vTwinkle * (1.0 + 1.3 * vGlint) * vAppear * uIntensity * mix(mix(1.0, vDim, uDimAmount), 1.0, vGlint);
     light *= smoothstep(1.0, 0.75, r);
     vec3 col = mix(vColor, vec3(1.0), clamp(core * 1.3 + spikes * 0.35, 0.0, 1.0));
     gl_FragColor = vec4(col * light, 1.0);
@@ -104,6 +107,9 @@ export class StarLayer {
         uRefDist: { value: this.o.refDist },
         uMaxSize: { value: Math.min(range[1] ?? 64, 160) },
         uIntensity: { value: 1 },
+        uSizeScale: { value: 1 },
+        uRays: { value: 1 },
+        uDimAmount: { value: 1 },
       },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
@@ -128,7 +134,7 @@ export class StarLayer {
     for (const id of this.born.keys()) if (!ids.has(id)) this.born.delete(id);
     const n = list.length;
     const f = (k: number) => new Float32Array(n * k);
-    const pos = f(3), col = f(3), size = f(1), phase = f(1), speed = f(1), birth = f(1), seed = f(1);
+    const pos = f(3), col = f(3), size = f(1), phase = f(1), speed = f(1), birth = f(1), seed = f(1), dim = f(1);
     const color = new THREE.Color();
     this.stars = list.map((s, i) => {
       if (!this.born.has(s.id)) this.born.set(s.id, t + (s.delay ?? 0));
@@ -140,6 +146,7 @@ export class StarLayer {
       phase[i] = rand(s.id, 1) * Math.PI * 2;
       speed[i] = 0.8 + rand(s.id, 2) * 1.6;
       seed[i] = rand(s.id, 3);
+      dim[i] = s.dim ?? 1;
       birth[i] = this.born.get(s.id)!;
       return { ...s, pos: new THREE.Vector3(p.x, p.y, p.z) };
     });
@@ -151,6 +158,7 @@ export class StarLayer {
     g.setAttribute('aSpeed', new THREE.BufferAttribute(speed, 1));
     g.setAttribute('aBorn', new THREE.BufferAttribute(birth, 1));
     g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+    g.setAttribute('aDim', new THREE.BufferAttribute(dim, 1));
     this.points.geometry.dispose();
     this.points.geometry = g;
   }
@@ -166,6 +174,15 @@ export class StarLayer {
   setIntensity(value: number): void {
     this.material.uniforms.uIntensity!.value = value;
   }
+
+  /** Size multiplier of every star (the flat map shrinks them when it shows the whole world). */
+  setSizeScale(value: number): void { this.material.uniforms.uSizeScale!.value = value; }
+
+  /** Strength of the long and short rays (1 = full). */
+  setRays(value: number): void { this.material.uniforms.uRays!.value = value; }
+
+  /** How much the per-star `dim` applies (0 = not at all, 1 = fully). */
+  setDimAmount(value: number): void { this.material.uniforms.uDimAmount!.value = value; }
 
   /** Nearest star (on the visible side of a globe) within maxPx of the pointer. */
   pick(x: number, y: number, maxPx: number): PlacedStar | null {

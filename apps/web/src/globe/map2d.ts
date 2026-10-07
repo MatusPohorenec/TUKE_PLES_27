@@ -22,6 +22,9 @@ const Z = { ocean: 0, land: 1, borders: 2, arcs: 3, stars: 4, guests: 4.5 };
 const START_WIDTH = 0.12; // the view starts on this share of the world's width around Košice …
 const PADDING = 0.18; // … and keeps this much room around the places lit so far
 const FOLLOW = 0.9; // s: how fast the view follows
+const DENSE_RADIUS = 16; // scene units (~15 px on the whole world at 1920 px): neighbours closer than this crowd a star
+const DOCK_LAT = -38; // cards dock south of this latitude …
+const DOCK_LON: readonly [number, number] = [-52, 138]; // … between the coasts of Argentina and Australia (Melbourne lies at 145° E)
 
 /** Projected rings of a GeoJSON object (antimeridian cut and curve resampling by d3). */
 function rings(path: ReturnType<typeof geoPath>, object: GeoPermissibleObjects): XY[][] {
@@ -64,6 +67,7 @@ export class MapScene extends WallScene {
   private view: Box;
   private target: Box;
   private readonly placeXY = new Map<string, XY>();
+  private readonly density = new Map<string, number>();
   private readonly disposables: { dispose(): void }[] = [];
 
   constructor(private readonly el: HTMLElement, countries: CountryFeature[]) {
@@ -104,6 +108,8 @@ export class MapScene extends WallScene {
     const stars = { scene: this.scene, renderer: this.renderer, camera: () => this.camera, refDist: CAMERA_Z, sphere: false };
     this.coopStars = new StarLayer({ ...stars, place: onMap(Z.stars) });
     this.guestStars = new StarLayer({ ...stars, place: onMap(Z.guests) });
+    this.coopStars.setRays(0.45); // hundreds of rays crossing over Europe read as one white blot
+    this.guestStars.setRays(0.6);
 
     this.view = this.startBox();
     this.target = { ...this.view };
@@ -121,22 +127,40 @@ export class MapScene extends WallScene {
 
   // ---------------------------------------------------------------- the map
 
-  /** The dark sea: the world's outline between 60° S and 85° N, with a thin blue rim like the globe's atmosphere. */
+  /**
+   * The dark sea as a grid over the world, fading out towards its edges (the antimeridian, the far north and
+   * south), so the map floats in the night instead of being cut out with a hard line.
+   */
   private drawOcean(): void {
-    const pts: THREE.Vector2[] = [];
-    const add = (lon: number, lat: number) => { const [x, y] = this.lonLat(lon, lat); pts.push(new THREE.Vector2(x, y)); };
-    const W = 179.999;
-    for (let lon = -W; lon <= W; lon += 2) add(lon, -60);
-    for (let lat = -60; lat <= 85; lat += 2) add(W, lat);
-    for (let lon = W; lon >= -W; lon -= 2) add(lon, 85);
-    for (let lat = 85; lat >= -60; lat -= 2) add(-W, lat);
-    const shape = new THREE.Shape(pts);
-    const fill = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(3 / 255, 10 / 255, 36 / 255, THREE.SRGBColorSpace) }));
-    fill.position.z = Z.ocean;
-    const rim = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#4f7dff', transparent: true, opacity: 0.55 }));
-    rim.position.z = Z.borders;
-    this.scene.add(fill, rim);
-    this.disposables.push(fill.geometry, fill.material, rim.geometry, rim.material);
+    const sea = new THREE.Color().setRGB(3 / 255, 10 / 255, 36 / 255, THREE.SRGBColorSpace);
+    const smooth = (e0: number, e1: number, x: number) => { const k = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return k * k * (3 - 2 * k); };
+    const lons: number[] = [], lats: number[] = [];
+    for (let lon = -180; lon <= 180; lon += 3) lons.push(Math.max(-179.999, Math.min(179.999, lon)));
+    for (let lat = -64; lat <= 86; lat += 2.5) lats.push(lat);
+    const positions: number[] = [], colors: number[] = [], index: number[] = [];
+    for (const lat of lats) {
+      for (const lon of lons) {
+        const [x, y] = this.lonLat(lon, lat);
+        const alpha = smooth(180, 166, Math.abs(lon)) * smooth(86, 70, lat) * smooth(-64, -50, lat);
+        positions.push(x, y, Z.ocean);
+        colors.push(sea.r, sea.g, sea.b, alpha);
+      }
+    }
+    const row = lons.length;
+    for (let j = 0; j < lats.length - 1; j++) {
+      for (let i = 0; i < row - 1; i++) {
+        const a = j * row + i, b = a + 1, c = a + row, d = c + 1;
+        index.push(a, b, c, b, d, c);
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 4));
+    g.setIndex(index);
+    const material = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+    const fill = new THREE.Mesh(g, material);
+    this.scene.add(fill);
+    this.disposables.push(g, material);
   }
 
   /** Country fills (own material each, shared with the colour fades in core.ts) and all outlines in one line mesh. */
@@ -214,6 +238,12 @@ export class MapScene extends WallScene {
     this.camera.top = h / (2 * s); this.camera.bottom = -h / (2 * s);
     this.camera.position.set(cx, cy, CAMERA_Z);
     this.camera.updateProjectionMatrix();
+    // the whole world shows Europe small: smaller stars and the dense ones dimmer; close up both as on the globe
+    const zoom = (this.world.x1 - this.world.x0) / bw;
+    const size = Math.min(1, 0.55 * Math.pow(zoom, 0.4));
+    const dim = Math.min(1, Math.max(0, (2.5 - zoom) / 1.5));
+    for (const layer of [this.coopStars, this.guestStars]) { layer?.setSizeScale(size); }
+    this.coopStars?.setDimAmount(dim);
   }
 
   /**
@@ -266,6 +296,14 @@ export class MapScene extends WallScene {
   override setCooperation(places: GlobePlace[], options: { reveal?: boolean } = {}): void {
     this.placeXY.clear();
     for (const p of places) this.placeXY.set(p.id, this.lonLat(p.lon, p.lat));
+    // how crowded each place is on the whole-world view: neighbours within about a star's width
+    this.density.clear();
+    const xy = places.map(p => this.placeXY.get(p.id)!);
+    places.forEach((p, i) => {
+      let near = 0;
+      for (let j = 0; j < xy.length; j++) if (j !== i && Math.hypot(xy[j]![0] - xy[i]![0], xy[j]![1] - xy[i]![1]) < DENSE_RADIUS) near++;
+      this.density.set(p.id, near);
+    });
     if (options.reveal) {
       this.view = this.startBox();
       this.target = { ...this.view };
@@ -288,6 +326,40 @@ export class MapScene extends WallScene {
   }
 
   protected arcWidth(p: GlobePlace): number { return 0.6 + Math.min(p.links, 12) * 0.11; }
+
+  /** Short arcs (most of Europe) glow less after landing; the reach across the world stays bright. */
+  protected override arcGlow(p: GlobePlace): number {
+    const k = Math.min(1, Math.max(0, (p.distanceKm - 400) / 3100));
+    return 0.2 + 0.8 * k * k * (3 - 2 * k);
+  }
+
+  /** Stars among many neighbours are dimmer on the whole-world view (they still flare when lit). */
+  protected override starDim(p: GlobePlace): number {
+    return Math.max(0.3, 1 / Math.sqrt(1 + (this.density.get(p.id) ?? 0) / 4));
+  }
+
+  /**
+   * Cards dock like a lower third over the open southern ocean: south of 38° S between South America and
+   * Australia no place lies (a guest light there narrows it). Null on phones and where it is too small.
+   */
+  override cardDock(): { top: number; bottom: number; left: number; right: number } | null {
+    if (this.el.clientWidth <= 760) return null;
+    let [west, east] = DOCK_LON;
+    for (const p of [...this.visibleCoop(), ...this.guestPlaces()]) {
+      if (p.lat > DOCK_LAT + 2 || p.lon < west || p.lon > east) continue;
+      if (p.lon < (west + east) / 2) west = p.lon + 4; else east = p.lon - 4;
+    }
+    const rect = this.el.getBoundingClientRect();
+    // a meridian bends towards the middle further south, so the coasts are nearest at the dock's top
+    const top = this.screenPoint(DOCK_LAT, (west + east) / 2).y + 6;
+    const bottom = rect.bottom - 8;
+    const left = Math.max(rect.left + 16, this.screenPoint(DOCK_LAT, west).x);
+    const right = Math.min(rect.right - 16, this.screenPoint(DOCK_LAT, east).x);
+    return bottom - top >= 44 && right - left >= 320 ? { top, bottom, left, right } : null;
+  }
+
+  /** Cards never cover the map: where no dock fits, the place only gets a name tag. */
+  override cardsFloat(): boolean { return false; }
 
   protected launchGuest(pin: GuestArrival): void {
     const t = seconds();

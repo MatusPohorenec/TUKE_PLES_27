@@ -37,7 +37,8 @@
 .wall-year { margin-bottom: 1.4vh; opacity: 0; transition: opacity 0.8s ease; }
 .wall-year.on { opacity: 1; }
 .wall-year b {
-  display: block; font: italic 500 clamp(64px, 8vw, 150px)/0.9 var(--font-display);
+  display: block; width: max-content; white-space: nowrap; /* the gradient fills only the box: it must hold the whole year */
+  font: italic 500 clamp(64px, 8vw, 150px)/0.9 var(--font-display);
   font-variant-numeric: lining-nums tabular-nums;
   background: linear-gradient(180deg, #fff, #b9c8ff 70%, #7f95e6);
   -webkit-background-clip: text; background-clip: text; color: transparent;

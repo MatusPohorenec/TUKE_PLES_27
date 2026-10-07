@@ -110,6 +110,10 @@ export abstract class WallScene {
   protected abstract launchGuest(pin: GuestArrival): void;
   /** Line width of a cooperation arc, in scene units. */
   protected abstract arcWidth(place: GlobePlace): number;
+  /** Strength of an arc's steady light after its beam has landed (0–1). */
+  protected arcGlow(_place: GlobePlace): number { return 1; }
+  /** Brightness of a place's star (0–1), e.g. lower in a dense cluster. */
+  protected starDim(_place: GlobePlace): number { return 1; }
   /** The lit places changed (reveal, filters, guests). */
   protected placesChanged(): void {}
   /** The reveal starts (first: the page has just opened). */
@@ -118,6 +122,15 @@ export abstract class WallScene {
   protected frameTick(_nowMs: number, _dt: number): void {}
   /** After all updates of the frame (a map that draws itself renders here). */
   protected frameEnd(_nowMs: number, _dt: number): void {}
+
+  /**
+   * Where a card docks instead of floating next to its place: an area of the screen (client pixels), or null
+   * to float. The flat map docks its cards over the empty southern ocean, like a lower third.
+   */
+  cardDock(): { top: number; bottom: number; left: number; right: number } | null { return null; }
+
+  /** Whether a card that cannot dock may float next to its place; false: it shrinks to a name tag. */
+  cardsFloat(): boolean { return true; }
 
   /** Starts the frame loop; a map calls it at the end of its constructor, once its layers exist. */
   protected startLoop(): void {
@@ -187,10 +200,8 @@ export abstract class WallScene {
     this.coopShown = reveal ? 0 : this.coop.length;
     this.shownYear = null;
     if (!this.years.length) this.onYear?.(null, null);
-    if (reveal) {
-      this.coopStars.clear();
-      this.revealStarts(first);
-    }
+    this.coopStars.clear(); // births follow the new schedule (already lit without reveal)
+    if (reveal) this.revealStarts(first);
     this.renderArcs();
     this.renderCoopStars();
     this.renderCountries();
@@ -349,7 +360,7 @@ export abstract class WallScene {
   private renderArcs(): void {
     this.arcs.set(this.coop.filter(p => this.inGroups(p)).map(p => {
       const { launch, travel } = this.timing.get(p.id)!;
-      return { lat: p.lat, lon: p.lon, color: GROUP_COLOR[p.groups.find(g => this.groups.has(g))!], width: this.arcWidth(p), launch, travel };
+      return { lat: p.lat, lon: p.lon, color: GROUP_COLOR[p.groups.find(g => this.groups.has(g))!], width: this.arcWidth(p), glow: this.arcGlow(p), launch, travel };
     }));
   }
 
@@ -365,6 +376,7 @@ export abstract class WallScene {
           size: 11 + 5.5 * Math.sqrt(Math.min(p.links, 50)),
           color: GROUP_COLOR[p.groups.find(g => this.groups.has(g))!],
           delay: launch + travel - t,
+          dim: this.starDim(p),
         };
       }),
     ]);

@@ -18,6 +18,8 @@ export interface ArcInput {
   launch: number;
   /** seconds the beam needs for the whole arc */
   travel: number;
+  /** 0–1: strength of the steady light after the beam has landed (the first beam is always full); default 1 */
+  glow?: number;
 }
 
 /** Fills `out` (ARC_SEGMENTS + 1 points) with the arc from Košice to the place at lat/lon. */
@@ -33,9 +35,9 @@ const VERTEX = /* glsl */ `
   uniform vec2 uResolution;
   uniform float uMinPx;
   attribute vec3 aPrev, aNext, aColor;
-  attribute float aSide, aT, aWidth, aLaunch, aTravel;
+  attribute float aSide, aT, aWidth, aLaunch, aTravel, aGlow;
   varying vec3 vColor;
-  varying float vT, vSide, vLaunch, vTravel;
+  varying float vT, vSide, vLaunch, vTravel, vGlow;
   void main() {
     mat4 mvp = projectionMatrix * modelViewMatrix;
     vec4 c = mvp * vec4(position, 1.0);
@@ -54,12 +56,13 @@ const VERTEX = /* glsl */ `
     vSide = aSide;
     vLaunch = aLaunch;
     vTravel = aTravel;
+    vGlow = aGlow;
   }`;
 
 const FRAGMENT = /* glsl */ `
   uniform float uTime, uOpacity, uBase, uAmbient;
   varying vec3 vColor;
-  varying float vT, vSide, vLaunch, vTravel;
+  varying float vT, vSide, vLaunch, vTravel, vGlow;
   // a pulse whose head is at 'head' (0 = where it starts, 1 = where it ends) with a fading tail behind it
   float pulse(float head, float s, float len) {
     float d = head - s;
@@ -76,9 +79,10 @@ const FRAGMENT = /* glsl */ `
     if (h > 1.0 && uAmbient > 0.0) {
       float slow = vTravel * 3.0;                       // the steady light flows calmer than the first beam
       float k = mod(age - vTravel, slow * 4.0) / slow;
-      light += pulse(k, 1.0 - vT, 0.22) * 0.5;          // the place answers right away: light back to Košice
-      light += pulse(k - 2.0, vT, 0.22) * 0.5;          // and out again
-      light += uBase * smoothstep(1.0, 1.6, h);         // the connection itself stays faintly lit
+      float steady = pulse(k, 1.0 - vT, 0.22) * 0.5     // the place answers right away: light back to Košice
+                   + pulse(k - 2.0, vT, 0.22) * 0.5      // and out again
+                   + uBase * smoothstep(1.0, 1.6, h);    // the connection itself stays faintly lit
+      light += steady * vGlow;
     }
     light *= 0.15 + 0.85 * smoothstep(0.0, 0.15, vT);   // hundreds of arcs meet in Košice
     float glow = exp(-vSide * vSide * mix(3.2, 1.8, min(beam, 1.0)));
@@ -163,7 +167,7 @@ export class ArcLayer {
   set(arcs: ArcInput[]): void {
     const P = SEGMENTS + 1, V = P * 2, n = arcs.length;
     const pos = new Float32Array(n * V * 3), prev = new Float32Array(n * V * 3), next = new Float32Array(n * V * 3), col = new Float32Array(n * V * 3);
-    const side = new Float32Array(n * V), along = new Float32Array(n * V), width = new Float32Array(n * V), launch = new Float32Array(n * V), travel = new Float32Array(n * V);
+    const side = new Float32Array(n * V), along = new Float32Array(n * V), width = new Float32Array(n * V), launch = new Float32Array(n * V), travel = new Float32Array(n * V), glow = new Float32Array(n * V);
     const index = new Uint32Array(n * SEGMENTS * 6);
     const pts = Array.from({ length: P }, () => new THREE.Vector3());
     const lens = new Float32Array(P);
@@ -189,6 +193,7 @@ export class ArcLayer {
           width[v] = a.width;
           launch[v] = a.launch;
           travel[v] = a.travel;
+          glow[v] = a.glow ?? 1;
         }
       }
       for (let i = 0; i < SEGMENTS; i++) {
@@ -207,6 +212,7 @@ export class ArcLayer {
     g.setAttribute('aWidth', new THREE.BufferAttribute(width, 1));
     g.setAttribute('aLaunch', new THREE.BufferAttribute(launch, 1));
     g.setAttribute('aTravel', new THREE.BufferAttribute(travel, 1));
+    g.setAttribute('aGlow', new THREE.BufferAttribute(glow, 1));
     g.setIndex(new THREE.BufferAttribute(index, 1));
     this.mesh.geometry.dispose();
     this.mesh.geometry = g;

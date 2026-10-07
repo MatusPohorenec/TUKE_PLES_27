@@ -3,7 +3,9 @@
  * saying what TUKE does there (or how many guests brought a light). Where the screen has room next to the
  * globe, the card sits there with a line to its place; otherwise it sits beside the place. A card never
  * covers the title, the counters, the QR code, the buttons or its own place, and it leaves before the
- * place sets behind the horizon.
+ * place sets behind the horizon. A map can offer a dock instead (the flat map: a lower third over the empty
+ * southern ocean), then the place itself only gets a name tag; where even a one-line card does not fit
+ * there, the name tag carries the main number and no card covers the map.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CATEGORY_GROUPS } from '@ples/shared/constants';
@@ -16,8 +18,13 @@ import './spotlight.css';
 type Spot = { kind: 'coop'; id: string; lat: number; lon: number; place: GlobePlace } | { kind: 'guest'; id: string; lat: number; lon: number; place: GuestPlace };
 export interface Box { left: number; top: number; right: number; bottom: number }
 type Side = 'left' | 'right';
-/** margin: in the free space next to the globe; beside: on the globe next to the place; above / below: over or under the place (phones) */
-type Mode = 'margin' | 'beside' | 'above' | 'below';
+/**
+ * margin: in the free space next to the globe; beside: on the map next to the place; above / below: over or under
+ * the place (phones); dock: in the area the map offers; tag: no card, only the name tag at the place
+ */
+type Mode = 'margin' | 'beside' | 'above' | 'below' | 'dock' | 'tag';
+/** float: a card next to its place, with a line; dock / compact: a card in the dock (compact: one line) and a name tag; tag: the name tag alone */
+type Layout = 'float' | 'dock' | 'compact' | 'tag';
 interface Placement { mode: Mode; side: Side; x: number; y: number }
 interface Disc { x: number; y: number; r: number }
 
@@ -142,21 +149,43 @@ function follow(p: Placement, px: number, py: number, w: number, h: number, obst
   return y === null ? null : { x, y };
 }
 
+/** A docked card: centred in the dock, or just right of whatever panel stands in the way; null if it does not fit. */
+function dockAt(band: Box | null, w: number, h: number, obstacles: Box[]): { x: number; y: number } | null {
+  if (!band || w > band.right - band.left || h > band.bottom - band.top) return null;
+  const y = band.top + (band.bottom - band.top - h) / 2;
+  const hits = (x: number) => obstacles.filter(o => o.left - PAD < x + w && o.right + PAD > x && o.top - PAD < y + h && o.bottom + PAD > y);
+  let x = (band.left + band.right - w) / 2;
+  const blocking = hits(x);
+  if (blocking.length) x = Math.max(...blocking.map(o => o.right + PAD));
+  if (x + w > band.right || hits(x).length) return null;
+  return { x, y };
+}
+
+const hitsAny = (b: Box, obstacles: Box[]) => obstacles.some(o => o.left - PAD < b.right && o.right + PAD > b.left && o.top - PAD < b.bottom && o.bottom + PAD > b.top);
+
+/** The main number on a name tag that stands without a card. */
+function tagStat(spot: Spot): string {
+  if (spot.kind === 'coop') return `${fmt(spot.place.institutions)} ${plural(spot.place.institutions, 'inštitúcia', 'inštitúcie', 'inštitúcií')}`;
+  return `${fmt(spot.place.count)} ${plural(spot.place.count, 'hosť', 'hostia', 'hostí')}`;
+}
+
 /** obstacles(): what the cards must keep clear of (title, counters, QR code, buttons), in client pixels. */
 export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; obstacles: () => Box[] }) {
   const [spot, setSpot] = useState<Spot | null>(null);
   const [detail, setDetail] = useState<PlaceDetail | null>(null);
   const [shown, setShown] = useState(false);
+  const [layout, setLayout] = useState<Layout>('float');
   const card = useRef<HTMLDivElement>(null);
+  const chip = useRef<HTMLDivElement>(null);
   const lines = useRef<SVGSVGElement>(null);
   const line = useRef<SVGLineElement>(null);
   const ring = useRef<SVGCircleElement>(null);
   const dot = useRef<SVGCircleElement>(null);
   const obstaclesRef = useRef(obstacles);
   obstaclesRef.current = obstacles;
-  const rendered = useRef(''); // what the card shows right now, so it is measured only when complete
+  const rendered = useRef(''); // what the card shows right now and in which layout, so it is measured only when complete
 
-  useLayoutEffect(() => { rendered.current = spot ? keyOf(spot) + (detail ? '+' : '') : ''; }, [spot, detail]);
+  useLayoutEffect(() => { rendered.current = spot ? `${keyOf(spot)}${detail ? '+' : ''}|${layout}` : ''; }, [spot, detail, layout]);
 
   useEffect(() => {
     if (!scene) return;
@@ -166,6 +195,7 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
     let until = performance.now() + FIRST_DELAY_MS;
     let want = ''; // what the card must show before it is measured
     let placement: Placement | null = null;
+    let kind: Layout = 'float';
     let pos: { x: number; y: number } | null = null;
     let last = 0;
     let raf = 0;
@@ -180,13 +210,20 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
       setShown(false);
     };
 
-    const draw = (px: number, py: number, w: number, h: number) => {
-      if (!pos || !card.current || !line.current || !ring.current || !dot.current) return;
-      card.current.style.transform = `translate(${Math.round(pos.x)}px, ${Math.round(pos.y)}px)`;
+    const draw = (px: number, py: number, w: number, h: number, obstacles: Box[]) => {
+      if (!pos || !ring.current) return;
+      card.current?.style.setProperty('transform', `translate(${Math.round(pos.x)}px, ${Math.round(pos.y)}px)`);
+      ring.current.setAttribute('cx', String(px)); ring.current.setAttribute('cy', String(py));
+      if (chip.current) { // a name tag beside the place instead of a line to the card: right of it, else left
+        const cw = chip.current.offsetWidth, ch = chip.current.offsetHeight, y = py - ch / 2;
+        const free = (x: number) => x >= EDGE && x + cw <= innerWidth - EDGE && !hitsAny({ left: x, top: y, right: x + cw, bottom: y + ch }, obstacles);
+        const x = free(px + 22) || !free(px - 22 - cw) ? px + 22 : px - 22 - cw;
+        chip.current.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      }
+      if (!line.current || !dot.current) return;
       const ax = Math.min(Math.max(px, pos.x), pos.x + w), ay = Math.min(Math.max(py, pos.y + 16), pos.y + h - 16);
       line.current.setAttribute('x1', String(px)); line.current.setAttribute('y1', String(py));
       line.current.setAttribute('x2', String(ax)); line.current.setAttribute('y2', String(ay));
-      ring.current.setAttribute('cx', String(px)); ring.current.setAttribute('cy', String(py));
       dot.current.setAttribute('cx', String(ax)); dot.current.setAttribute('cy', String(ay));
     };
 
@@ -204,10 +241,12 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
           phase = 'load';
           until = t + LOAD_MS;
           want = keyOf(next);
+          kind = scene.cardDock() ? 'dock' : scene.cardsFloat() ? 'float' : 'tag';
+          setLayout(kind);
           setDetail(null);
           setShown(false);
           setSpot(next);
-          if (next.kind === 'coop') {
+          if (next.kind === 'coop' && kind !== 'tag') {
             want += '+';
             api.place(next.id)
               .then(d => { if (current === next) setDetail(d); })
@@ -221,35 +260,55 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
       } else if (phase === 'load' && current) {
         if (t > until) want = keyOf(current); // partners took too long
         const el = card.current;
-        const ready = rendered.current === want || rendered.current === keyOf(current) + '+';
-        if (el && ready) {
-          const w = el.offsetWidth, h = el.offsetHeight;
-          const p = scene.screenPoint(current.lat, current.lon);
-          const end = scene.screenPoint(current.lat, current.lon + scene.turnWhileFocused(SHOW_MS / 1000));
-          const disc = scene.disc();
-          placement = choosePlacement(p.x, p.y, w, h, (p.x + end.x) / 2 < disc.x ? 'left' : 'right', disc, obstaclesRef.current());
-          if (!placement) {
+        const ready = rendered.current === `${want}|${kind}` || rendered.current === `${keyOf(current)}+|${kind}`;
+        if (ready && (el || kind === 'tag')) {
+          const band = kind === 'dock' || kind === 'compact' ? scene.cardDock() : null;
+          if (el && band) el.style.setProperty('--dock-w', `${Math.floor(band.right - band.left)}px`);
+          const w = el?.offsetWidth ?? 0, h = el?.offsetHeight ?? 0;
+          let smaller: Layout | null = null; // the card does not fit its dock: measure the next smaller layout
+          if (kind === 'tag') {
+            placement = { mode: 'tag', side: 'right', x: 0, y: 0 };
+          } else if (band) {
+            const at = el && el.scrollWidth <= el.clientWidth + 1 ? dockAt(band, w, h, obstaclesRef.current()) : null;
+            placement = at && { mode: 'dock', side: 'right', ...at };
+            if (!at) smaller = kind === 'dock' ? 'compact' : scene.cardsFloat() ? 'float' : 'tag';
+          } else if (kind === 'dock' || kind === 'compact') {
+            smaller = scene.cardsFloat() ? 'float' : 'tag'; // the dock went away meanwhile
+          } else {
+            const p = scene.screenPoint(current.lat, current.lon);
+            const end = scene.screenPoint(current.lat, current.lon + scene.turnWhileFocused(SHOW_MS / 1000));
+            const disc = scene.disc();
+            placement = choosePlacement(p.x, p.y, w, h, (p.x + end.x) / 2 < disc.x ? 'left' : 'right', disc, obstaclesRef.current());
+          }
+          if (smaller) {
+            kind = smaller;
+            setLayout(smaller);
+          } else if (!placement) {
             reset(t, 300); // no room for this card on this screen: try another place
           } else {
             phase = 'show';
             until = t + SHOW_MS;
             pos = { x: placement.x, y: placement.y };
-            el.style.transform = `translate(${Math.round(pos.x)}px, ${Math.round(pos.y)}px)`;
+            el?.style.setProperty('transform', `translate(${Math.round(pos.x)}px, ${Math.round(pos.y)}px)`);
             setShown(true);
             scene.flare(current.kind, current.id);
             scene.setFocus(true);
           }
         }
-      } else if ((phase === 'show' || phase === 'leave') && current && placement && card.current) {
+      } else if ((phase === 'show' || phase === 'leave') && current && placement && (card.current || placement.mode === 'tag')) {
         const p = scene.screenPoint(current.lat, current.lon);
-        const w = card.current.offsetWidth, h = card.current.offsetHeight;
-        const target = follow(placement, p.x, p.y, w, h, obstaclesRef.current());
+        const w = card.current?.offsetWidth ?? 0, h = card.current?.offsetHeight ?? 0;
+        const obstacles = obstaclesRef.current();
+        const target = placement.mode === 'tag' ? pos
+          : placement.mode === 'dock' ? dockAt(scene.cardDock(), w, h, obstacles)
+          : follow(placement, p.x, p.y, w, h, obstacles);
         const gone = p.facing < 0.15 || p.x < 0 || p.x > innerWidth || p.y < 0 || p.y > innerHeight || !target || scene.revealing(); // e.g. R replays the reveal
         if (phase === 'show' && (t > until || gone)) {
           phase = 'leave';
           until = t + LEAVE_MS;
-          card.current.classList.add('leaving');
+          card.current?.classList.add('leaving');
           lines.current?.classList.add('leaving');
+          chip.current?.classList.add('leaving');
           scene.setFocus(false);
         } else if (phase === 'leave' && t > until) {
           reset(t, GAP_MS);
@@ -258,7 +317,7 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
           const k = 1 - Math.exp(-dt / 0.12); // glide, so a change of free space never makes the card jump
           pos = { x: pos.x + (target.x - pos.x) * k, y: pos.y + (target.y - pos.y) * k };
         }
-        if (current) draw(p.x, p.y, w, h);
+        if (current) draw(p.x, p.y, w, h, obstacles);
       }
       raf = requestAnimationFrame(loop);
     };
@@ -267,18 +326,26 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
   }, [scene]);
 
   if (!spot) return null;
+  const docked = layout === 'dock' || layout === 'compact';
   return (
     <>
       {shown && (
         <svg ref={lines} className="spot-lines" aria-hidden="true">
-          <line ref={line} />
+          {layout === 'float' && <line ref={line} />}
           <circle ref={ring} className="spot-ring" r="17" />
-          <circle ref={dot} className="spot-dot" r="2.5" />
+          {layout === 'float' && <circle ref={dot} className="spot-dot" r="2.5" />}
         </svg>
       )}
-      <div ref={card} className={`spot-card spot-${spot.kind}${shown ? '' : ' measuring'}`} role="status" aria-live="polite">
-        {spot.kind === 'coop' ? <CoopCard place={spot.place} detail={detail} /> : <GuestCard place={spot.place} />}
-      </div>
+      {shown && layout !== 'float' && (
+        <div ref={chip} className={`spot-chip spot-chip-${spot.kind}`} {...(layout === 'tag' ? { role: 'status', 'aria-live': 'polite' } : { 'aria-hidden': true })}>
+          {spot.place.name}{layout === 'tag' && <small>{tagStat(spot)}</small>}
+        </div>
+      )}
+      {layout !== 'tag' && (
+        <div ref={card} className={`spot-card spot-${spot.kind}${docked ? ' spot-dock' : ''}${layout === 'compact' ? ' spot-compact' : ''}${shown ? '' : ' measuring'}`} role="status" aria-live="polite">
+          {spot.kind === 'coop' ? <CoopCard place={spot.place} detail={detail} /> : <GuestCard place={spot.place} />}
+        </div>
+      )}
     </>
   );
 }
@@ -288,11 +355,14 @@ function CoopCard({ place, detail }: { place: GlobePlace; detail: PlaceDetail | 
   const top = detail?.institutions.slice().sort((a, b) => b.links.length - a.links.length).slice(0, 3) ?? [];
   return (
     <>
-      <div className="spot-kicker"><i style={{ background: GROUP_COLOR[group] }} />{groupLabel.get(group)}</div>
-      <h3>{place.name}</h3>
-      <p className="spot-meta">{place.country} · {fmt(place.distanceKm)} km od Košíc</p>
+      <div className="spot-head">
+        <div className="spot-kicker"><i style={{ background: GROUP_COLOR[group] }} />{groupLabel.get(group)}</div>
+        <h3>{place.name}</h3>
+        <p className="spot-meta">{place.country} · {fmt(place.distanceKm)} km od Košíc</p>
+      </div>
       <p className="spot-stats">
-        <b>{fmt(place.institutions)}</b> {plural(place.institutions, 'partnerská inštitúcia', 'partnerské inštitúcie', 'partnerských inštitúcií')}
+        <b>{fmt(place.institutions)}</b> <span className="spot-long">{plural(place.institutions, 'partnerská', 'partnerské', 'partnerských')} </span>
+        {plural(place.institutions, 'inštitúcia', 'inštitúcie', 'inštitúcií')}
         {' · '}<b>{fmt(place.links)}</b> {plural(place.links, 'väzba', 'väzby', 'väzieb')}
       </p>
       {top.length > 0 && <ul>{top.map(i => <li key={i.name}>{i.name.replace(/\s*\(.*\)$/, '')}</li>)}</ul>}
@@ -303,8 +373,10 @@ function CoopCard({ place, detail }: { place: GlobePlace; detail: PlaceDetail | 
 function GuestCard({ place }: { place: GuestPlace }) {
   return (
     <>
-      <div className="spot-kicker"><i style={{ background: GUEST_COLOR }} />Svetlá hostí</div>
-      <h3>{place.name}</h3>
+      <div className="spot-head">
+        <div className="spot-kicker"><i style={{ background: GUEST_COLOR }} />Svetlá hostí</div>
+        <h3>{place.name}</h3>
+      </div>
       <p className="spot-stats">
         <b>{fmt(place.count)}</b> {plural(place.count, 'hosť tu bol', 'hostia tu boli', 'hostí tu bolo')}
       </p>
