@@ -4,7 +4,8 @@
 
 | Adresa | Čo ukazuje |
 |---|---|
-| `/` | Stena: obrazovka pre LED stenu. Na prehrávacom PC sa otvára s `?kiosk=1` (bez odkazov, kurzor sa skryje). |
+| `/` | Stena: obrazovka pre LED stenu. Na prehrávacom PC sa otvára s `?kiosk=1` (bez odkazov, kurzor sa skryje). S `?view=2d` tá istá stena na plochej mape sveta namiesto zemegule. |
+| `/porovnanie` | 3D zemeguľa a 2D mapa vedľa seba v rozlíšení LED steny, spustené naraz (na rozhodnutie, čo sa číta lepšie). |
 | `/mapa` | Interaktívna mapa: filtre podľa typu spolupráce, detail miesta so zdrojmi. |
 | `/zapoj-sa` | Formulár pre hostí (cieľ QR kódu). |
 | `/admin` | Administrácia: scéna steny, zbieranie svetiel, kód v QR, moderovanie, pripomienky. |

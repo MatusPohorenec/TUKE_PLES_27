@@ -1,8 +1,9 @@
 /**
- * Cooperation arcs on the GPU: all arcs of the globe in one mesh and one draw call. The reveal and the pulses
- * run on time inside the shaders, so nothing is rebuilt while the light spreads and JavaScript only moves a
- * clock. An arc first carries a beam from Košice to its place; when the beam lands, the place answers with
- * light back to Košice, and from then on light travels both ways, as cooperation does.
+ * Cooperation arcs on the GPU: all arcs in one mesh and one draw call. The reveal and the pulses run on time
+ * inside the shaders, so nothing is rebuilt while the light spreads and JavaScript only moves a clock. An arc
+ * first carries a beam from Košice to its place; when the beam lands, the place answers with light back to
+ * Košice, and from then on light travels both ways, as cooperation does (unless the layer is one-shot, as for
+ * guest lights). The shape of an arc comes from a path function: over the globe (globeArcPath) or on a flat map.
  */
 import * as THREE from 'three';
 import type { GlobeInstance } from 'globe.gl';
@@ -11,7 +12,7 @@ export interface ArcInput {
   lat: number;
   lon: number;
   color: string;
-  /** line width in globe units (the globe radius is 100) */
+  /** line width in scene units (on the globe its radius is 100) */
   width: number;
   /** when the beam leaves Košice, in seconds of performance.now() */
   launch: number;
@@ -19,8 +20,12 @@ export interface ArcInput {
   travel: number;
 }
 
+/** Fills `out` (ARC_SEGMENTS + 1 points) with the arc from Košice to the place at lat/lon. */
+export type ArcPath = (lat: number, lon: number, out: THREE.Vector3[]) => void;
+
 const GLOBE_RADIUS = 100;
-const SEGMENTS = 48;
+export const ARC_SEGMENTS = 48;
+const SEGMENTS = ARC_SEGMENTS;
 const LIFT = 0.008; // above the country fills (0.006), below the stars (0.012)
 const ALTITUDE_SCALE = 0.38; // arc height relative to its length, as globe.gl's arcAltitudeAutoScale
 
@@ -52,7 +57,7 @@ const VERTEX = /* glsl */ `
   }`;
 
 const FRAGMENT = /* glsl */ `
-  uniform float uTime, uOpacity, uBase;
+  uniform float uTime, uOpacity, uBase, uAmbient;
   varying vec3 vColor;
   varying float vT, vSide, vLaunch, vTravel;
   // a pulse whose head is at 'head' (0 = where it starts, 1 = where it ends) with a fading tail behind it
@@ -68,8 +73,8 @@ const FRAGMENT = /* glsl */ `
     float h = age / vTravel;
     float beam = pulse(h, vT, 0.25);
     float light = beam * 1.4;                           // the beam that lights the place
-    if (h > 1.0) {
-      float slow = vTravel * 2.0;                       // the steady light flows calmer than the first beam
+    if (h > 1.0 && uAmbient > 0.0) {
+      float slow = vTravel * 3.0;                       // the steady light flows calmer than the first beam
       float k = mod(age - vTravel, slow * 4.0) / slow;
       light += pulse(k, 1.0 - vT, 0.22) * 0.5;          // the place answers right away: light back to Košice
       light += pulse(k - 2.0, vT, 0.22) * 0.5;          // and out again
@@ -89,6 +94,24 @@ function slerp(a: THREE.Vector3, b: THREE.Vector3, t: number): THREE.Vector3 {
   return a.clone().multiplyScalar(Math.sin((1 - t) * omega) / s).addScaledVector(b, Math.sin(t * omega) / s);
 }
 
+/** Arcs over the globe, shaped like globe.gl's: a cubic Bézier lifted in proportion to the distance. */
+export function globeArcPath(globe: GlobeInstance, origin: { lat: number; lon: number }): ArcPath {
+  const o = globe.getCoords(origin.lat, origin.lon, 0);
+  const u0 = new THREE.Vector3(o.x, o.y, o.z).normalize();
+  return (lat, lon, out) => {
+    const e = globe.getCoords(lat, lon, 0);
+    const u3 = new THREE.Vector3(e.x, e.y, e.z).normalize();
+    const alt = (u0.angleTo(u3) / 2) * ALTITUDE_SCALE;
+    const curve = new THREE.CubicBezierCurve3(
+      u0.clone().multiplyScalar(GLOBE_RADIUS * (1 + LIFT)),
+      slerp(u0, u3, 0.25).multiplyScalar(GLOBE_RADIUS * (1 + LIFT + alt * 1.5)),
+      slerp(u0, u3, 0.75).multiplyScalar(GLOBE_RADIUS * (1 + LIFT + alt * 1.5)),
+      u3.clone().multiplyScalar(GLOBE_RADIUS * (1 + LIFT)),
+    );
+    for (let i = 0; i <= SEGMENTS; i++) curve.getPoint(i / SEGMENTS, out[i]!);
+  };
+}
+
 export class ArcLayer {
   private readonly material: THREE.ShaderMaterial;
   private readonly mesh: THREE.Mesh;
@@ -96,14 +119,16 @@ export class ArcLayer {
   private opacity = 1;
   private targetOpacity = 1;
 
-  constructor(private readonly globe: GlobeInstance, private readonly origin: { lat: number; lon: number }) {
+  /** ambient: false for one-shot beams (guest lights) that end when they land */
+  constructor(private readonly scene: THREE.Scene, private readonly renderer: THREE.WebGLRenderer, private readonly path: ArcPath, { ambient = true } = {}) {
     this.material = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: performance.now() / 1000 },
         uResolution: { value: new THREE.Vector2(1, 1) },
-        uMinPx: { value: globe.renderer().getPixelRatio() },
+        uMinPx: { value: renderer.getPixelRatio() },
         uOpacity: { value: 1 },
         uBase: { value: 0.02 },
+        uAmbient: { value: ambient ? 1 : 0 },
       },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
@@ -115,14 +140,14 @@ export class ArcLayer {
     this.mesh = new THREE.Mesh(new THREE.BufferGeometry(), this.material);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 5;
-    globe.scene().add(this.mesh);
+    scene.add(this.mesh);
   }
 
   /** Called by the scene every frame: the clock, the screen size and a fade when the scene changes. */
   update(seconds: number, dt: number): void {
     const u = this.material.uniforms;
     u.uTime!.value = seconds;
-    this.globe.renderer().getDrawingBufferSize(this.size);
+    this.renderer.getDrawingBufferSize(this.size);
     (u.uResolution!.value as THREE.Vector2).copy(this.size);
     if (this.opacity !== this.targetOpacity) {
       const step = dt / 0.6;
@@ -140,24 +165,13 @@ export class ArcLayer {
     const pos = new Float32Array(n * V * 3), prev = new Float32Array(n * V * 3), next = new Float32Array(n * V * 3), col = new Float32Array(n * V * 3);
     const side = new Float32Array(n * V), along = new Float32Array(n * V), width = new Float32Array(n * V), launch = new Float32Array(n * V), travel = new Float32Array(n * V);
     const index = new Uint32Array(n * SEGMENTS * 6);
-    const o = this.globe.getCoords(this.origin.lat, this.origin.lon, 0);
-    const u0 = new THREE.Vector3(o.x, o.y, o.z).normalize();
     const pts = Array.from({ length: P }, () => new THREE.Vector3());
     const lens = new Float32Array(P);
     const color = new THREE.Color(), rgb = { r: 0, g: 0, b: 0 };
     arcs.forEach((a, k) => {
-      const e = this.globe.getCoords(a.lat, a.lon, 0);
-      const u3 = new THREE.Vector3(e.x, e.y, e.z).normalize();
-      const alt = (u0.angleTo(u3) / 2) * ALTITUDE_SCALE;
-      const curve = new THREE.CubicBezierCurve3(
-        u0.clone().multiplyScalar(GLOBE_RADIUS * (1 + LIFT)),
-        slerp(u0, u3, 0.25).multiplyScalar(GLOBE_RADIUS * (1 + LIFT + alt * 1.5)),
-        slerp(u0, u3, 0.75).multiplyScalar(GLOBE_RADIUS * (1 + LIFT + alt * 1.5)),
-        u3.clone().multiplyScalar(GLOBE_RADIUS * (1 + LIFT)),
-      );
+      this.path(a.lat, a.lon, pts);
       let total = 0;
       for (let i = 0; i < P; i++) {
-        curve.getPoint(i / SEGMENTS, pts[i]!);
         if (i) total += pts[i]!.distanceTo(pts[i - 1]!);
         lens[i] = total;
       }
@@ -199,7 +213,7 @@ export class ArcLayer {
   }
 
   dispose(): void {
-    this.globe.scene().remove(this.mesh);
+    this.scene.remove(this.mesh);
     this.mesh.geometry.dispose();
     this.material.dispose();
   }

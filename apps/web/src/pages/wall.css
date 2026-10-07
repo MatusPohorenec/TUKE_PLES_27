@@ -19,6 +19,11 @@
   padding: 16px 20px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel);
   backdrop-filter: blur(8px);
 }
+/* on the flat map the bottom right is Australia: the QR panel moves to the empty Arctic, top right */
+.wall.view-2d .wall-join {
+  top: calc(env(safe-area-inset-top, 0px) + 4vh); bottom: auto; flex-direction: column; align-items: flex-start; max-width: 260px;
+}
+.wall.view-2d:not(.kiosk) .wall-join { top: calc(env(safe-area-inset-top, 0px) + 70px); }
 .wall-join b { display: block; font: italic 600 clamp(20px, 1.8vw, 30px)/1.1 var(--font-display); color: var(--warm); }
 .wall-join span { display: block; color: var(--silver-dim); font-size: 13px; margin-top: 4px; }
 .qr { flex: none; }

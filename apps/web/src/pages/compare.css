@@ -1,0 +1,9 @@
+.compare { min-height: 100vh; padding: 76px 24px 24px; display: grid; gap: 18px; align-content: start; }
+.compare header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; max-width: 1800px; width: 100%; margin: 0 auto; }
+.compare h1 { font: italic 500 clamp(28px, 3vw, 44px)/1 var(--font-display); }
+.compare header p { margin: 6px 0 0; }
+.compare-row { display: grid; gap: 16px; justify-content: center; }
+.compare figure { margin: 0; display: grid; gap: 8px; }
+.compare figcaption { font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--silver-dim); }
+.compare-frame { overflow: hidden; border-radius: 10px; border: 1px solid var(--line); background: #02061a; }
+.compare-frame iframe { display: block; border: 0; transform-origin: 0 0; }

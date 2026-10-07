@@ -1,10 +1,10 @@
 /** Hover card for stars; rotation pauses while the pointer rests on a star. */
 import { useEffect, useRef, useState } from 'react';
-import type { GlobeScene, PickResult } from '../globe/scene.ts';
+import type { PickResult, WallScene } from '../globe/core.ts';
 
 const km = (n: number) => `${n.toLocaleString('sk')} km`;
 
-export function GlobeTooltip({ scene, host, onPick }: { scene: GlobeScene | null; host: HTMLElement | null; onPick?: (hit: PickResult | null) => void }) {
+export function GlobeTooltip({ scene, host, onPick }: { scene: WallScene | null; host: HTMLElement | null; onPick?: (hit: PickResult | null) => void }) {
   const [hit, setHit] = useState<{ result: PickResult; x: number; y: number } | null>(null);
   const tip = useRef<HTMLDivElement>(null);
   useEffect(() => {

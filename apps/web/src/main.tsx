@@ -10,6 +10,7 @@ const MapPage = lazy(() => import('./pages/MapPage.tsx'));
 const Join = lazy(() => import('./pages/Join.tsx'));
 const Admin = lazy(() => import('./pages/Admin.tsx'));
 const About = lazy(() => import('./pages/About.tsx'));
+const Compare = lazy(() => import('./pages/Compare.tsx'));
 
 const ROUTES: Record<string, React.ComponentType> = {
   '/': Wall,
@@ -18,6 +19,7 @@ const ROUTES: Record<string, React.ComponentType> = {
   '/zapoj-sa': Join,
   '/admin': Admin,
   '/o-projekte': About,
+  '/porovnanie': Compare, // 3D globe and 2D map side by side
 };
 
 /** Review build: every page except the wall in kiosk mode offers a comment button. */

@@ -3,7 +3,6 @@
  * and four short rays) and the twinkle live in the shaders; JavaScript only uploads positions and attributes.
  */
 import * as THREE from 'three';
-import type { GlobeInstance } from 'globe.gl';
 
 export interface StarInput {
   id: string;
@@ -17,6 +16,18 @@ export interface StarInput {
 }
 
 export interface PlacedStar extends StarInput { pos: THREE.Vector3 }
+
+export interface StarLayerOptions {
+  scene: THREE.Scene;
+  renderer: THREE.WebGLRenderer;
+  camera: () => THREE.Camera;
+  /** where a star sits in the scene */
+  place: (lat: number, lon: number) => THREE.Vector3;
+  /** camera distance at which stars have their nominal size (the globe's default view: 210) */
+  refDist?: number;
+  /** stars on a sphere: picking skips the far side */
+  sphere?: boolean;
+}
 
 const VERTEX = /* glsl */ `
   uniform float uTime, uPixelRatio, uRefDist, uMaxSize;
@@ -79,16 +90,18 @@ export class StarLayer {
   private readonly born = new Map<string, number>();
   private stars: PlacedStar[] = [];
   private frame = 0;
+  private readonly o: Required<StarLayerOptions>;
 
-  constructor(private readonly globe: GlobeInstance, private readonly altitude = 0.012) {
-    const renderer = globe.renderer();
+  constructor(options: StarLayerOptions) {
+    this.o = { refDist: 210, sphere: true, ...options };
+    const renderer = this.o.renderer;
     const gl = renderer.getContext();
     const range = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE) as Float32Array;
     this.material = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: now() },
         uPixelRatio: { value: renderer.getPixelRatio() },
-        uRefDist: { value: 210 }, // camera to globe surface at the default view (altitude 2.1)
+        uRefDist: { value: this.o.refDist },
         uMaxSize: { value: Math.min(range[1] ?? 64, 160) },
         uIntensity: { value: 1 },
       },
@@ -101,7 +114,7 @@ export class StarLayer {
     this.points = new THREE.Points(new THREE.BufferGeometry(), this.material);
     this.points.frustumCulled = false;
     this.points.renderOrder = 10;
-    globe.scene().add(this.points);
+    this.o.scene.add(this.points);
     const tick = () => {
       this.material.uniforms.uTime!.value = now();
       this.frame = requestAnimationFrame(tick);
@@ -119,7 +132,7 @@ export class StarLayer {
     const color = new THREE.Color();
     this.stars = list.map((s, i) => {
       if (!this.born.has(s.id)) this.born.set(s.id, t + (s.delay ?? 0));
-      const p = this.globe.getCoords(s.lat, s.lon, this.altitude);
+      const p = this.o.place(s.lat, s.lon);
       pos.set([p.x, p.y, p.z], i * 3);
       color.set(s.color); // sRGB values on purpose: the shader writes them out unconverted
       col.set([color.r, color.g, color.b], i * 3);
@@ -154,16 +167,16 @@ export class StarLayer {
     this.material.uniforms.uIntensity!.value = value;
   }
 
-  /** Nearest star on the visible side of the globe within maxPx of the pointer. */
+  /** Nearest star (on the visible side of a globe) within maxPx of the pointer. */
   pick(x: number, y: number, maxPx: number): PlacedStar | null {
-    const cam = this.globe.camera();
-    const rect = this.globe.renderer().domElement.getBoundingClientRect();
+    const cam = this.o.camera();
+    const rect = this.o.renderer.domElement.getBoundingClientRect();
     const v = new THREE.Vector3(), toCam = new THREE.Vector3();
     let best: PlacedStar | null = null, bestD = maxPx;
     const t = now();
     for (const s of this.stars) {
       if ((this.born.get(s.id) ?? 0) > t) continue; // not lit yet
-      if (toCam.copy(cam.position).sub(s.pos).dot(s.pos) <= 0) continue;
+      if (this.o.sphere && toCam.copy(cam.position).sub(s.pos).dot(s.pos) <= 0) continue;
       v.copy(s.pos).project(cam);
       const d = Math.hypot(((v.x + 1) / 2) * rect.width + rect.left - x, ((1 - v.y) / 2) * rect.height + rect.top - y);
       if (d < bestD) { bestD = d; best = s; }
@@ -173,7 +186,7 @@ export class StarLayer {
 
   dispose(): void {
     cancelAnimationFrame(this.frame);
-    this.globe.scene().remove(this.points);
+    this.o.scene.remove(this.points);
     this.points.geometry.dispose();
     this.material.dispose();
   }

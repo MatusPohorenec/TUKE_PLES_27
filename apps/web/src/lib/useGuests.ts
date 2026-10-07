@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { LIMITS } from '@ples/shared/constants';
 import type { EventInfo, LivePin, LiveTotals } from '@ples/shared';
-import type { GlobeScene } from '../globe/scene.ts';
+import type { WallScene } from '../globe/core.ts';
 import { api } from './api.ts';
 import { usePoll } from './usePoll.ts';
 
@@ -18,7 +18,7 @@ export const pinKey = (p: { countryCode: string; lat: number; lon: number }) => 
 const ANIMATED_PER_POLL = 8;
 const RESYNC_MS = 5 * 60_000;
 
-export function useGuests(scene: GlobeScene | null, slug: string, { intervalMs = 2000 } = {}) {
+export function useGuests(scene: WallScene | null, slug: string, { intervalMs = 2000 } = {}) {
   const [event, setEvent] = useState<EventInfo | null>(null);
   const [totals, setTotals] = useState<LiveTotals>({ pins: 0, places: 0, countries: 0 });
   const [recent, setRecent] = useState<LivePin[]>([]);

@@ -8,8 +8,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CATEGORY_GROUPS } from '@ples/shared/constants';
 import type { GlobePlace, PlaceDetail } from '@ples/shared';
-import type { GlobeScene, GuestPlace } from '../globe/scene.ts';
-import { GROUP_COLOR, GUEST_COLOR } from '../globe/scene.ts';
+import { GROUP_COLOR, GUEST_COLOR, type GuestPlace, type WallScene } from '../globe/core.ts';
 import { api } from '../lib/api.ts';
 import { fmt, plural } from '../lib/format.ts';
 import './spotlight.css';
@@ -35,7 +34,7 @@ const RING = 26; // half the size of the area around the place that a card must 
 const groupLabel = new Map<string, string>(CATEGORY_GROUPS.map(g => [g.code, g.label]));
 const keyOf = (s: Spot) => `${s.kind}:${s.id}`;
 
-function pickSpot(scene: GlobeScene, recent: string[], obstacles: Box[]): Spot | null {
+function pickSpot(scene: WallScene, recent: string[], obstacles: Box[]): Spot | null {
   const ahead = scene.turnWhileFocused(SHOW_MS / 1000); // where the place will be when its card leaves
   const pool: (Spot & { weight: number })[] = [];
   if (scene.currentMode() === 'cooperation') {
@@ -144,7 +143,7 @@ function follow(p: Placement, px: number, py: number, w: number, h: number, obst
 }
 
 /** obstacles(): what the cards must keep clear of (title, counters, QR code, buttons), in client pixels. */
-export function PlaceSpotlight({ scene, obstacles }: { scene: GlobeScene | null; obstacles: () => Box[] }) {
+export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; obstacles: () => Box[] }) {
   const [spot, setSpot] = useState<Spot | null>(null);
   const [detail, setDetail] = useState<PlaceDetail | null>(null);
   const [shown, setShown] = useState(false);

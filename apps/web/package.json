@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ples/shared": "*",
+    "d3-geo": "^3.1.1",
     "globe.gl": "2.46.2",
     "qrcode": "^1.5.4",
     "react": "^19.3.0",
@@ -19,6 +20,7 @@
     "three": "0.186.1"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

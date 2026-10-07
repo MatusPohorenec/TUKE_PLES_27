@@ -24,10 +24,13 @@ live. Theme: midnight blue + silver, light / play of light (svetlohra). Visual p
 
 ```
 apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r186 with own shaders
-  src/pages        Wall.tsx (/ – the LED wall), MapPage.tsx (/mapa), Join.tsx (/zapoj-sa), Admin.tsx (/admin), About.tsx (/o-projekte)
-  src/globe        scene.ts (GlobeScene: reveal/timeline, rotation, countries, guests), arcs.ts (all cooperation arcs, one
-                   mesh, time-driven shader), stars.ts (StarLayer: twinkling stars, GPU-timed births), borders.ts (outlines,
-                   one LineSegments), useGlobeScene.ts
+  src/pages        Wall.tsx (/ – the LED wall, `?view=2d` = flat map), MapPage.tsx (/mapa), Join.tsx (/zapoj-sa),
+                   Admin.tsx (/admin), About.tsx (/o-projekte), Compare.tsx (/porovnanie – 3D and 2D side by side)
+  src/globe        core.ts (abstract WallScene: timeline, cooperation/guest state, country colours, counters, year, picking),
+                   scene.ts (GlobeScene: globe.gl, rotation, title fit), map2d.ts (MapScene: Natural Earth map in an
+                   orthographic three.js scene, d3-geo, camera that widens with the light), arcs.ts (all cooperation arcs,
+                   one mesh, time-driven shader; path function per view), stars.ts (StarLayer, GPU-timed births),
+                   borders.ts (globe outlines, one LineSegments), useGlobeScene.ts (creates the 3D or 2D scene)
   src/components   PlaceSpotlight.tsx (cards on the wall), CountUp.tsx (smooth counters), GlobeTooltip, QrCode, Starfield,
                    FeedbackButton („Pripomienka"), PlaceSearch
   src/lib          api.ts, useGuests.ts (summary + shared live feed), usePoll.ts (pauses in hidden tabs), useGlobeData.ts,
@@ -80,7 +83,9 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - Every year from `TUKE_FOUNDED` to max(current year, latest `since`) gets a slot: empty 0.09 s, else 0.16 s + 0.018 s per new
   place (max 1.6 s); milestone years at least 1.8 s. A place lands in the year of `since` (earliest dated cooperation),
   nearest first within a year; places without a year land in the last year. Beam launch = landing − travel
-  (`beamSeconds = 0.9 + km/5000`). If no place has a year, the reveal falls back to distance order over 24 s.
+  (`beamSeconds = 0.6 + km/8000`); a beam may leave at most 3 timeline years before its landing year
+  (`LAUNCH_WINDOW`: the year before is held longer), else far beams would fly through decades of quiet years.
+  Total ≈ 37 s. If no place has a year, the reveal falls back to distance order over 24 s.
 - Year counter + milestone caption (`MILESTONES` in packages/shared/constants.ts: 1952 VŠT, 1991 TUKE, 2004 EU, 2020 Ulysseus,
   2027 75 rokov) at the top of the counters column (`.wall-year` inside `.wall-stats`); captions carry their own year
   („2004 · …") and stay 3.2 s; on phones only the year, top right. It fades 3 s after the last landing and leaves the layout.
@@ -102,6 +107,19 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - Layout: title fitted above the globe and faded when the globe is zoomed into it; `?kiosk=1` hides links/cursor, keeps the
   screen awake; `R` replays the opening. Phones (≤760 px): one row of buttons, counters in one row with short labels, globe
   sized to end above the counters.
+
+## 2D view (`?view=2d`, added 2026-10-07 to compare readability; decision pending)
+
+- MapScene draws the same wall on a Natural Earth projection (Antarctica left out): ocean shape with a blue rim, per-country
+  meshes (triangulated from d3-geo projected rings, holes handled) using the shared country materials, outlines as one
+  LineSegments, arcs bowing northwards (quadratic, same ArcLayer shader), stars with the same StarLayer (`sphere: false`),
+  guest beams as a one-shot ArcLayer (`ambient: false`).
+- No rotation. During the opening the view starts on Central Europe (12 % of the world's width) and only widens to hold
+  Košice and every place whose beam is a third of the way there (+18 % padding), then shows the whole world.
+- Layout differences: on the flat map the bottom right is Australia, so the QR panel sits top right (empty Arctic,
+  Russia is hidden) as a narrow column (`.wall.view-2d .wall-join`). Cards sit on the map (no side margins).
+- The nav has a 2D/3D switch (full page load). `/porovnanie` shows both in 1920×1080 iframes, scaled, restartable together.
+- Measured: 2D p95 frame 4.3 ms, longest 8.4 ms (lighter than the globe).
 
 ## Performance lessons (measured 2026-10-06)
 
@@ -141,10 +159,12 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - bcbc65a: smooth reveal (GPU arcs, per-country fades, merged borders), countries light when the beam lands, mutual light.
 - 630c781: smooth count-up counters. 09d2c0f: no cards and slow rotation during the opening. 1eb2faa: phone layout.
 - tag `pred-casovou-osou` (= 1eb2faa). 1c00003: start years in the dataset. bebc50d: opening as the 1952–2027 timeline.
+- c5e0f22: this file. 2026-10-07: 2D view + /porovnanie, shared WallScene core, beams kept within 3 years of their landing.
 
 ## Open questions / next
 
-- Organisers: RU/BY on the map, what „kde si bol/a" means for guests, guest light colour, milestones wording, Vercel plan,
+- Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), RU/BY on the map, what „kde si bol/a" means for
+  guests, guest light colour, milestones wording, Vercel plan,
   confirmation of the Erasmus list by the international office (OZVaM).
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome kiosk `/?kiosk=1&k=CODE`), rehearsal.
 - Load test with ~500 simulated guests; English version of the guest form; polish of /mapa on phones.

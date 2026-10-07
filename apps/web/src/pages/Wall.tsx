@@ -21,7 +21,15 @@ export default function Wall() {
   const kiosk = queryParam('kiosk') !== null;
   const slug = queryParam('event') ?? DEFAULT_EVENT;
   const code = queryParam('k');
-  const { ref, scene } = useGlobeScene();
+  // ?view=2d shows the same wall on a flat world map (to compare readability with the globe)
+  const view = queryParam('view') === '2d' ? '2d' : '3d';
+  const { ref, scene } = useGlobeScene({ view });
+  const otherView = (() => {
+    const q = new URLSearchParams(location.search);
+    if (view === '2d') q.delete('view'); else q.set('view', '2d');
+    const s = q.toString();
+    return location.pathname + (s ? `?${s}` : '');
+  })();
   const titleRef = useRef<HTMLElement>(null);
   const { data, error } = useGlobeData();
   const [visible, setVisible] = useState<GlobePlace[]>([]);
@@ -117,7 +125,7 @@ export default function Wall() {
   const collecting = guests.available && (guests.event?.status === 'open' || guests.event?.status === 'live');
 
   return (
-    <div className={`wall mode-${mode}${kiosk ? ' kiosk' : ''}`}>
+    <div className={`wall mode-${mode} view-${view}${kiosk ? ' kiosk' : ''}`}>
       <div className="stage-light" />
       <Starfield />
       <div className="globe-host" ref={ref} />
@@ -172,6 +180,7 @@ export default function Wall() {
           <Link className="chip" href="/mapa">Preskúmať mapu</Link>
           <Link className="chip" href="/zapoj-sa">Zapoj sa</Link>
           <Link className="chip" href="/o-projekte">O projekte</Link>
+          <a className="chip wall-view" href={otherView} title="Prepnúť medzi zemeguľou a mapou">{view === '2d' ? '3D' : '2D'}</a>
           <button type="button" className="chip wall-replay" aria-label="Znova" onClick={() => scene?.replay()}>↻ <span>Znova (R)</span></button>
         </nav>
       )}
