@@ -34,7 +34,7 @@ export default function About() {
           ))}
         </ul>
         <p className="muted small">
-          Väzby s inštitúciami v Rusku a Bielorusku sú v dátach, ale na mape sa nezobrazujú. Údaje pred plesom overuje Úsek zahraničných vzťahov a mobility TUKE.
+          Údaje pred plesom overuje Úsek zahraničných vzťahov a mobility TUKE.
         </p>
       </section>
       <footer className="join-foot"><Link href="/mapa">Preskúmať mapu →</Link></footer>

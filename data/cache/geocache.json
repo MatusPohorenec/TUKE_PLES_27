@@ -2923,5 +2923,161 @@
 "lat": 49.4878,
 "lon": 16.66016,
 "display": "Boskovice, okres Blansko, South Moravian Region, Czechia"
+},
+"munchen|de": {
+"lat": 48.13711,
+"lon": 11.57538,
+"display": "Munich, Bavaria, Germany"
+},
+"lulea|se": {
+"lat": 65.58312,
+"lon": 22.14595,
+"display": "Luleå, Luleå kommun, Norrbotten County, 971 28, Sweden"
+},
+"billingstad|no": {
+"lat": 59.87431,
+"lon": 10.49069,
+"display": "Billingstad, Asker, Akershus, 1396, Norway"
+},
+"vilanova i la geltru barcelona|es": {
+"lat": 41.2242,
+"lon": 1.72563,
+"display": "Vilanova i la Geltrú, Garraf, Barcelona, Catalonia, 08800, Spain"
+},
+"casalecchio di reno bo|it": {
+"lat": 44.47602,
+"lon": 11.27569,
+"display": "Casalecchio di Reno, Unione dei comuni Valli del Reno, Lavino e Samoggia, Bologna, Emilia-Romagna, 40033, Italy"
+},
+"tulcea|ro": {
+"lat": 45.17752,
+"lon": 28.80163,
+"display": "Tulcea, Romania"
+},
+"bologna bo|it": {
+"lat": 44.49382,
+"lon": 11.34263,
+"display": "Bologna, Emilia-Romagna, Italy"
+},
+"bucharest 6|ro": {
+"lat": 44.4823,
+"lon": 26.09375,
+"display": "Bl. 10I, 8, 6, Strada Feleacu, Aviației, Sector 1, Bucharest, 014181, Romania"
+},
+"khmelnytsky|ua": {
+"lat": 49.41964,
+"lon": 26.97938,
+"display": "Khmelnytskyi, Khmelnytskyi Urban Hromada, Khmelnytskyi Raion, Khmelnytskyi Oblast, Ukraine"
+},
+"umea|se": {
+"lat": 63.82566,
+"lon": 20.26307,
+"display": "Umeå, Umeå kommun, Västerbotten County, Sweden"
+},
+"vilanova i la geltru|es": {
+"lat": 41.2242,
+"lon": 1.72563,
+"display": "Vilanova i la Geltrú, Garraf, Barcelona, Catalonia, 08800, Spain"
+},
+"raufoss|no": {
+"lat": 60.72608,
+"lon": 10.61332,
+"display": "Raufoss, Vestre Toten, Innlandet, 2830, Norway"
+},
+"bruxelles / brussel|be": {
+"lat": 50.84674,
+"lon": 4.35249,
+"display": "Brussels, Brussels-Capital, Belgium"
+},
+"kalamaria|gr": {
+"lat": 40.5803,
+"lon": 22.95326,
+"display": "Kalamaria Municipality, Thessaloniki, Thermi, Thessaloniki Regional Unit, Central Macedonia, Macedonia and Thrace, 570 01, Greece"
+},
+"meudon|fr": {
+"lat": 48.81267,
+"lon": 2.23854,
+"display": "Meudon, Boulogne-Billancourt, Hauts-de-Seine, Ile-de-France, Metropolitan France, France"
+},
+"zaporizhzhia|ua": {
+"lat": 47.85079,
+"lon": 35.11829,
+"display": "Zaporizhzhia, Zaporizhzhia Urban Hromada, Zaporizhia Raion, Zaporizhia Oblast, 69000-69499, Ukraine"
+},
+"iasi, iasi county|ro": {
+"lat": 47.18352,
+"lon": 27.56861,
+"display": "Iasi County Police Inspectorate, Șoseaua Sărărie, Copou, Păcurari, Iași, Iași Metropolitan Area, Iași, 700452, Romania"
+},
+"yekaterinburg|ru": {
+"lat": 56.83821,
+"lon": 60.60079,
+"display": "Yekaterinburg, Yekaterinburg Municipality, Sverdlovsk Oblast, Ural Federal District, Russia"
+},
+"gamasa|eg": {
+"lat": 31.43883,
+"lon": 31.54423,
+"display": "Gamasa, Dakahlia Governorate, 35712, Egypt"
+},
+"muenster|de": {
+"lat": 51.96251,
+"lon": 7.62519,
+"display": "Münster, North Rhine-Westphalia, Germany"
+},
+"kazan|ru": {
+"lat": 55.79465,
+"lon": 49.1115,
+"display": "Kazan, городской округ Казань, Tatarstan, Volga Federal District, Russia"
+},
+"tomsk|ru": {
+"lat": 56.48875,
+"lon": 84.95234,
+"display": "Tomsk, городской округ Томск, Tomsk Oblast, Siberian Federal District, 634000, Russia"
+},
+"irkutsk|ru": {
+"lat": 52.28912,
+"lon": 104.27983,
+"display": "Irkutsk, городской округ Иркутск, Irkutsk Oblast, Siberian Federal District, Russia"
+},
+"paris cedex 07|fr": null,
+"odesa|ua": {
+"lat": 46.4843,
+"lon": 30.73229,
+"display": "Odesa, Odesa Urban Hromada, Odesa Raion, Odesa Oblast, Ukraine"
+},
+"iași|ro": {
+"lat": 47.16156,
+"lon": 27.58378,
+"display": "Iași, Iași Metropolitan Area, Iași, Romania"
+},
+"al mansurah|eg": {
+"lat": 31.03757,
+"lon": 31.38649,
+"display": "El Mansura, Dakahlia Governorate, 35517, Egypt"
+},
+"seville|es": {
+"lat": 37.38863,
+"lon": -5.99534,
+"display": "Seville, Sevilla, Andalusia, Spain"
+},
+"casalecchio di reno|it": {
+"lat": 44.47602,
+"lon": 11.27569,
+"display": "Casalecchio di Reno, Unione dei comuni Valli del Reno, Lavino e Samoggia, Bologna, Emilia-Romagna, 40033, Italy"
+},
+"venezia|it": {
+"lat": 45.43719,
+"lon": 12.33459,
+"display": "Venice, Venezia, Veneto, 30121-30176, Italy"
+},
+"luleå|se": {
+"lat": 65.58312,
+"lon": 22.14595,
+"display": "Luleå, Luleå kommun, Norrbotten County, 971 28, Sweden"
+},
+"umeå|se": {
+"lat": 63.82566,
+"lon": 20.26307,
+"display": "Umeå, Umeå kommun, Västerbotten County, Sweden"
 }
 }

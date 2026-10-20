@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from geocode import geocode  # noqa: E402
+from geocode import cache as geocache, geocode  # noqa: E402
 
 ORIGIN = {"name": "Technická univerzita v Košiciach", "city": "Košice", "country_code": "SK", "lat": 48.7305, "lon": 21.2455}
 
@@ -227,13 +227,16 @@ for o in oa["institutions"]:
         },
     )
 
-# city strings that the source platforms garbled
+# city strings that the source platforms garbled, or wrote with the apostrophe of a soft sign
 CITY_FIX = {"Galati, Galati county": "Galați", "Bsokivce": "Boskovice", "Crnogorskih Serdara 63Podgorica": "Podgorica",
-            "Marka Marulica 2Sarajewo": "Sarajevo", "Podpgorica": "Podgorica"}
+            "Marka Marulica 2Sarajewo": "Sarajevo", "Podpgorica": "Podgorica", "Kazan’": "Kazan", "Tver'": "Tver",
+            "Umea": "Umeå", "Lulea": "Luleå"}
 for inst in institutions.values():
     inst["city"] = CITY_FIX.get(inst["city"], inst["city"])
     if not inst["city"] and "Bucharest" in inst["name"]:
         inst["city"] = "Bucharest"
+    if inst["country_code"] == "IT" and inst["city"]:
+        inst["city"] = re.sub(r"\s+[A-Za-z]{2}$", "", inst["city"])  # province code: "Bologna BO", "Milano Mi"
 
 # fill coordinates that sources did not provide
 for inst in institutions.values():
@@ -242,18 +245,81 @@ for inst in institutions.values():
         if g:
             inst["lat"], inst["lon"] = g["lat"], g["lon"]
 
-# Ties with Russian and Belarusian institutions are politically sensitive since 2022. They stay in the data
-# (list "hidden") but are left off the map until the organisers decide otherwise.
-HIDDEN_COUNTRIES = {"RU", "BY"}
-hidden = [i for i in institutions.values() if i["country_code"] in HIDDEN_COUNTRIES]
-placed = [i for i in institutions.values() if i["lat"] is not None and i["country_code"] not in HIDDEN_COUNTRIES]
-unplaced = [i for i in institutions.values() if i["lat"] is None and i["country_code"] not in HIDDEN_COUNTRIES]
-
 
 def km(a, b):
     p1, p2 = math.radians(a["lat"]), math.radians(b["lat"])
     h = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(b["lon"] - a["lon"]) / 2) ** 2
     return 12742 * math.asin(math.sqrt(h))
+
+
+TRANSLIT = str.maketrans({"Ł": "L", "ł": "l", "Ø": "O", "ø": "o", "Æ": "AE", "æ": "ae", "ß": "ss", "Đ": "D", "đ": "d",
+                          "ı": "i", "Œ": "OE", "œ": "oe", "Þ": "Th", "þ": "th"})
+
+
+def city_key(city):
+    """Spelling-insensitive city name: ASCII letters only (Kraków = Krakow, Łódź = Lodz)."""
+    s = unicodedata.normalize("NFKD", (city or "").split("|")[0].translate(TRANSLIT)).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z]+", " ", s).strip()
+
+
+def display_name(names):
+    """Name of a city node: the most common city regardless of spelling, written with the most diacritics
+    among its spellings (München, not Munchen), then the most common, then the shortest spelling."""
+    totals = {}
+    for name, n in names.items():
+        totals[city_key(name)] = totals.get(city_key(name), 0) + n
+    best = max(totals.items(), key=lambda kv: (kv[1], -len(kv[0])))[0]
+    accents = lambda s: sum(1 for ch in unicodedata.normalize("NFC", s) if ord(ch) > 127 and ch.isalpha())  # noqa: E731
+    return max((s for s in names if city_key(s) == best), key=lambda s: (accents(s), names[s], -len(s)))
+
+
+def cached_city(inst):
+    return geocache.get(f"{(inst['city'] or '').split('|')[0].strip()}|{inst['country_code']}".lower())
+
+
+# Source coordinates are sometimes a default for a whole country or project (Rome, Berlin, Stockholm; Tashkent for the
+# Russian partners of one Erasmus+ project) or another place of the same name (Lafayette, Louisiana instead of West
+# Lafayette, Indiana). Suspicious points are compared with their geocoded city: points shared by institutions of
+# different cities, points far from other institutions of the same city, points far from their city in the geocache.
+# A point farther than SUSPECT_KM from its city is replaced by the city when that is confirmed: another institution
+# of the city lies near it, or the point is a default (two or more of the cities sharing it lie far from it).
+SUSPECT_KM = 50
+located = {i["id"]: i for i in institutions.values() if i["lat"] is not None and i["city"]}
+by_point, by_city = {}, {}
+for i in located.values():
+    by_point.setdefault((round(i["lat"], 3), round(i["lon"], 3)), []).append(i)
+    by_city.setdefault((i["country_code"], city_key(i["city"])), []).append(i)
+suspects = {i["id"] for g in by_point.values() if len({city_key(i["city"]) for i in g}) > 1 for i in g}
+suspects |= {i["id"] for g in by_city.values() for i in g if any(km(i, j) > SUSPECT_KM for j in g)}
+suspects |= {i["id"] for i in located.values() if (c := cached_city(i)) and km(i, c) > SUSPECT_KM}
+city_points = {iid: g for iid in sorted(suspects) if (g := geocode(located[iid]["city"], located[iid]["country_code"]))}
+far = {iid for iid, g in city_points.items() if km(located[iid], g) > SUSPECT_KM}
+
+
+def confirmed(inst, point):
+    same_city = by_city[(inst["country_code"], city_key(inst["city"]))]
+    if any(j["id"] not in far and km(j, point) <= SUSPECT_KM for j in same_city):
+        return True
+    sharing = by_point[(round(inst["lat"], 3), round(inst["lon"], 3))]
+    return len({city_key(j["city"]) for j in sharing if j["id"] in far}) >= 2
+
+
+moves = [(located[iid], city_points[iid]) for iid in sorted(far) if confirmed(located[iid], city_points[iid])]
+for iid in sorted(far - {i["id"] for i, _ in moves}):
+    print(f"kept, city not confirmed: {located[iid]['name']} | {located[iid]['city']} {located[iid]['country_code']}")
+for inst, point in sorted(moves, key=lambda m: -km(*m)):
+    print(f"moved {round(km(inst, point)):5d} km to its city: {inst['city']} {inst['country_code']} | {inst['name']}")
+for inst, point in moves:
+    inst["lat"], inst["lon"] = point["lat"], point["lon"]
+print("coordinates checked:", len(suspects), "| replaced by their city:", len(moves))
+
+# Every country is on the map, Russia and Belarus included (decided 2026-10-20; until then their institutions were
+# kept off the map as a politically sensitive topic). An ISO code added here hides that country again: its
+# institutions then go to the list "hidden" instead of the map.
+HIDDEN_COUNTRIES: set[str] = set()
+hidden = [i for i in institutions.values() if i["country_code"] in HIDDEN_COUNTRIES]
+placed = [i for i in institutions.values() if i["lat"] is not None and i["country_code"] not in HIDDEN_COUNTRIES]
+unplaced = [i for i in institutions.values() if i["lat"] is None and i["country_code"] not in HIDDEN_COUNTRIES]
 
 
 # one node per city: sources spell cities differently (Praha / Prague / Praha 6), so cluster by distance instead of by name
@@ -271,7 +337,7 @@ for i in sorted(placed, key=lambda i: -len(i["links"])):
     c["links"] += len(i["links"])
 city_list = []
 for n, c in enumerate(sorted(cities, key=lambda c: -c["links"]), 1):
-    name = max(c.pop("names").items(), key=lambda kv: (kv[1], -len(kv[0])))[0] if c["names"] else ""
+    name = display_name(c.pop("names")) if c["names"] else ""
     city_list.append({"id": f"c{n:04d}", "city": name, **c, "categories": sorted(c["categories"]), "distance_km": round(km(ORIGIN, c))})
 city_of = {iid: c["id"] for c in city_list for iid in c["institutions"]}
 for i in placed:
@@ -327,7 +393,7 @@ for i in placed:
         per_cat[c] = per_cat.get(c, 0) + 1
 for c, n in sorted(per_cat.items(), key=lambda kv: -kv[1]):
     print(f"  {n:5d}  {c}")
-print("hidden (RU/BY):", len(hidden))
+print("hidden countries:", sorted(HIDDEN_COUNTRIES), "institutions:", len(hidden))
 print("unplaced (no coordinates):", len(unplaced))
 for i in unplaced[:30]:
     print("   ", i["name"], "|", i["city"], i["country_code"])

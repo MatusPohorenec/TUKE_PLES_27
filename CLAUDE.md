@@ -212,8 +212,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   in), short arcs keep less steady light after landing (`arcGlow` 0.2 → 1 between 400 and 3 500 km; the beam stays full).
 - No rotation. During the opening the view starts on Central Europe (12 % of the world's width) and only widens to hold
   Košice and every place whose beam is a third of the way there (+18 % padding), then shows the whole world.
-- Layout differences: on the flat map the bottom right is Australia, so the QR panel sits top right (empty Arctic,
-  Russia is hidden) as a narrow column (`.wall.view-2d .wall-join`).
+- Layout differences: on the flat map the bottom right is Australia, so the QR panel sits top right (Arctic) as a narrow
+  column (`.wall.view-2d .wall-join`). Measured 2026-10-20 with Russia shown: clear of every place at 1920×1080 (kiosk), but
+  at 1280×720 it covers Yakutsk, Khabarovsk, Vladivostok, Nakhodka, Beijing, Harbin and Kitami, and at 1536×730 Kitami
+  (without kiosk also Tokyo, Nagoya, Sendai …): smaller screens need a compact or relocated panel.
 - Cards never cover the map (the user: cards over half the map). Like TV lower thirds / docked map panels
   (Flightradar24, Esri dock, Datawrapper callouts), `MapScene.cardDock()` offers the empty southern ocean south of 38° S
   between 52° W and 138° E (stars there narrow it); the card docks there as wide as the band (`--dock-w`) and the place gets
@@ -250,9 +252,17 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 ## Data (data/README.md has the details)
 
-- 815 places (cities merged within 15 km), 2 075 institutions, 2 511 links, 84 countries on the globe; Russia/Belarus
-  (43 institutions) are hidden pending the organisers' decision (`HIDDEN_COUNTRIES` in scripts/build_dataset.py).
-- `since` (start year) on 2 285 links / 767 places, 1980–2027: first joint publication (OpenAlex, all years, works with
+- Dataset 2026-10-20+aeb9797b: 832 places (cities merged within 15 km), 2 118 institutions, 2 558 links, 86 countries on
+  the globe. Russia and Belarus are shown since 2026-10-20 (the user's decision; 43 institutions, 24 places; until then they
+  were hidden as politically sensitive): `HIDDEN_COUNTRIES` in scripts/build_dataset.py is empty. The DB column
+  `countries.is_hidden` and the API filters on it exist but the seed never sets it.
+- build_dataset.py checks source coordinates: points shared by institutions of different cities, far from other
+  institutions of the same city or from the cached city are re-geocoded; a point > 50 km from its city is replaced when
+  confirmed (another institution of the city nearby, or a default point far from 2+ of its cities). 25 fixed on 2026-10-20,
+  e.g. Tashkent for 4 Russian partners of one Erasmus+ KA2 project, a Greek federation in India, Purdue in Louisiana,
+  Luleå/Umeå at Stockholm, DLR Köln at Berlin, Milano/Bologna at Rome. Place name = the most common city regardless of
+  spelling, written with diacritics when any source has them (München, Poznań, Łódź); Italian province suffixes dropped.
+- `since` (start year) on 2 325 links / 782 places, 1980–2027: first joint publication (OpenAlex, all years, works with
   ≤ 15 institutions; scripts/openalex_first_years.py), start of the earliest shared EU project (CORDIS), first Erasmus
   nomination (agreements themselves are undated), dates from contracts/projects/CEEPUS. It is the earliest evidence, not
   necessarily the true start. Earliest: Praha 1980, Budapest 1982, Jena 1984. Nothing in the sources before 1980.
@@ -276,6 +286,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   went live the same evening (verified: health up, CORS, preflight, wall timeline, place detail, search). Branch merged to main.
   Later that evening the second PC (Docker PC) pulled it: `npm ci`, local SQL Server 2022 in the Docker container
   `ples-mssql`, ples_dev migrated + seeded, api-smoke passes; README got the Docker variant (B), this file the two-PC notes.
+  Then, at the user's request, Russia and Belarus went on the map (the About page no longer says they are left out), with a
+  coordinate check and diacritic place names in build_dataset.py: dataset 2026-10-20+aeb9797b (832 places, 86 countries).
 
 ## Open questions / next
 
@@ -291,10 +303,11 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   `existingResponse="PassThrough"` on the API site; a rewrite of all URLs to app.js would allow plain /api.
 - The architecture document (v0.2) still says env.config / web.config, /api and Node 22: refresh it to App_Data\.env,
   iisnode.yml, /app.js/api and Node 18 (Artifact read by its URL, edit the saved file, publish with `url` set).
-- Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), RU/BY on the map, what „kde si bol/a" means for
-  guests, guest light colour, milestones wording, confirmation of the Erasmus list by the international office (OZVaM).
+- Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), what „kde si bol/a" means for guests, guest light
+  colour, milestones wording, confirmation of the Erasmus list by the international office (OZVaM).
+- 2D view: the QR panel covers places on screens smaller than 1920×1080 (see the 2D section).
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome kiosk `/?kiosk=1&k=CODE`), rehearsal.
 - Load test with ~500 simulated guests against the TUKE server (one iisnode process); English version of the guest form;
   polish of /mapa on phones; counters say „1 svetiel hostí" for 1–4 lights (fixed label; `plural()` exists in lib/format.ts).
 - Student lobby after the ball: second database, switch App_Data\.env.
-- Older cooperation (before 1980) would need archive sources; undated places (48) light up in the last year.
+- Older cooperation (before 1980) would need archive sources; undated places (50) light up in the last year.
