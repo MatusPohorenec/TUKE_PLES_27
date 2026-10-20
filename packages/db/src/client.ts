@@ -1,96 +1,122 @@
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
+import { isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
-import * as schema from './schema.ts';
+import { Kysely, MssqlDialect } from 'kysely';
+import * as Tarn from 'tarn';
+import * as Tedious from 'tedious';
+import type { Database } from './schema.ts';
 
-export type Schema = typeof schema;
-export type Db = PgDatabase<PgQueryResultHKT, Schema>;
-export type Driver = 'neon' | 'pg' | 'pglite';
+export type Db = Kysely<Database>;
 
 /** Repository root, only meaningful when running from source (local development, CLI). */
 export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
-export const MIGRATIONS_DIR = fileURLToPath(new URL('../drizzle', import.meta.url));
-
-/** Reads the repository .env when running locally; on Vercel the variables come from the project settings. */
-export function loadEnv(): void {
-  const file = `${REPO_ROOT}.env`;
-  if (!process.env.VERCEL && existsSync(file)) process.loadEnvFile(file);
-}
 
 /**
- * Which driver to use:
- *  - DATABASE_URL on *.neon.tech -> Neon HTTP driver (serverless, no connection pool to manage)
- *  - any other DATABASE_URL       -> node-postgres (e.g. a Postgres server at TUKE after moving off Vercel)
- *  - no DATABASE_URL              -> PGlite, an embedded Postgres in .data/pglite (local development only)
+ * Loads environment variables from a file of the repository: `.env` by default (local development), or the
+ * file given by `--env <file>` on the command line, e.g. `npm run db:seed -- --env .env.tuke` for the TUKE
+ * database. Only that one file is read, so a run against TUKE never picks up the local settings.
+ * Under IIS (iisnode) nothing is loaded: the variables come from the appSettings of web.config.
  */
-export function resolveDriver(env = process.env): Driver {
-  if (env.DB_DRIVER === 'neon' || env.DB_DRIVER === 'pg' || env.DB_DRIVER === 'pglite') return env.DB_DRIVER;
-  if (!env.DATABASE_URL) return 'pglite';
-  return /\.neon\.tech\b/.test(env.DATABASE_URL) ? 'neon' : 'pg';
+export function loadEnv(argv = process.argv): string | null {
+  if (process.env.IISNODE_VERSION) return null;
+  const flag = argv.indexOf('--env');
+  const name = flag >= 0 ? argv[flag + 1] : '.env';
+  if (!name) throw new Error('--env needs a file name, e.g. --env .env.tuke');
+  const file = isAbsolute(name) ? name : join(REPO_ROOT, name);
+  if (!existsSync(file)) {
+    if (flag >= 0) throw new Error(`env file not found: ${file}`);
+    return null;
+  }
+  process.loadEnvFile(file);
+  return name;
+}
+
+export interface DbConfig {
+  /** host name, or host\instance for a named instance (e.g. localhost\SQLEXPRESS, resolved by SQL Server Browser) */
+  server: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+  encrypt: boolean;
+  trustServerCertificate: boolean;
+}
+
+const flag = (value: string | undefined, fallback: boolean) => (value === undefined || value === '' ? fallback : /^(1|true|yes)$/i.test(value));
+
+/**
+ * Connection settings from the environment (SQL Server authentication):
+ *   MSSQL_SERVER, MSSQL_DATABASE, MSSQL_USER, MSSQL_PASSWORD
+ *   MSSQL_PORT (1433), MSSQL_ENCRYPT (true), MSSQL_TRUST_SERVER_CERTIFICATE (false)
+ */
+export function dbConfig(env = process.env): DbConfig | null {
+  if (!env.MSSQL_SERVER) return null;
+  const missing = ['MSSQL_DATABASE', 'MSSQL_USER', 'MSSQL_PASSWORD'].filter(k => !env[k]);
+  if (missing.length) throw new Error(`MSSQL_SERVER is set but ${missing.join(', ')} ${missing.length > 1 ? 'are' : 'is'} missing`);
+  return {
+    server: env.MSSQL_SERVER,
+    port: Number(env.MSSQL_PORT) || 1433,
+    database: env.MSSQL_DATABASE!,
+    user: env.MSSQL_USER!,
+    password: env.MSSQL_PASSWORD!,
+    encrypt: flag(env.MSSQL_ENCRYPT, true),
+    trustServerCertificate: flag(env.MSSQL_TRUST_SERVER_CERTIFICATE, false),
+  };
 }
 
 export function isDatabaseConfigured(env = process.env): boolean {
-  return Boolean(env.DATABASE_URL) || !env.VERCEL;
+  return Boolean(env.MSSQL_SERVER);
 }
 
-interface Connection { db: Db; driver: Driver; close: () => Promise<void> }
-let connection: Promise<Connection> | undefined;
-
-async function connect(): Promise<Connection> {
-  const driver = resolveDriver();
-  const url = process.env.DATABASE_URL;
-  if (driver === 'neon') {
-    const { neon } = await import('@neondatabase/serverless');
-    const { drizzle } = await import('drizzle-orm/neon-http');
-    return { driver, db: drizzle({ client: neon(url!), schema }) as unknown as Db, close: async () => {} };
-  }
-  if (driver === 'pg') {
-    const { default: pg } = await import('pg');
-    const { drizzle } = await import('drizzle-orm/node-postgres');
-    const pool = new pg.Pool({ connectionString: url, max: 5 });
-    return { driver, db: drizzle({ client: pool, schema }) as unknown as Db, close: () => pool.end() };
-  }
-  if (process.env.VERCEL) throw new Error('DATABASE_URL is not set: connect a Postgres database (Neon) to the Vercel project');
-  const { PGlite } = await import('@electric-sql/pglite');
-  const { pg_trgm } = await import('@electric-sql/pglite/contrib/pg_trgm');
-  const { drizzle } = await import('drizzle-orm/pglite');
-  const dir = process.env.PGLITE_DIR ?? `${REPO_ROOT}.data/pglite`;
-  mkdirSync(dir, { recursive: true });
-  const client = new PGlite(dir, { extensions: { pg_trgm } });
-  return { driver, db: drizzle({ client, schema }) as unknown as Db, close: () => client.close() };
+/** "server/database" for logs; never includes the password. */
+export function describeDatabase(env = process.env): string {
+  const c = dbConfig(env);
+  return c ? `${c.server}${c.server.includes('\\') ? '' : `:${c.port}`}/${c.database}` : 'no database';
 }
 
-/** Shared lazily created connection. */
-export function getDb(): Promise<Db> {
-  connection ??= connect().catch(err => { connection = undefined; throw err; });
-  return connection.then(c => c.db);
+function createKysely(c: DbConfig): Kysely<Database> {
+  const [host, instanceName] = c.server.split('\\');
+  const dialect = new MssqlDialect({
+    tarn: { ...Tarn, options: { min: 0, max: 10, idleTimeoutMillis: 60_000, acquireTimeoutMillis: 20_000 } },
+    tedious: {
+      ...Tedious,
+      connectionFactory: () => new Tedious.Connection({
+        server: host!,
+        authentication: { type: 'default', options: { userName: c.user, password: c.password } },
+        options: {
+          database: c.database,
+          ...(instanceName ? { instanceName } : { port: c.port }),
+          encrypt: c.encrypt,
+          trustServerCertificate: c.trustServerCertificate,
+          connectTimeout: 15_000,
+          requestTimeout: 30_000,
+          appName: 'ples-tuke',
+        },
+      }),
+    },
+  });
+  return new Kysely<Database>({ dialect });
 }
 
-export async function getDriver(): Promise<Driver> {
-  return resolveDriver();
+let base: Kysely<Database> | undefined;
+let db: Db | undefined;
+
+/**
+ * Shared lazily created connection pool. Every table lives in schema dbo; the TUKE login has a default
+ * schema of its own, so all names are qualified (withSchema).
+ */
+export async function getDb(): Promise<Db> {
+  if (db) return db;
+  const config = dbConfig();
+  if (!config) throw new Error('The database is not configured: set MSSQL_SERVER, MSSQL_DATABASE, MSSQL_USER and MSSQL_PASSWORD');
+  base = createKysely(config);
+  db = base.withSchema('dbo');
+  return db;
 }
 
 export async function closeDb(): Promise<void> {
-  if (!connection) return;
-  const c = await connection;
-  connection = undefined;
-  await c.close();
-}
-
-/** Applies the SQL migrations from packages/db/drizzle with the migrator of the active driver. */
-export async function runMigrations(): Promise<Driver> {
-  const db = await getDb();
-  const driver = resolveDriver();
-  const config = { migrationsFolder: MIGRATIONS_DIR };
-  if (driver === 'neon') {
-    const { migrate } = await import('drizzle-orm/neon-http/migrator');
-    await migrate(db as never, config);
-  } else if (driver === 'pg') {
-    const { migrate } = await import('drizzle-orm/node-postgres/migrator');
-    await migrate(db as never, config);
-  } else {
-    const { migrate } = await import('drizzle-orm/pglite/migrator');
-    await migrate(db as never, config);
-  }
-  return driver;
+  const b = base;
+  base = undefined;
+  db = undefined;
+  await b?.destroy();
 }

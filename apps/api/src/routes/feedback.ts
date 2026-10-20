@@ -1,8 +1,7 @@
 /** Reviewer comments from the prototype: POST /api/feedback */
 import { Hono } from 'hono';
-import { and, eq, gt, sql } from 'drizzle-orm';
 import { FeedbackSchema } from '@ples/shared';
-import { feedback, getDb, isDatabaseConfigured } from '@ples/db';
+import { getDb, isDatabaseConfigured } from '@ples/db';
 import { CACHE, fail, readJson } from '../lib/http.ts';
 import { ipHash } from '../lib/security.ts';
 
@@ -11,11 +10,12 @@ export const feedbackRoutes = new Hono().post('/', async c => {
   const input = await readJson(c, FeedbackSchema);
   const ip = ipHash(c);
   const db = await getDb();
-  const [recent] = await db.select({ n: sql<number>`count(*)::int` }).from(feedback)
-    .where(and(eq(feedback.ipHash, ip), gt(feedback.createdAt, new Date(Date.now() - 10 * 60_000))));
+  const recent = await db.selectFrom('feedback').select(eb => eb.fn.countAll<number>().as('n'))
+    .where('ip_hash', '=', ip).where('created_at', '>', new Date(Date.now() - 10 * 60_000))
+    .executeTakeFirst();
   if ((recent?.n ?? 0) >= 20) fail(429, 'too_many', 'Veľa pripomienok naraz. Skús to o chvíľu.');
-  const [row] = await db.insert(feedback).values({ page: input.page, message: input.message, author: input.author || null, ipHash: ip })
-    .returning({ id: feedback.id });
+  const row = await db.insertInto('feedback').values({ page: input.page, message: input.message, author: input.author || null, ip_hash: ip })
+    .output('inserted.id').executeTakeFirstOrThrow();
   c.header('Cache-Control', CACHE.none);
-  return c.json({ id: row!.id }, 201);
+  return c.json({ id: row.id }, 201);
 });

@@ -1,15 +1,20 @@
 /**
- * npm run db:migrate
- * Runs on every Vercel build (see "vercel-build" in the root package.json). Without a database on Vercel
- * it only warns, so the first deployment works before Neon is connected (the globe then uses the bundled snapshot).
+ * npm run db:migrate [-- --env .env.tuke]
+ * Applies the SQL migrations in packages/db/migrations to the database configured by MSSQL_* (see .env.example).
+ * Without --env the repository .env is used (local SQL Server); --env names another file, e.g. the TUKE database.
  */
-import { closeDb, isDatabaseConfigured, loadEnv, runMigrations } from '../client.ts';
+import { closeDb, describeDatabase, getDb, isDatabaseConfigured, loadEnv } from '../client.ts';
+import { runMigrations } from '../migrations.ts';
 
-loadEnv();
+const envFile = loadEnv();
 if (!isDatabaseConfigured()) {
-  console.warn('[db:migrate] DATABASE_URL is not set, skipping migrations');
-  process.exit(0);
+  console.error('[db:migrate] MSSQL_SERVER is not set (copy .env.example to .env, or pass --env <file>)');
+  process.exit(1);
 }
-const driver = await runMigrations();
-console.log(`[db:migrate] migrations applied (${driver})`);
-await closeDb();
+console.log(`[db:migrate] ${describeDatabase()}${envFile ? ` (from ${envFile})` : ''}`);
+try {
+  const applied = await runMigrations(await getDb());
+  console.log(applied.length ? `[db:migrate] applied: ${applied.join(', ')}` : '[db:migrate] up to date');
+} finally {
+  await closeDb();
+}

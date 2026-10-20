@@ -8,15 +8,43 @@ export class ApiFailure extends Error {
 
 export const fail = (status: ContentfulStatusCode, code: string, message: string): never => { throw new ApiFailure(status, code, message); };
 
-/** Response caching on the Vercel CDN (s-maxage) and in the browser (max-age). */
+/**
+ * Response caching in the browser (max-age) and in a shared cache, if one sits in front of the API (s-maxage).
+ * With the web on another origin every response also carries Vary: Origin (CORS middleware in app.ts).
+ */
 export const CACHE = {
   dataset: 'public, max-age=60, s-maxage=3600, stale-while-revalidate=604800',
   dictionary: 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
   summary: 'public, max-age=0, s-maxage=5, stale-while-revalidate=30',
-  /** same response for every viewer: the CDN answers almost every poll, the function runs about once per 2 s */
+  /** same response for every viewer, see shared() */
   live: 'public, max-age=0, s-maxage=2, stale-while-revalidate=2',
   none: 'no-store',
 } as const;
+
+/**
+ * Computes a value at most once per ttl and hands the same result to every caller in the meantime.
+ * The live feed and the summary are identical for all viewers: on Vercel the CDN answered the polls,
+ * on IIS this keeps the database load flat however many screens and phones poll.
+ */
+export function shared<T>(ttlMs: number): (key: string, compute: () => Promise<T>) => Promise<T> {
+  const entries = new Map<string, { at: number; value: Promise<T> }>();
+  return (key, compute) => {
+    const now = Date.now();
+    const hit = entries.get(key);
+    if (hit && now - hit.at < ttlMs) return hit.value;
+    const value = compute();
+    entries.set(key, { at: now, value });
+    value.catch(() => { if (entries.get(key)?.value === value) entries.delete(key); }); // never keep a failure
+    return value;
+  };
+}
+
+/** Positive whole number from a query or path parameter, else undefined. */
+export function positiveInt(value: string | undefined): number | undefined {
+  if (!value || !/^\d{1,9}$/.test(value)) return undefined;
+  const n = Number(value);
+  return n > 0 ? n : undefined;
+}
 
 export async function readJson<S extends z.ZodType>(c: Context, schema: S): Promise<z.infer<S>> {
   let body: unknown;

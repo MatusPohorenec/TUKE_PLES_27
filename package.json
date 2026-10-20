@@ -13,11 +13,11 @@
   "scripts": {
     "dev": "node tools/dev.mjs",
     "build": "npm run build -w @ples/web",
+    "build:tuke": "node tools/build-tuke.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "db:generate": "npm run generate -w @ples/db",
-    "db:migrate": "npm run migrate -w @ples/db",
+    "db:migrate": "npm run migrate -w @ples/db --",
     "db:seed": "npm run seed -w @ples/db --",
-    "vercel-build": "npm run db:migrate && npm run db:seed -- --if-needed && node tools/build-vercel.mjs"
+    "db:dev-setup": "node tools/mssql-dev-setup.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

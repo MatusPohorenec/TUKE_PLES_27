@@ -1,3 +1,4 @@
+export { sql } from 'kysely';
 export * from './client.ts';
-export * as schema from './schema.ts';
+export * from './migrations.ts';
 export * from './schema.ts';
