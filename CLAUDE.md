@@ -75,27 +75,44 @@ npm run dev          # web http://localhost:5173 (proxies /api), api http://loca
 npm run typecheck
 npm run db:migrate   # local SQL Server; add -- --env .env.tuke for the TUKE database (only with the user's OK)
 npm run db:seed      # imports data/tuke_cooperation.json when it changed (--force re-imports, --if-needed, --env <file>)
-npm run db:dev-setup # once per machine: .data/mssql-dev-setup.sql (run in SSMS) + MSSQL_* in .env, new local password
+npm run db:dev-setup # once per machine: .data/mssql-dev-setup.sql (SSMS, or sqlcmd in the Docker container) + MSSQL_* in .env
 npm run build:tuke   # deploy/web, deploy/api, deploy/srdcom-web.zip, deploy/srdcom-api.zip (-- --api-url <url>)
 node tools/api-smoke.mjs [api] [origin]   # every API route against a LOCAL API; with an origin also CORS everywhere
+docker start ples-mssql                   # Docker PC only: the local SQL Server (Docker Desktop must be running)
 ```
 
-## Local environment (this Windows machine)
+## Local environment (two Windows PCs)
 
-- Node 24.14.1 via nvm-windows (global); the dev tooling (vite 8, tsx, esbuild build) needs ≥ 22.12. Node 18.20.6 (the
-  server's version) is installed in nvm for testing the API bundle: `/c/Users/matus/AppData/Local/nvm/v18.20.6/node.exe`.
-- SQL Server 2025 Developer (Microsoft retired the 2022 web installer; the winget package fails), default instance
-  MSSQLSERVER (MSSQL17) on localhost:1433, TCP/IP on, Mixed Mode. Database and login `ples_dev` mirror the TUKE login
-  (own default schema, db_ddladmin + db_datareader + db_datawriter, collation SQL_Latin1_General_CP1_CI_AI, compatibility
-  level 160 = 2022). Self-signed certificate → `MSSQL_TRUST_SERVER_CERTIFICATE=true` (also at TUKE). Windows auth over shared
-  memory works for the account `matus` (sysadmin).
-- Env files (all git-ignored): `.env` = local (MSSQL_* of ples_dev, ADMIN_PASSWORD=change-me, WEB_ORIGIN=http://localhost:4173);
-  `.env.tuke` = the TUKE database (MSSQL_* only), used only with `--env .env.tuke`; `db_pass.txt` = the TUKE DB password.
-- Browser pane launch configs (`.claude/launch.json`, git-ignored): `app` = `npm run dev` (5173); `web-cross-origin` =
-  `npm run preview -w @ples/web -- --port 4173 --strictPort` for the two-host setup like TUKE (build the web first with
-  `VITE_API_URL=http://localhost:8787/api npm run build -w @ples/web`; the API allows 4173 through WEB_ORIGIN in .env).
-- Windows machine: Git Bash and PowerShell; Python 3 with requests, beautifulsoup4, lxml. Temp scripts go to the session
-  scratchpad. Local test lights: POST `/api/events/ples-2027/pins` with header `x-device-id: <16–64 hex chars>` and body
+The user works on two Windows PCs with the same repo path (`C:\Users\Matus\Desktop\Ples 2027`) and syncs them through GitHub
+(pull before work, push after). Git-ignored files (`.env`, `.env.tuke`, `db_pass.txt`, `deploy/`, `.data/`,
+`.claude/launch.json`) exist per PC. Check which PC this is before relying on the details below: `docker ps --filter
+name=ples-mssql` (Docker PC) or `Get-Service MSSQLSERVER` (native PC); `git reflog` shows whether the latest commits came by pull.
+
+- **Native PC** (the MS SQL port was made here; README variant A): Node 24.14.1 via nvm-windows (global), Node 18.20.6 (the
+  server's version) in nvm for testing the API bundle: `/c/Users/matus/AppData/Local/nvm/v18.20.6/node.exe`. SQL Server 2025
+  Developer (Microsoft retired the 2022 web installer; the winget package fails), default instance MSSQLSERVER (MSSQL17) on
+  localhost:1433, TCP/IP on, Mixed Mode; Windows auth over shared memory works for the account `matus` (sysadmin).
+- **Docker PC** (set up 2026-10-20; README variant B): Node 24.14.0 in `C:\Program Files\nodejs` (no nvm, no Node 18 yet).
+  Docker Desktop (WSL 2) runs the container `ples-mssql`: image mcr.microsoft.com/mssql/server:2022-latest (Developer
+  16.0.4305), published on 127.0.0.1:1433 only, volume `ples-mssql-data`, `--restart unless-stopped` (starts with Docker
+  Desktop), server collation SQL_Latin1_General_CP1_CI_AI, MSSQL_MEMORY_LIMIT_MB=2048. The sa password exists only in the
+  container env, so run sa scripts inside the container: `docker exec -i ples-mssql bash -c 'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD"
+  /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b' < file.sql`. In Git Bash prefix `MSYS_NO_PATHCONV=1`, otherwise
+  it rewrites `/opt/…` to `C:/Program Files/Git/opt/…`. The TUKE VPN (Check Point Endpoint) is not always connected there.
+- Both PCs: database and login `ples_dev` mirror the TUKE login (own default schema, db_ddladmin + db_datareader +
+  db_datawriter, not db_owner; collation SQL_Latin1_General_CP1_CI_AI, compatibility level 160 = 2022, RCSI off), created by
+  `npm run db:dev-setup` and its .sql file. Self-signed certificate → `MSSQL_TRUST_SERVER_CERTIFICATE=true` (also at TUKE).
+  Git Bash and PowerShell; Python 3 with requests, beautifulsoup4, lxml. Temp scripts go to the session scratchpad.
+- After a pull that changes package-lock.json run `npm ci`: the Docker PC still had node_modules of the Postgres era
+  (no kysely/tedious, @hono/node-server 2.x) until 2026-10-20.
+- Env files (all git-ignored, per PC): `.env` = local (MSSQL_* of ples_dev, ADMIN_PASSWORD, WEB_ORIGIN=http://localhost:4173);
+  `.env.tuke` = the TUKE database (MSSQL_* only), used only with `--env .env.tuke`; `db_pass.txt` = the TUKE DB password,
+  listed in `.git/info/exclude` on each PC (that file is per PC too: check it, else `git add -A` would stage the password).
+- Browser pane launch configs (`.claude/launch.json`, git-ignored): `app` = `npm run dev` (5173) on both PCs; on the native
+  PC also `web-cross-origin` = `npm run preview -w @ples/web -- --port 4173 --strictPort` for the two-host setup like TUKE
+  (build the web first with `VITE_API_URL=http://localhost:8787/api npm run build -w @ples/web`; the API allows 4173
+  through WEB_ORIGIN in .env).
+- Local test lights: POST `/api/events/ples-2027/pins` with header `x-device-id: <16–64 hex chars>` and body
   `{"places":[{"countryCode":"NP"}],"visitKind":"erasmus_study"}`; undo with DELETE
   `/api/events/ples-2027/submissions/<submissionId>` and the same header.
 
@@ -142,8 +159,11 @@ iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App
 - TUKE database (names only in `.env.tuke`): the login has roles db_ddladmin + db_datareader + db_datawriter (not db_owner)
   and a default schema of its own → all tables live in `dbo` and every name is qualified. SQL Server 2022 Enterprise
   16.0.1160.1, collation SQL_Latin1_General_CP1_CI_AI, RCSI off, self-signed certificate. Migrated and seeded 2026-10-20.
-- Reachable from the TUKE network: 80, 443, FTP 21, Web Deploy 8172, Plesk 8443 (FTPS 990 not). Manual zip upload is the
-  deploy path; GitHub Actions + FTPS would be the automation later. Plesk Git (build on the server) was rejected.
+- Reachable from the TUKE network: 80, 443, FTP 21, Web Deploy 8172, Plesk 8443 (FTPS 990 not); SQL Server 1433 answered
+  the native PC on 2026-10-20 (migrate + seed of the TUKE DB). From outside the TUKE network only 443 answers (checked
+  2026-10-20 from the Docker PC: 1433, 8443, 21 and 8172 time out), so Plesk and every `--env .env.tuke` run need the TUKE
+  network or the TUKE VPN (Check Point Endpoint). Manual zip upload is the deploy path; GitHub Actions + FTPS would be the
+  automation later. Plesk Git (build on the server) was rejected.
 - DNS: TUKE's resolver rs1.tuke.sk cached NXDOMAIN for srdcom.tuke.sk on 2026-10-20 (cleared the same day). Before the ball
   open the site from the TUKE network.
 - Second database (student lobby, later): same migrations + seed with another env file; the API uses one database at a time
@@ -254,12 +274,17 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   0628a06 docs; de9b76e api-smoke; TUKE DB migrated + seeded; 9d0a37c no web.config dependency (route folders,
   App_Data\.env, iisnode.yml); f980fd7 Node 18 + /app.js path info; 9a3e639 fallback error messages; then docs. Production
   went live the same evening (verified: health up, CORS, preflight, wall timeline, place detail, search). Branch merged to main.
+  Later that evening the second PC (Docker PC) pulled it: `npm ci`, local SQL Server 2022 in the Docker container
+  `ples-mssql`, ples_dev migrated + seeded, api-smoke passes; README got the Docker variant (B), this file the two-PC notes.
 
 ## Open questions / next
 
 - Vercel retirement (the user, in the Vercel dashboard): copy any reviewer comments from https://tuke-ples-27.vercel.app/admin
   (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the
   Vercel paragraph in README.md.
+- Upload pending: production still showed f980fd7 (API and web) on 2026-10-20 evening, so 9a3e639 (Slovak fallback error
+  messages, web only) goes live with the next upload of the zips (needs the TUKE network or VPN for Plesk).
+- Docker PC: install Node 18.20.6 (nvm-windows or the portable zip) before the next API change, to test the bundle.
 - Production checks only the user can do: a guest light from a phone (/zapoj-sa → wall → undo), /admin login with the
   production password, hide/show a light, scene switch.
 - TUKE IT (optional): Node.js 22/24 LTS instead of 18 (then restore the newer dependencies from tag `pred-node18`);

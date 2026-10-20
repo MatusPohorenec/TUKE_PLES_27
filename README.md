@@ -29,9 +29,11 @@ Architektúra, schéma databázy a otvorené otázky sú v dokumente „Architek
 
 ## Lokálny vývoj
 
-Potrebné: Node.js 22.12 alebo novší (odporúčaný 24) na vývoj a build a lokálny Microsoft SQL Server. Samotné API (`deploy/api`) beží aj na Node.js 18, ktorý má server TUKE. Nikdy nevyvíjaj proti databáze na serveri TUKE.
+Potrebné: Node.js 22.12 alebo novší (odporúčaný 24) na vývoj a build a lokálny Microsoft SQL Server, buď nainštalovaný vo Windows (variant A), alebo v Dockeri (variant B). Samotné API (`deploy/api`) beží aj na Node.js 18, ktorý má server TUKE. Nikdy nevyvíjaj proti databáze na serveri TUKE.
 
-### SQL Server na vlastnom počítači (raz)
+Projekt sa vyvíja na dvoch počítačoch: jeden má variant A, druhý variant B. Oba majú rovnakú databázu `ples_dev`, takže `.env` aj príkazy v časti Spustenie sú rovnaké. Súbory mimo gitu (`.env`, `.env.tuke`, `deploy/`) má každý počítač vlastné. Keď `git pull` prinesie zmenený `package-lock.json`, spusti `npm ci`.
+
+### SQL Server, variant A: inštalácia vo Windows (raz)
 
 1. Stiahni **SQL Server Developer** (zadarmo na vývoj) z https://www.microsoft.com/sql-server/sql-server-downloads a nainštaluj typ **Basic**. Webový inštalátor verzie 2022 už Microsoft nepodporuje, preto 2025 (`aka.ms/sql2025developer`). Lokálna databáza sa prepne na kompatibilitu 2022 (úroveň 160) ako na TUKE. Vznikne inštancia `MSSQLSERVER` a tvoj Windows účet bude jej správca. Na pripájanie stačí SSMS.
 2. **SQL Server Configuration Manager** → *SQL Server Network Configuration* → *Protocols for MSSQLSERVER* → **TCP/IP** → **Enable**.
@@ -43,6 +45,38 @@ Potrebné: Node.js 22.12 alebo novší (odporúčaný 24) na vývoj a build a lo
 
 4. V SSMS sa pripoj na `localhost` (Windows Authentication), otvor `.data/mssql-dev-setup.sql` a spusti ho. Zapne prihlasovanie heslom (Mixed Mode) a vytvorí databázu `ples_dev` s loginom `ples_dev`. Login má rovnaké práva ako login na TUKE: vlastnú predvolenú schému a roly `db_ddladmin`, `db_datareader`, `db_datawriter`. Databáza má rovnakú collation ako TUKE (`SQL_Latin1_General_CP1_CI_AI`) a úroveň kompatibility 160.
 5. V Configuration Manageri → *SQL Server Services* → **SQL Server (MSSQLSERVER)** → **Restart**.
+
+### SQL Server, variant B: Docker (raz)
+
+SQL Server 2022 (tá istá verzia ako na TUKE) beží v kontajneri `ples-mssql`. Netreba ho inštalovať, zapínať TCP/IP ani reštartovať. Príkazy sú pre Git Bash: `MSYS_NO_PATHCONV=1` mu bráni prepísať cesty v kontajneri (napr. `/opt/...`) na cesty Windows.
+
+1. Nainštaluj a spusti **Docker Desktop** (WSL 2, Linux kontajnery).
+2. Vytvor kontajner. Príkaz stiahne image `mcr.microsoft.com/mssql/server:2022-latest` (asi 2,4 GB) a nastaví collation servera ako na TUKE. Heslo pre `sa` si vygeneruje sám a zostane len v nastaveniach kontajnera (`docker inspect ples-mssql`). Port je otvorený len pre tento počítač (`127.0.0.1`), dáta sú vo volume `ples-mssql-data` a kontajner sa spúšťa spolu s Dockerom. `ACCEPT_EULA=Y` je súhlas s licenciou SQL Server Developer (len na vývoj a testy).
+
+   ```bash
+   MSYS_NO_PATHCONV=1 docker run -d --name ples-mssql --hostname ples-mssql \
+     -p 127.0.0.1:1433:1433 -v ples-mssql-data:/var/opt/mssql \
+     -e ACCEPT_EULA=Y -e MSSQL_PID=Developer -e MSSQL_COLLATION=SQL_Latin1_General_CP1_CI_AI -e MSSQL_MEMORY_LIMIT_MB=2048 \
+     -e MSSQL_SA_PASSWORD="Sa9-$(node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))")" \
+     --restart unless-stopped mcr.microsoft.com/mssql/server:2022-latest
+   ```
+
+   Prvý štart trvá niekoľko sekúnd, najviac asi pol minúty. Server je pripravený, keď `docker logs ples-mssql` vypíše `SQL Server is now ready for client connections`.
+3. Vygeneruj skript a nastavenia (rovnako ako vo variante A):
+
+   ```bash
+   npm run db:dev-setup
+   ```
+
+4. Spusti skript v kontajneri ako `sa`. Kroky so SSMS a reštartom, ktoré vypíše `db:dev-setup`, vo variante B odpadajú.
+
+   ```bash
+   MSYS_NO_PATHCONV=1 docker exec -i ples-mssql bash -c 'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b' < .data/mssql-dev-setup.sql
+   ```
+
+   Vypíše `ok: database and login ples_dev are ready…`. Databáza a login sú rovnaké ako vo variante A.
+
+Bežne stačí mať spustený Docker Desktop, kontajner sa zapne sám. Ručne ho spustíš príkazom `docker start ples-mssql` a zastavíš príkazom `docker stop ples-mssql`. `docker rm -f ples-mssql` zmaže kontajner, ale dáta zostanú vo volume. `docker volume rm ples-mssql-data` zmaže aj dáta.
 
 ### Spustenie
 
