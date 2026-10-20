@@ -4,26 +4,34 @@ Live web app for the TUKE ball 2027, which celebrates **75 years of the Technica
 A dark, "switched-off" rotating globe is shown on the LED wall at the ball: light flies from Košice to every place where TUKE
 has documented cooperation, places light up as twinkling stars, and guests add the places they have been to via a QR code,
 live. Theme: midnight blue + silver, light / play of light (svetlohra). Visual polish and correct, sourced data both matter.
+After the ball the wall moves permanently to the student lobby (vestibul) with a second database.
 
-- Production (TUKE, Plesk for Windows): web https://srdcom.tuke.sk, API https://api.srdcom.tuke.sk (`/api/health` shows the
-  deployed commit), database MS SQL Server 2022 on portal.msweb.tuke.sk. The old Vercel + Neon version
-  (https://tuke-ples-27.vercel.app) is frozen at tag `pred-mssql`; `vercel.json` disables Git deployments since the port.
-- Repo: https://github.com/MatusPohorenec/TUKE_PLES_27 (**public**: never commit secrets or personal data)
+- **Production = TUKE hosting** (Plesk for Windows on msweb.tuke.sk, live since 2026-10-20):
+  web https://srdcom.tuke.sk, API https://api.srdcom.tuke.sk/app.js/api (health with the deployed commit:
+  https://api.srdcom.tuke.sk/app.js/api/health), database Microsoft SQL Server 2022 on portal.msweb.tuke.sk (same machine).
+- Git: `main` is the TUKE version (branch `mssql-tuke` merged 2026-10-20). Tags: `pred-mssql` = last Vercel/Postgres version,
+  `pred-node18` = the Node 22 dependency set, `pred-casovou-osou` = the wall before the timeline opening.
+- Vercel (https://tuke-ples-27.vercel.app, Neon Postgres) is being retired: the user deletes the project himself. Until it is
+  gone `vercel.json` keeps Git deployments off (`git.deploymentEnabled: false`); after that `vercel.json` can be deleted.
+- Repo: https://github.com/MatusPohorenec/TUKE_PLES_27 (**public**: never commit secrets, personal data or the TUKE database
+  and login names)
 - Architecture document for reviewers (Slovak, private artifact): https://claude.ai/artifact/VvkL4spi4XUYJMMVuNB68A
-- `README.md` (Slovak) = dev/deploy guide, `data/README.md` (Slovak) = data sources, pipeline, known limits
+- `README.md` (Slovak) = dev/deploy guide incl. the Plesk steps, `data/README.md` (Slovak) = data sources, pipeline, limits
 
 ## Working agreements
 
 - Talk to the user in Slovak. UI texts are Slovak. Code, comments and commit messages are English.
-- Flow used throughout: implement → `npm run typecheck` → verify in the browser pane (local dev server, local SQL Server) →
-  commit → push → `npm run build:tuke` → the user uploads the zips in Plesk (README „Nasadenie na TUKE") → check that
-  https://api.srdcom.tuke.sk/api/health reports the new commit → verify on production → short report. A push deploys nothing.
-- Push over HTTPS without prompts: `GCM_INTERACTIVE=never GIT_TERMINAL_PROMPT=0 git push` (SSH push is denied on this machine).
-- Before big changes tag the current state (example: tag `pred-casovou-osou` = the wall before the timeline opening).
-- Never type passwords/secrets into anything; the user fills `App_Data\.env` on the server himself. Never print `MSSQL_PASSWORD`,
-  `.env`, `.env.tuke` or `db_pass.txt` (repo root, excluded via .git/info/exclude).
-- Never develop or experiment against the TUKE database; it is written only by `db:migrate` / `db:seed` with `--env .env.tuke`,
-  and only with the user's OK.
+- Flow: implement → `npm run typecheck` → verify locally (dev server + local SQL Server, browser pane, `tools/api-smoke.mjs`)
+  → commit → push → `npm run build:tuke` → the user uploads the zip(s) in Plesk → check that
+  https://api.srdcom.tuke.sk/app.js/api/health (API) and https://srdcom.tuke.sk/build.txt (web) show the new commit →
+  verify on production → short report. **A push deploys nothing**; only the zips the user uploads do.
+- Push over HTTPS without prompts: `GCM_INTERACTIVE=never GIT_TERMINAL_PROMPT=0 git push`.
+- Before big changes tag the current state (see the tags above).
+- Never type passwords/secrets into anything (the production admin password included: the user tests /admin himself).
+  The user fills `App_Data\.env` on the server. Never print `MSSQL_PASSWORD`, `.env`, `.env.tuke` or `db_pass.txt`
+  (repo root, excluded via .git/info/exclude); read them only from scripts.
+- Never develop or experiment against the TUKE database; it is written only by `db:migrate` / `db:seed` with
+  `--env .env.tuke`, and only with the user's OK. Test lights on production only with the user's OK (they show on the wall).
 - Guest data stays anonymous (device/IP only as HMAC hashes). Nomination PDFs contain names/e-mails: store aggregates only.
 
 ## Layout
@@ -31,7 +39,8 @@ live. Theme: midnight blue + silver, light / play of light (svetlohra). Visual p
 ```
 apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r186 with own shaders
   src/pages        Wall.tsx (/ – the LED wall, `?view=2d` = flat map), MapPage.tsx (/mapa), Join.tsx (/zapoj-sa),
-                   Admin.tsx (/admin), About.tsx (/o-projekte), Compare.tsx (/porovnanie – 3D and 2D side by side)
+                   Admin.tsx (/admin), About.tsx (/o-projekte), Compare.tsx (/porovnanie – 3D and 2D side by side);
+                   the routes are listed in src/main.tsx (ROUTES; build:tuke makes a folder per route)
   src/globe        core.ts (abstract WallScene: timeline, cooperation/guest state, country colours, counters, year, picking),
                    scene.ts (GlobeScene: globe.gl, rotation, title fit), map2d.ts (MapScene: Natural Earth map in an
                    orthographic three.js scene, d3-geo, camera that widens with the light), arcs.ts (all cooperation arcs,
@@ -39,22 +48,23 @@ apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r18
                    borders.ts (globe outlines, one LineSegments), useGlobeScene.ts (creates the 3D or 2D scene)
   src/components   PlaceSpotlight.tsx (cards on the wall), CountUp.tsx (smooth counters), GlobeTooltip, QrCode, Starfield,
                    FeedbackButton („Pripomienka"), PlaceSearch
-  src/lib          api.ts, useGuests.ts (summary + shared live feed), usePoll.ts (pauses in hidden tabs), useGlobeData.ts,
-                   router.tsx (tiny router), format.ts (Slovak plural, number format), device.ts
+  src/lib          api.ts (VITE_API_URL base, credentials, fallback error messages), useGuests.ts (summary + shared live
+                   feed), usePoll.ts (pauses in hidden tabs), useGlobeData.ts, router.tsx (tiny router, ignores a trailing
+                   slash), format.ts (Slovak plural, number format), device.ts
 apps/api         Hono 4 REST API under /api (routes: globe, events, gazetteer, admin, feedback); server.ts = the one entry
-                 (local port 8787, or the iisnode named pipe in PORT); app.ts (CORS by WEB_ORIGIN); snapshot.ts = bundled
-                 dataset fallback when the DB is unreachable; lib/http.ts (CACHE headers, shared() = per-process cache of
-                 live/summary), lib/security.ts (HMACs, client IP = last X-Forwarded-For entry, admin cookie)
-packages/db      MS SQL Server via Kysely 0.27 + tedious 19: migrations/*.sql (T-SQL, GO batches, applied by src/migrations.ts,
-                 recorded in dbo.schema_migrations), schema.ts (Kysely types, SQL names), client.ts (MSSQL_* env, pool,
-                 loadEnv with --env), cli/migrate.ts, cli/seed.ts
+                 (local port 8787, or the iisnode named pipe in PORT; loads App_Data/.env under iisnode; strips a leading
+                 /app.js); app.ts (CORS by WEB_ORIGIN, health); snapshot.ts = bundled dataset fallback when the DB is down;
+                 lib/http.ts (CACHE headers, shared() = per-process cache of live 2 s / summary 5 s), lib/security.ts
+                 (HMACs, client IP = last X-Forwarded-For entry, admin cookie Path=/ SameSite=Strict)
+packages/db      MS SQL Server via Kysely 0.27 + tedious 19: migrations/*.sql (T-SQL, GO batches, applied by
+                 src/migrations.ts, recorded in dbo.schema_migrations), schema.ts (Kysely types = SQL names), client.ts
+                 (MSSQL_* env, pool, withSchema('dbo'), loadEnv with --env, applyEnvFile), cli/migrate.ts, cli/seed.ts
 packages/shared  constants.ts (ORIGIN, TUKE_FOUNDED, MILESTONES, CATEGORY_GROUPS, CATEGORIES, LIMITS …), api.ts (zod schemas,
                  response types); `@ples/shared/constants` has no zod, for the browser bundle
 data/            tuke_cooperation.json (+ .csv) = the versioned dataset (source of truth for hard facts), raw/, evidence/
 scripts/         Python pipeline that builds the dataset (order in data/README.md)
-tools/           dev.mjs (web + api), build-tuke.mjs (deploy/web + deploy/api + zips), iis/ (iisnode.yml and env.example
-                 = App_Data/.env template of the API site), mssql-dev-setup.mjs (local SQL Server login/database + .env),
-                 api-smoke.mjs
+tools/           dev.mjs (web + api), build-tuke.mjs (deploy/ + zips), iis/iisnode.yml + iis/env.example (template of
+                 App_Data/.env), mssql-dev-setup.mjs (local SQL Server login/database + .env), api-smoke.mjs
 ```
 
 ## Commands
@@ -63,73 +73,81 @@ tools/           dev.mjs (web + api), build-tuke.mjs (deploy/web + deploy/api + 
 npm install
 npm run dev          # web http://localhost:5173 (proxies /api), api http://localhost:8787/api/health
 npm run typecheck
-npm run db:migrate   # add -- --env .env.tuke for the TUKE database (only with the user's OK)
-npm run db:seed      # imports data/tuke_cooperation.json when it changed (--force to re-import, --if-needed)
-npm run db:dev-setup # once: .data/mssql-dev-setup.sql (run in SSMS) + MSSQL_* in .env, new local password
-npm run build:tuke   # deploy/ for the TUKE servers (-- --api-url <url> for another API address)
+npm run db:migrate   # local SQL Server; add -- --env .env.tuke for the TUKE database (only with the user's OK)
+npm run db:seed      # imports data/tuke_cooperation.json when it changed (--force re-imports, --if-needed, --env <file>)
+npm run db:dev-setup # once per machine: .data/mssql-dev-setup.sql (run in SSMS) + MSSQL_* in .env, new local password
+npm run build:tuke   # deploy/web, deploy/api, deploy/srdcom-web.zip, deploy/srdcom-api.zip (-- --api-url <url>)
+node tools/api-smoke.mjs [api] [origin]   # every API route against a LOCAL API; with an origin also CORS everywhere
 ```
 
-- Node 24 (nvm-windows; `nvm use 24.14.1` was done 2026-10-20, engines need >= 22.12).
-- Local DB: SQL Server 2025 Developer (Microsoft retired the 2022 web installer; the winget package fails), default
-  instance MSSQLSERVER (MSSQL17) on localhost:1433 with TCP/IP enabled and Mixed Mode; database and login `ples_dev` set up
-  like the TUKE login (own default schema, db_ddladmin + db_datareader + db_datawriter, collation
-  SQL_Latin1_General_CP1_CI_AI, compatibility level 160 = 2022). Self-signed certificate, so
-  `MSSQL_TRUST_SERVER_CERTIFICATE=true` (also at TUKE). Windows auth (shared memory) works for the admin account `matus`.
-- `node tools/api-smoke.mjs [api] [origin]`: every API route against the local API (submit/undo, search, admin, scene,
-  access code; with an origin also CORS on every response). Browser checks: wall timeline, /mapa detail, /zapoj-sa
-  submit + undo, /admin login + moderation + scene switch.
-- In the browser pane the dev server is the launch config `app` (`.claude/launch.json`: `npm run dev`, port 5173).
-- Windows machine: Git Bash and PowerShell; Python 3 with requests, beautifulsoup4, lxml. Temp scripts go to the session scratchpad.
-- Test lights: POST `/api/events/ples-2027/pins` with header `x-device-id: <16–64 hex chars>` and body
+## Local environment (this Windows machine)
+
+- Node 24.14.1 via nvm-windows (global); the dev tooling (vite 8, tsx, esbuild build) needs ≥ 22.12. Node 18.20.6 (the
+  server's version) is installed in nvm for testing the API bundle: `/c/Users/matus/AppData/Local/nvm/v18.20.6/node.exe`.
+- SQL Server 2025 Developer (Microsoft retired the 2022 web installer; the winget package fails), default instance
+  MSSQLSERVER (MSSQL17) on localhost:1433, TCP/IP on, Mixed Mode. Database and login `ples_dev` mirror the TUKE login
+  (own default schema, db_ddladmin + db_datareader + db_datawriter, collation SQL_Latin1_General_CP1_CI_AI, compatibility
+  level 160 = 2022). Self-signed certificate → `MSSQL_TRUST_SERVER_CERTIFICATE=true` (also at TUKE). Windows auth over shared
+  memory works for the account `matus` (sysadmin).
+- Env files (all git-ignored): `.env` = local (MSSQL_* of ples_dev, ADMIN_PASSWORD=change-me, WEB_ORIGIN=http://localhost:4173);
+  `.env.tuke` = the TUKE database (MSSQL_* only), used only with `--env .env.tuke`; `db_pass.txt` = the TUKE DB password.
+- Browser pane launch configs (`.claude/launch.json`, git-ignored): `app` = `npm run dev` (5173); `web-cross-origin` =
+  `npm run preview -w @ples/web -- --port 4173 --strictPort` for the two-host setup like TUKE (build the web first with
+  `VITE_API_URL=http://localhost:8787/api npm run build -w @ples/web`; the API allows 4173 through WEB_ORIGIN in .env).
+- Windows machine: Git Bash and PowerShell; Python 3 with requests, beautifulsoup4, lxml. Temp scripts go to the session
+  scratchpad. Local test lights: POST `/api/events/ples-2027/pins` with header `x-device-id: <16–64 hex chars>` and body
   `{"places":[{"countryCode":"NP"}],"visitKind":"erasmus_study"}`; undo with DELETE
-  `/api/events/ples-2027/submissions/<submissionId>` and the same header. Production has none.
-- Cross-origin mode locally (like TUKE): run the API with `WEB_ORIGIN=http://localhost:4173` and serve a web build made with
-  `VITE_API_URL=http://localhost:8787/api` (e.g. `npm run preview -w @ples/web -- --port 4173`).
+  `/api/events/ples-2027/submissions/<submissionId>` and the same header.
 
-## Deploy (TUKE, Plesk for Windows; README „Nasadenie na TUKE" has the user's steps)
+## Production: TUKE hosting (Plesk for Windows)
 
-- Two Plesk sites on msweb.tuke.sk (147.232.16.54, IIS, `X-Powered-By-Plesk: PleskWin`): srdcom.tuke.sk = static web
-  (`deploy/web`), api.srdcom.tuke.sk = Node via iisnode (`deploy/api`). `npm run build:tuke` also writes
-  `deploy/srdcom-web.zip` / `srdcom-api.zip` for Plesk File Manager (Upload → Extract). Manual zip upload is the chosen
-  deploy path for the ball (Plesk Git would build on the server; GitHub Actions + FTPS is the later option: FTP 21,
-  Web Deploy 8172 and the panel 8443 are reachable from outside, FTPS 990 is not).
-- iisnode facts (checked in its source): it loads the startup file with require(), so `app.js` (CommonJS) imports `api.mjs`;
-  PORT is a named pipe; `<appSettings>` entries would become env vars (ANSI only); `iisnode.yml` next to app.js overrides
-  the `<iisnode>` settings (keys like enableXFF, devErrorsEnabled, logDirectory, watchedFiles); enableXFF appends
-  the client IP to X-Forwarded-For (last entry trusted); Node gets the original URL (X-Original-URL) after the rewrite;
-  defaults devErrorsEnabled/debuggingEnabled = true are switched off in tools/iis/iisnode.yml; watchedFiles restart Node.
-- Plesk for Windows: one Node.js version for the whole server, picked by the admin: **18.20.6** at TUKE (2026-10-20, EOL
-  but that is the server). So the API stays Node-18-compatible: kysely 0.27.6, tedious 19, @hono/node-server 1.19 (their
-  engines), esbuild target node18, no process.loadEnvFile (own `applyEnvFile` in packages/db). Tag `pred-node18` = the
-  Node 22 dependency set. Dev tooling (vite 8, tsx, build) still needs Node ≥ 22.12 locally. Node 18.20.6 is installed
-  in nvm for tests (`/c/Users/matus/AppData/Local/nvm/v18.20.6/node.exe`). Application Root must equal Document Root,
-  no environment-variable UI (Linux only).
-- TUKE rule: **web.config of both sites is generated by Plesk and a deploy never changes it** (the user, 2026-10-20). So:
-  the web has a folder with a copy of index.html per route (no SPA rewrite needed; the app strips the trailing slash),
-  the API reads its settings from `App_Data\.env` (server.ts, KEY=value; IIS never serves App_Data), iisnode settings come
-  from `iisnode.yml`, logs and the source map live in `App_Data`. Plesk's Node.js setup maps only the iisnode handler
-  for app.js (no rewrite), so /api/* is a static 404, but IIS hands /app.js/<path> to iisnode (path info): the web calls
-  `https://api.srdcom.tuke.sk/app.js/api` (build:tuke default) and server.ts drops the `/app.js` prefix; /api/… keeps
-  working if a rewrite is ever added. Health check: https://api.srdcom.tuke.sk/app.js/api/health.
-- Plesk's custom error pages (httpErrors, existingResponse Auto) replace the body of every API error (iisnode does not set
-  fTrySkipCustomErrors); status and headers (CORS, nosniff) survive, so apps/web/src/lib/api.ts falls back to Slovak
-  messages by status and route. `existingResponse="PassThrough"` on the API site would keep the JSON (admin change).
-- Live since 2026-10-20 evening: App_Data\.env has MSSQL_*, NODE_ENV, WEB_ORIGIN, ADMIN_PASSWORD (filled by the user);
-  iisnode.yml is honoured (a change of App_Data\.env restarted the app by itself). Verified from outside: health up, CORS on
-  all responses incl. 401, preflight 204, wall timeline, place detail and search on https://srdcom.tuke.sk.
-- Env (App_Data\.env on the server): MSSQL_SERVER/DATABASE/USER/PASSWORD (+ MSSQL_ENCRYPT, MSSQL_TRUST_SERVER_CERTIFICATE=true: TUKE's SQL Server has a
-  self-signed certificate), ADMIN_PASSWORD, optional SESSION_SECRET (else generated into `app_settings`), WEB_ORIGIN
-  (CORS), NODE_ENV=production (under iisnode the API is production anyway). Build time: VITE_API_URL.
-- TUKE database and login (names in the local `.env.tuke`, kept out of the public repo; the login is spelled like the
-  database, with an underscore): roles db_ddladmin + db_datareader + db_datawriter, not db_owner, and a default schema
-  of its own → all tables are in `dbo` and every name is qualified. Collation SQL_Latin1_General_CP1_CI_AI, RCSI off, Enterprise 16.0.1160.1.
-- Cross-origin: the web sends `credentials: 'include'`, reads carry no x-device-id (simple requests, no preflight); the
-  admin cookie is host-only on api.srdcom.tuke.sk with SameSite=Strict and Path=/ (same site tuke.sk, so it is sent).
-- No CDN at TUKE: `shared()` in lib/http.ts computes /live once per 2 s and /summary once per 5 s per process.
-- DNS 2026-10-20: srdcom.tuke.sk resolved everywhere except TUKE's resolver rs1.tuke.sk (cached NXDOMAIN, SOA minimum 1 day).
-  Before the ball check the site from the TUKE network.
-- Second database (student lobby / vestibule, later): same migrations + seed with another env file; the API uses one database
-  at a time (switch = new values in App_Data\.env).
+**Deploy** (README „Nasadenie na TUKE" has the user's steps): `npm run build:tuke`, then the user uploads in Plesk File
+Manager and extracts with overwrite: `deploy/srdcom-web.zip` → `httpdocs` of srdcom.tuke.sk, `deploy/srdcom-api.zip` →
+root of api.srdcom.tuke.sk (folder `/api.srdcom.tuke.sk`). iisnode restarts the API by itself when app.js, api.mjs,
+iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App). Check the commit on /app.js/api/health and
+/build.txt. Data changes: `npm run db:seed -- --env .env.tuke` (with OK), then also redeploy the API (it carries the snapshot).
+
+**What is on the server**
+- srdcom.tuke.sk (`httpdocs`): static `deploy/web`; every page route has a folder with a copy of index.html (`/mapa` →
+  301 → `/mapa/` → index.html; the query string survives, e.g. `/zapoj-sa?k=CODE`). Plesk's own web.config stays.
+- api.srdcom.tuke.sk: `app.js` (CommonJS startup file for iisnode, imports `api.mjs`), `api.mjs` (the whole API, no
+  node_modules), `tuke_cooperation.json` (snapshot), `iisnode.yml`, `package.json`, `build.txt`, and `App_Data\` with
+  `api.mjs.map`, `.env.example`, the server-only **`.env`** (MSSQL_SERVER/DATABASE/USER/PASSWORD, MSSQL_ENCRYPT=true,
+  MSSQL_TRUST_SERVER_CERTIFICATE=true, NODE_ENV=production, WEB_ORIGIN=https://srdcom.tuke.sk, ADMIN_PASSWORD, optional
+  SESSION_SECRET – else generated into `app_settings`) and the iisnode logs (`App_Data\iisnode`). IIS never serves App_Data.
+- Plesk Node.js settings of api.srdcom.tuke.sk: Application Root = Document Root = /api.srdcom.tuke.sk, startup file app.js,
+  mode production. Never click NPM install or Auto-configure.
+
+**Server constraints and how the app works around them** (all verified 2026-10-20)
+- **web.config of both sites is generated by Plesk and a deploy never changes it** (TUKE rule). Hence route folders on the
+  web, settings in App_Data\.env (read by server.ts with `applyEnvFile`), iisnode settings in `iisnode.yml` (iisnode reads it
+  next to app.js; enableXFF, devErrorsEnabled/debuggingEnabled off, logs in App_Data\iisnode, watchedFiles; it is honoured).
+- **Node.js 18.20.6** server-wide (Plesk for Windows has one version per server; EOL). The API stays Node-18-compatible:
+  kysely 0.27.6, tedious 19, @hono/node-server 1.19 (by their engines), esbuild target node18, no Node 20+ APIs (no
+  process.loadEnvFile). Test bundle changes with the Node 18 binary. If TUKE upgrades to 22/24, the tag `pred-node18` has
+  the newer set.
+- **No rewrite to app.js**: Plesk maps only the iisnode handler for app.js, so `/api/*` is a static 404, but IIS hands
+  `/app.js/<path>` to iisnode (path info). The web calls `https://api.srdcom.tuke.sk/app.js/api` (build:tuke default) and
+  server.ts strips `/app.js`; plain `/api/…` would work too if a rewrite were ever added. `/` and `/api/…` give Plesk's 404.
+- **Plesk custom error pages replace the body of every API error** (iisnode does not set fTrySkipCustomErrors); status and
+  headers (CORS, nosniff) survive, so apps/web/src/lib/api.ts shows Slovak fallback messages by status and route.
+  `existingResponse="PassThrough"` on the API site would keep the JSON bodies (admin change, optional).
+- iisnode facts (from its source): require() of the startup file (hence CommonJS app.js + import()), PORT is a named pipe,
+  `<appSettings>` would become env vars (ANSI only; unused), enableXFF appends the client IP to X-Forwarded-For (the last
+  entry is trusted), Node gets the original URL (X-Original-URL), iisnode.yml keys = `<iisnode>` attributes (`key: value`).
+- Cross-origin: the web sends `credentials: 'include'`; GETs carry no custom header (no preflight); writes send x-device-id
+  (preflight → 204 from the API's CORS middleware, max-age 86400). The admin cookie is host-only on api.srdcom.tuke.sk,
+  SameSite=Strict (same site tuke.sk), Path=/.
+- No CDN: `shared()` computes /live once per 2 s and /summary once per 5 s per process; /globe is memoised for 60 s.
+- TUKE database (names only in `.env.tuke`): the login has roles db_ddladmin + db_datareader + db_datawriter (not db_owner)
+  and a default schema of its own → all tables live in `dbo` and every name is qualified. SQL Server 2022 Enterprise
+  16.0.1160.1, collation SQL_Latin1_General_CP1_CI_AI, RCSI off, self-signed certificate. Migrated and seeded 2026-10-20.
+- Reachable from the TUKE network: 80, 443, FTP 21, Web Deploy 8172, Plesk 8443 (FTPS 990 not). Manual zip upload is the
+  deploy path; GitHub Actions + FTPS would be the automation later. Plesk Git (build on the server) was rejected.
+- DNS: TUKE's resolver rs1.tuke.sk cached NXDOMAIN for srdcom.tuke.sk on 2026-10-20 (cleared the same day). Before the ball
+  open the site from the TUKE network.
+- Second database (student lobby, later): same migrations + seed with another env file; the API uses one database at a time
+  (switch = new MSSQL_* values in App_Data\.env).
 
 ## The wall (/) – behaviour as built
 
@@ -223,33 +241,35 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   Sources and tricks: Wayback snapshots of erasmus.tuke.sk, EWP HEI registry, CORDIS CSV, OpenAlex `I183764125`,
   crz.gov.sk, keep.eu, ceepus.info.
 
-## History (session of 2026-10-06)
+## History
 
-- 0c71d06–9e728a4: initial app, Vercel + Neon deploy, server-generated session secret, title kept clear of the globe.
-- 38ffaa8: CDN-cached live feed, hidden-tab pause, place cards, faster rotation over oceans.
-- 7484cb4: cards avoid the title/panels, sit next to the globe. a900948: guest countries blue instead of grey.
-- bcbc65a: smooth reveal (GPU arcs, per-country fades, merged borders), countries light when the beam lands, mutual light.
-- 630c781: smooth count-up counters. 09d2c0f: no cards and slow rotation during the opening. 1eb2faa: phone layout.
-- tag `pred-casovou-osou` (= 1eb2faa). 1c00003: start years in the dataset. bebc50d: opening as the 1952–2027 timeline.
-- c5e0f22: this file. f9744e8: 2D view + /porovnanie, shared WallScene core, beams kept within 3 years of their landing.
+- 2026-10-06: 0c71d06–9e728a4 initial app on Vercel + Neon; 38ffaa8 live feed, place cards, faster rotation over oceans;
+  7484cb4/a900948 card placement, blue guest countries; bcbc65a smooth GPU reveal, mutual light; 630c781 count-up counters;
+  09d2c0f no cards during the opening; 1eb2faa phone layout (tag `pred-casovou-osou`); 1c00003 start years in the dataset;
+  bebc50d opening as the 1952–2027 timeline; c5e0f22 this file; f9744e8 2D view + /porovnanie.
 - 2026-10-07: 2D calmer (soft sea edge, dimmer dense Europe, short arcs glow less), cards docked as a lower third,
-  `setCooperation` always clears star births (a replay without reveal showed no stars), year counter box fits the year.
-- 2026-10-20 (branch `mssql-tuke`, tag `pred-mssql` = 96b7446 before it): the user moved the official deployment to TUKE
-  infrastructure. 0b4d69d: database layer on MS SQL Server (Kysely + tedious, T-SQL migrations, MERGE seed), Vercel Git
-  deployments off. 1684f04: build for IIS + iisnode, web and API on two hosts (CORS, VITE_API_URL). 0628a06: docs.
-  de9b76e: tools/api-smoke.mjs. The TUKE database and login names stay out of the public repo (`.env.tuke` only).
-  Verified locally on SQL Server (same-origin and cross-origin, the bundle over a named pipe like iisnode); the TUKE
-  database was migrated and seeded the same day with the user's OK (15 tables in dbo, no guest data yet).
-  9d0a37c: no web.config dependency (route folders, App_Data\.env, iisnode.yml). f980fd7: Node 18 (the server's version)
-  + /app.js path info. 9a3e639: client error messages when IIS swaps the error body. Production runs f980fd7/9a3e639.
+  `setCooperation` always clears star births, year counter box fits the year (96b7446 = tag `pred-mssql`).
+- 2026-10-20: the user moved the official deployment to TUKE (hosting requested from TUKE IT; Plesk sites + MS SQL database).
+  0b4d69d MS SQL port (Kysely + tedious, T-SQL migration, MERGE seed, CORS, Vercel Git deploys off); 1684f04 IIS build;
+  0628a06 docs; de9b76e api-smoke; TUKE DB migrated + seeded; 9d0a37c no web.config dependency (route folders,
+  App_Data\.env, iisnode.yml); f980fd7 Node 18 + /app.js path info; 9a3e639 fallback error messages; then docs. Production
+  went live the same evening (verified: health up, CORS, preflight, wall timeline, place detail, search). Branch merged to main.
 
 ## Open questions / next
 
+- Vercel retirement (the user, in the Vercel dashboard): copy any reviewer comments from https://tuke-ples-27.vercel.app/admin
+  (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the
+  Vercel paragraph in README.md.
+- Production checks only the user can do: a guest light from a phone (/zapoj-sa → wall → undo), /admin login with the
+  production password, hide/show a light, scene switch.
+- TUKE IT (optional): Node.js 22/24 LTS instead of 18 (then restore the newer dependencies from tag `pred-node18`);
+  `existingResponse="PassThrough"` on the API site; a rewrite of all URLs to app.js would allow plain /api.
+- The architecture document (v0.2) still says env.config / web.config, /api and Node 22: refresh it to App_Data\.env,
+  iisnode.yml, /app.js/api and Node 18 (Artifact read by its URL, edit the saved file, publish with `url` set).
 - Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), RU/BY on the map, what „kde si bol/a" means for
   guests, guest light colour, milestones wording, confirmation of the Erasmus list by the international office (OZVaM).
-- TUKE hosting: Node.js version on the Plesk server (≥ 22 needed), go-live of srdcom.tuke.sk, the second database for the
-  student lobby, deleting the Vercel project afterwards; merge `mssql-tuke` into `main` once TUKE is live.
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome kiosk `/?kiosk=1&k=CODE`), rehearsal.
-- Load test with ~500 simulated guests; English version of the guest form; polish of /mapa on phones.
+- Load test with ~500 simulated guests against the TUKE server (one iisnode process); English version of the guest form;
+  polish of /mapa on phones; counters say „1 svetiel hostí" for 1–4 lights (fixed label; `plural()` exists in lib/format.ts).
+- Student lobby after the ball: second database, switch App_Data\.env.
 - Older cooperation (before 1980) would need archive sources; undated places (48) light up in the last year.
-- Updating the architecture document: `Artifact` read by its URL, edit the saved file, publish with `url` set.

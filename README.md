@@ -168,6 +168,6 @@ Odporúčanie: na ples **ručné nasadenie zo zipu**. Build sa robí lokálne a 
 - **CORS chyba v prehliadači**: `WEB_ORIGIN` sa musí presne zhodovať s adresou webu (`https://srdcom.tuke.sk`, bez lomky na konci).
 - **`"database":"down"`** alebo **`"not_configured"`**: zlé údaje v `App_Data\.env`, súbor chýba, alebo firewall databázy. Stena aj tak beží z pribaleného dátového balíka.
 
-### Vercel (pôvodné nasadenie)
+### Vercel (pôvodné nasadenie, ruší sa)
 
-Predtým aplikácia bežala na Verceli s Postgres (Neon), posledný stav tej verzie je v tagu `pred-mssql`. Od prechodu na MS SQL je vo `vercel.json` vypnuté nasadzovanie z gitu: push už na Vercel nič nenasadí a posledné nasadenie tam ostane, kým projekt na Verceli nezmažeš.
+Pôvodný prototyp bežal na Verceli s Postgres (Neon) na https://tuke-ples-27.vercel.app, jeho posledný stav je v tagu `pred-mssql`. Od 20. 10. 2026 je produkcia na hostingu TUKE a Vercel sa ruší: vo Verceli najprv skopíruj prípadné pripomienky z `/admin`, potom zmaž projekt `tuke-ples-27` aj jeho databázu Neon. Kým projekt existuje, `vercel.json` má vypnuté nasadzovanie z gitu, takže push nič nenasadí. Po zmazaní projektu sa `vercel.json` môže z repozitára odstrániť.
