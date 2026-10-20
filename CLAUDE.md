@@ -320,6 +320,11 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 ## Open questions / next
 
+- Handover 2026-10-20 evening (the user continues on the other PC): main = 6abb1f4, everything pushed. Production runs
+  00f355d (API and web). Not deployed yet: 6abb1f4 (guest undo link + notice, wall resync on a count mismatch, counter
+  grammar), web only: `git pull`, `npm run build:tuke`, upload `deploy/srdcom-web.zip` (the API zip may stay), then check
+  /build.txt and a guest light from a phone (send, see the golden arc, „Zrušiť toto svetlo", the wall drops it within
+  seconds). On the native PC also run `npm run db:seed` once, so its local DB gets dataset 2026-10-20+aeb9797b.
 - Vercel retirement (the user, in the Vercel dashboard): copy any reviewer comments from https://tuke-ples-27.vercel.app/admin
   (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the
   Vercel paragraph in README.md.
