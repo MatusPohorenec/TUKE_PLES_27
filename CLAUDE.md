@@ -218,7 +218,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   `setCooperation` always clears star births (a replay without reveal showed no stars), year counter box fits the year.
 - 2026-10-20 (branch `mssql-tuke`, tag `pred-mssql` = 96b7446 before it): the user moved the official deployment to TUKE
   infrastructure. 0b4d69d: database layer on MS SQL Server (Kysely + tedious, T-SQL migrations, MERGE seed), Vercel Git
-  deployments off. 1def69f: build for IIS + iisnode, web and API on two hosts (CORS, VITE_API_URL). 0514354: docs.
+  deployments off. 1684f04: build for IIS + iisnode, web and API on two hosts (CORS, VITE_API_URL). 0628a06: docs.
+  de9b76e: tools/api-smoke.mjs. The TUKE database and login names stay out of the public repo (`.env.tuke` only).
   Verified locally on SQL Server (same-origin and cross-origin, the bundle over a named pipe like iisnode); the TUKE
   database was migrated and seeded the same day with the user's OK (15 tables in dbo, no guest data yet).
 
