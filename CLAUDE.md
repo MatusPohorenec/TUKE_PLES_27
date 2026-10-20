@@ -111,6 +111,12 @@ npm run build:tuke   # deploy/ for the TUKE servers (-- --api-url <url> for anot
   for app.js (no rewrite), so /api/* is a static 404, but IIS hands /app.js/<path> to iisnode (path info): the web calls
   `https://api.srdcom.tuke.sk/app.js/api` (build:tuke default) and server.ts drops the `/app.js` prefix; /api/… keeps
   working if a rewrite is ever added. Health check: https://api.srdcom.tuke.sk/app.js/api/health.
+- Plesk's custom error pages (httpErrors, existingResponse Auto) replace the body of every API error (iisnode does not set
+  fTrySkipCustomErrors); status and headers (CORS, nosniff) survive, so apps/web/src/lib/api.ts falls back to Slovak
+  messages by status and route. `existingResponse="PassThrough"` on the API site would keep the JSON (admin change).
+- Live since 2026-10-20 evening: App_Data\.env has MSSQL_*, NODE_ENV, WEB_ORIGIN, ADMIN_PASSWORD (filled by the user);
+  iisnode.yml is honoured (a change of App_Data\.env restarted the app by itself). Verified from outside: health up, CORS on
+  all responses incl. 401, preflight 204, wall timeline, place detail and search on https://srdcom.tuke.sk.
 - Env (App_Data\.env on the server): MSSQL_SERVER/DATABASE/USER/PASSWORD (+ MSSQL_ENCRYPT, MSSQL_TRUST_SERVER_CERTIFICATE=true: TUKE's SQL Server has a
   self-signed certificate), ADMIN_PASSWORD, optional SESSION_SECRET (else generated into `app_settings`), WEB_ORIGIN
   (CORS), NODE_ENV=production (under iisnode the API is production anyway). Build time: VITE_API_URL.
@@ -234,6 +240,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   de9b76e: tools/api-smoke.mjs. The TUKE database and login names stay out of the public repo (`.env.tuke` only).
   Verified locally on SQL Server (same-origin and cross-origin, the bundle over a named pipe like iisnode); the TUKE
   database was migrated and seeded the same day with the user's OK (15 tables in dbo, no guest data yet).
+  9d0a37c: no web.config dependency (route folders, App_Data\.env, iisnode.yml). f980fd7: Node 18 (the server's version)
+  + /app.js path info. 9a3e639: client error messages when IIS swaps the error body. Production runs f980fd7/9a3e639.
 
 ## Open questions / next
 
