@@ -25,8 +25,26 @@ async function request<T>(path: string, init: RequestInit & { json?: unknown } =
     throw new ApiError(0, 'offline', 'Server je nedostupný. Skontroluj pripojenie a skús znova.');
   }
   const body = res.status === 204 ? null : await res.json().catch(() => null);
-  if (!res.ok) throw new ApiError(res.status, body?.error?.code ?? 'error', body?.error?.message ?? `Chyba ${res.status}`);
+  if (!res.ok) throw new ApiError(res.status, body?.error?.code ?? 'error', body?.error?.message ?? fallbackMessage(res.status, path, init.method ?? 'GET'));
   return body as T;
+}
+
+/**
+ * IIS on the TUKE server replaces the JSON body of an API error with its own error page (Plesk custom errors);
+ * the status and the CORS headers survive. These are the API's own messages, chosen by status and route.
+ */
+function fallbackMessage(status: number, path: string, method: string): string {
+  const login = path === '/admin/login';
+  switch (status) {
+    case 400: return 'Neplatné údaje. Skús to znova.';
+    case 401: return login ? 'Nesprávne heslo.' : 'Prihlás sa.';
+    case 403: return 'Na pridanie svetla naskenuj QR kód z plesu.';
+    case 404: return method === 'DELETE' ? 'Svetlá sa už nedajú vrátiť.' : 'Nenašlo sa.';
+    case 409: return 'Pridávanie svetiel je momentálne zatvorené.';
+    case 429: return login ? 'Priveľa pokusov. Skús to o 15 minút.' : 'Veľa požiadaviek naraz. Skús to o pár minút.';
+    case 503: return path.startsWith('/admin') ? 'Administrácia nie je zapnutá.' : 'Služba je dočasne nedostupná. Skús to o chvíľu.';
+    default: return status >= 500 ? 'Na serveri sa niečo pokazilo. Skús to znova.' : `Chyba ${status}`;
+  }
 }
 
 export const api = {
