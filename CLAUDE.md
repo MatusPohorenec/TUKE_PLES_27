@@ -204,7 +204,14 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   of the pulse round (`spread(key)`). Guest stars: `whiteCore` 0.3 (stay gold), size 26 + 8·√count. Before 2026-10-20 the
   arrival was a 2.6 s globe.gl dash that vanished, which read as "no connection".
 - Live feed: wall polls `/live` every 2 s (map 5 s), shared newest 60; own cursor; resync from `/summary` after a gap
-  bigger than the window and every 5 min (so hidden/undone lights disappear); polling pauses in hidden tabs.
+  bigger than the window, every 5 min, and as soon as `live.totals.pins` differs from the lights the wall counted (summary
+  count + new feed lights): a guest's undo or an admin's hide/show shows within seconds, and names that left the feed leave
+  the „recent" list (useGuests.ts). Polling pauses in hidden tabs (`document.hidden`; override it when testing in the pane).
+- Guest form (/zapoj-sa): after sending, the main action is „Pridať ďalšie miesta"; undo is a text link „Zrušiť toto svetlo"
+  (it deletes the lights, 15 min, same browser) followed by a notice in the form. It used to be a button „Vrátiť späť",
+  which read as "back" (the user lost lights that way, 2026-10-20).
+- Counters: the label's Slovak form follows the number on screen (CountUp `onShow`), e.g. 1 krajina, 3 krajiny, 86 krajín,
+  1 svetlo hosťa.
 - Layout: title fitted above the globe and faded when the globe is zoomed into it; `?kiosk=1` hides links/cursor, keeps the
   screen awake; `R` replays the opening. Phones (≤760 px): one row of buttons, counters in one row with short labels, globe
   sized to end above the counters.
@@ -307,7 +314,9 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   gold with a lasting golden arc from Košice (beam on arrival, then light both ways) on the globe and the map.
   00f355d deployed the same evening (API + web; verified: health and /build.txt 00f355d, /globe 2026-10-20+aeb9797b from the
   DB, new snapshot served, bundle has the fallback messages, `--join-scale`, the gold and the guest arcs, About text without
-  RU/BY, wall 3D + 2D running with API 200 and no console errors). No guest light tested on production yet.
+  RU/BY, wall 3D + 2D running with API 200 and no console errors). The user then tested guest lights on production:
+  the golden arc to Niger worked, but „Vrátiť späť" deleted the light and the wall kept showing undone lights until the
+  5-minute resync; fixed (undo link + notice, resync on a count mismatch, counter grammar).
 
 ## Open questions / next
 
@@ -326,6 +335,6 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   international office (OZVaM).
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome kiosk `/?kiosk=1&k=CODE`), rehearsal.
 - Load test with ~500 simulated guests against the TUKE server (one iisnode process); English version of the guest form;
-  polish of /mapa on phones; counters say „1 svetiel hostí" for 1–4 lights (fixed label; `plural()` exists in lib/format.ts).
+  polish of /mapa on phones.
 - Student lobby after the ball: second database, switch App_Data\.env.
 - Older cooperation (before 1980) would need archive sources; undated places (50) light up in the last year.

@@ -52,6 +52,12 @@
 .join-done h2 { font: italic 500 34px/1.05 var(--font-display); color: var(--warm); }
 .join-done p { margin: 0; }
 .join-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+/* undo is a plain text link under the main action, so nobody takes it for "back" */
+.join-undo-link {
+  padding: 6px 2px; border: 0; background: none; color: var(--silver); font: inherit; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.join-undo-link:hover, .join-undo-link:focus-visible { color: #fff; }
 .join-foot { text-align: center; color: var(--silver-dim); }
 .join-foot a { color: var(--silver-dim); }
 

@@ -8,9 +8,12 @@ import { fmt } from '../lib/format.ts';
 
 const EASE_S = 0.4; // about 0.4 s to cover two thirds of a change
 
-export function CountUp({ value }: { value: number }) {
+/** onShow: called with every number written, e.g. to keep a label's grammatical form in step with it. */
+export function CountUp({ value, onShow }: { value: number; onShow?: (shown: number) => void }) {
   const ref = useRef<HTMLElement>(null);
   const shown = useRef<number | null>(null);
+  const onShowRef = useRef(onShow);
+  onShowRef.current = onShow;
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -18,6 +21,7 @@ export function CountUp({ value }: { value: number }) {
     if (shown.current === null || matchMedia('(prefers-reduced-motion: reduce)').matches) {
       shown.current = value;
       el.textContent = fmt(value);
+      onShowRef.current?.(value);
       return;
     }
     let raf = 0;
@@ -30,6 +34,7 @@ export function CountUp({ value }: { value: number }) {
       if (Math.abs(value - next) < 0.5) next = value;
       shown.current = next;
       el.textContent = fmt(Math.round(next));
+      onShowRef.current?.(Math.round(next));
       if (next !== value) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);

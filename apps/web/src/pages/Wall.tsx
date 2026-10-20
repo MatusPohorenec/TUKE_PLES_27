@@ -13,8 +13,20 @@ import { QrCode } from '../components/QrCode.tsx';
 import { Starfield } from '../components/Starfield.tsx';
 import { useGlobeData } from '../lib/useGlobeData.ts';
 import { useGuests } from '../lib/useGuests.ts';
+import { plural } from '../lib/format.ts';
 import { Link, queryParam } from '../lib/router.tsx';
 import './wall.css';
+
+/** Counter labels in the right Slovak form for the number (1 krajina, 3 krajiny, 86 krajín); short: on a phone. */
+const LABELS = {
+  countries: (n: number) => ({ label: plural(n, 'krajina', 'krajiny', 'krajín') }),
+  places: (n: number) => ({ label: plural(n, 'miesto', 'miesta', 'miest') }),
+  institutions: (n: number) => ({
+    label: plural(n, 'partnerská inštitúcia', 'partnerské inštitúcie', 'partnerských inštitúcií'),
+    short: plural(n, 'inštitúcia', 'inštitúcie', 'inštitúcií'),
+  }),
+  guests: (n: number) => ({ label: plural(n, 'svetlo hosťa', 'svetlá hostí', 'svetiel hostí'), short: plural(n, 'svetlo', 'svetlá', 'svetiel') }),
+};
 
 /** 2D: the smallest the QR panel gets to keep lit places free, and the room it keeps around them (px). */
 const JOIN_MIN_SCALE = 0.5;
@@ -184,16 +196,16 @@ export default function Wall() {
         )}
         {mode === 'live' ? (
           <>
-            <Stat value={guests.totals.pins} label="svetiel hostí" short="svetiel" warm />
-            <Stat value={guests.totals.places} label="miest" />
-            <Stat value={guests.totals.countries} label="krajín" />
+            <Stat value={guests.totals.pins} labels={LABELS.guests} warm />
+            <Stat value={guests.totals.places} labels={LABELS.places} />
+            <Stat value={guests.totals.countries} labels={LABELS.countries} />
           </>
         ) : (
           <>
-            <Stat value={counts.countries} label="krajín" />
-            <Stat value={counts.places} label="miest" />
-            <Stat value={counts.institutions} label="partnerských inštitúcií" short="inštitúcií" />
-            {guests.totals.pins > 0 && <Stat value={guests.totals.pins} label="svetiel hostí" short="svetiel" warm small />}
+            <Stat value={counts.countries} labels={LABELS.countries} />
+            <Stat value={counts.places} labels={LABELS.places} />
+            <Stat value={counts.institutions} labels={LABELS.institutions} />
+            {guests.totals.pins > 0 && <Stat value={guests.totals.pins} labels={LABELS.guests} warm small />}
           </>
         )}
       </section>
@@ -227,13 +239,24 @@ export default function Wall() {
   );
 }
 
-/** short: the label on a phone, where the counters share one row */
-function Stat({ value, label, short, warm, small }: { value: number; label: string; short?: string; warm?: boolean; small?: boolean }) {
+/** labels(n): the label for the number on screen (short: on a phone, where the counters share one row) */
+function Stat({ value, labels, warm, small }: { value: number; labels: (n: number) => { label: string; short?: string }; warm?: boolean; small?: boolean }) {
+  // the labels follow the number on screen, not the target the counter runs to, so "3 krajiny" never reads "3 krajín";
+  // they are written like the number (no re-render per frame), also when a span attaches after the first number
+  const shown = useRef(value);
+  const long = useRef<HTMLSpanElement | null>(null);
+  const brief = useRef<HTMLSpanElement | null>(null);
+  const apply = useCallback(() => {
+    const { label, short = label } = labels(shown.current);
+    if (long.current && long.current.textContent !== label) long.current.textContent = label;
+    if (brief.current && brief.current.textContent !== short) brief.current.textContent = short;
+  }, [labels]);
+  const show = useCallback((n: number) => { shown.current = n; apply(); }, [apply]);
   return (
     <div className={`stat${warm ? ' warm' : ''}${small ? ' small' : ''}`}>
-      <CountUp value={value} />
-      <span className="stat-long">{label}</span>
-      <span className="stat-short">{short ?? label}</span>
+      <CountUp value={value} onShow={show} />
+      <span className="stat-long" ref={el => { long.current = el; apply(); }} />
+      <span className="stat-short" ref={el => { brief.current = el; apply(); }} />
     </div>
   );
 }

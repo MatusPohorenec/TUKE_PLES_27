@@ -26,6 +26,7 @@ export function useGuests(scene: WallScene | null, slug: string, { intervalMs = 
   const cursor = useRef<number | null>(null);
   const synced = useRef(0); // when the summary was loaded
   const seen = useRef(0); // newest pin this page has shown, so a resync does not fly the same light in twice
+  const shown = useRef(0); // lights on the wall: the summary's count plus every new light from the feed since
 
   useEffect(() => { cursor.current = null; seen.current = 0; }, [scene, slug]);
 
@@ -38,6 +39,7 @@ export function useGuests(scene: WallScene | null, slug: string, { intervalMs = 
         scene.setGuests(s.places.map(p => ({ key: pinKey(p), name: p.name, countryCode: p.countryCode, lat: p.lat, lon: p.lon, count: p.count })));
         cursor.current = s.cursor;
         seen.current = Math.max(seen.current, s.cursor);
+        shown.current = s.totals.pins;
         synced.current = Date.now();
         setEvent(s.event);
         setTotals(s.totals);
@@ -57,6 +59,17 @@ export function useGuests(scene: WallScene | null, slug: string, { intervalMs = 
           if (unseen.length) setRecent(r => [...unseen.slice().reverse(), ...r].slice(0, 4));
           cursor.current = fresh.at(-1)!.id;
           seen.current = Math.max(seen.current, cursor.current);
+          shown.current += fresh.length;
+        }
+        // the feed only brings new lights: fewer (or more) in total means a guest took lights back or an admin hid
+        // (or showed) some, so the wall reloads the summary now instead of at the next resync, and the names of
+        // lights that left the feed leave the list
+        if (cursor.current !== null && live.totals.pins !== shown.current) {
+          cursor.current = null;
+          // a window that is not full holds every light; a full one says nothing about lights older than it
+          const inFeed = new Set(live.pins.map(p => p.id));
+          const oldest = live.pins.length >= LIMITS.liveWindow ? live.pins[0]!.id : -Infinity;
+          setRecent(r => r.filter(p => inFeed.has(p.id) || p.id < oldest));
         }
         setEvent(live.event);
         setTotals(live.totals);

@@ -7,6 +7,7 @@ import type { PickResult } from '../globe/scene.ts';
 import { GlobeTooltip } from '../components/GlobeTooltip.tsx';
 import { Starfield } from '../components/Starfield.tsx';
 import { api } from '../lib/api.ts';
+import { plural } from '../lib/format.ts';
 import { useGlobeData } from '../lib/useGlobeData.ts';
 import { useGuests } from '../lib/useGuests.ts';
 import { Link } from '../lib/router.tsx';
@@ -56,7 +57,7 @@ export default function MapPage() {
           {data && (
             <p className="muted">
               {data.stats.places.toLocaleString('sk')} miest v {data.stats.countries} krajinách · {data.stats.institutions.toLocaleString('sk')} inštitúcií
-              {guests.totals.pins > 0 && <> · <span style={{ color: 'var(--warm)' }}>{guests.totals.pins} svetiel hostí</span></>}
+              {guests.totals.pins > 0 && <> · <span style={{ color: 'var(--warm)' }}>{guests.totals.pins} {plural(guests.totals.pins, 'svetlo hosťa', 'svetlá hostí', 'svetiel hostí')}</span></>}
             </p>
           )}
         </div>

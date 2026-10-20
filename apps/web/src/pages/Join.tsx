@@ -33,6 +33,7 @@ export default function Join() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState<SubmitResponse | null>(null);
+  const [notice, setNotice] = useState(''); // after an undo: what happened to the lights
 
   useEffect(() => {
     api.event(slug).then(setEvent).catch((err: ApiError) => setEventError(err.status === 503 || err.status === 404
@@ -49,6 +50,7 @@ export default function Join() {
     if (!visitKind) { setError('Vyber, čo si tam robil/a.'); return; }
     setSending(true);
     setError('');
+    setNotice('');
     try {
       const res = await api.submit(slug, {
         code: code || undefined,
@@ -66,9 +68,15 @@ export default function Join() {
     }
   };
 
+  // takes the lights of the last sending off the wall again (a wrong place); the form stays empty for a new try
   const undo = async () => {
     if (!done) return;
-    try { await api.undo(slug, done.submissionId); setDone(null); } catch (err) { setError((err as Error).message); }
+    const one = done.pins.length === 1;
+    try {
+      await api.undo(slug, done.submissionId);
+      setDone(null);
+      setNotice(one ? 'Svetlo sme zrušili, zo steny zmizne o pár sekúnd.' : 'Svetlá sme zrušili, zo steny zmiznú o pár sekúnd.');
+    } catch (err) { setError((err as Error).message); }
   };
 
   const closed = event && (event.status === 'closed' || event.status === 'draft');
@@ -88,17 +96,23 @@ export default function Join() {
 
       {done ? (
         <section className="join-card join-done" aria-live="polite">
-          <h2>Tvoje svetlá letia na stenu</h2>
+          <h2>{done.pins.length === 1 ? 'Tvoje svetlo letí na stenu' : 'Tvoje svetlá letia na stenu'}</h2>
           <ul className="join-chips">{done.pins.map(p => <li key={p.id} className="join-chip lit">{p.name}</li>)}</ul>
-          <p className="muted">Pozri sa na zemeguľu, o pár sekúnd sa rozsvietia.</p>
+          <p className="muted">Pozri sa na zemeguľu, o pár sekúnd sa {done.pins.length === 1 ? 'rozsvieti' : 'rozsvietia'}.</p>
           <div className="join-actions">
             <button type="button" className="button" onClick={() => setDone(null)}>Pridať ďalšie miesta</button>
-            <button type="button" className="button ghost" onClick={undo}>Vrátiť späť</button>
           </div>
+          <p className="muted small join-undo">
+            Pomýlil/a si sa?{' '}
+            <button type="button" className="join-undo-link" onClick={undo}>
+              {done.pins.length === 1 ? 'Zrušiť toto svetlo' : 'Zrušiť tieto svetlá'}
+            </button>
+          </p>
           {error && <p className="error" role="alert">{error}</p>}
         </section>
       ) : event && !closed && (
         <form className="join-card" onSubmit={submit} noValidate>
+          {notice && <p className="join-note" role="status">{notice}</p>}
           {needsCode && (
             <div className="join-field">
               <label htmlFor="join-code">Kód z QR</label>
