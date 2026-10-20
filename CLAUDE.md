@@ -69,9 +69,14 @@ npm run build:tuke   # deploy/ for the TUKE servers (-- --api-url <url> for anot
 ```
 
 - Node 24 (nvm-windows; `nvm use 24.14.1` was done 2026-10-20, engines need >= 22.12).
-- Local DB: SQL Server 2022 Developer, default instance MSSQLSERVER on localhost:1433 (TCP/IP enabled), database and login
-  `ples_dev` set up like the TUKE login (own default schema, db_ddladmin + db_datareader + db_datawriter, collation
-  SQL_Latin1_General_CP1_CI_AI). Self-signed certificate, so `MSSQL_TRUST_SERVER_CERTIFICATE=true` (also at TUKE).
+- Local DB: SQL Server 2025 Developer (Microsoft retired the 2022 web installer; the winget package fails), default
+  instance MSSQLSERVER (MSSQL17) on localhost:1433 with TCP/IP enabled and Mixed Mode; database and login `ples_dev` set up
+  like the TUKE login (own default schema, db_ddladmin + db_datareader + db_datawriter, collation
+  SQL_Latin1_General_CP1_CI_AI, compatibility level 160 = 2022). Self-signed certificate, so
+  `MSSQL_TRUST_SERVER_CERTIFICATE=true` (also at TUKE). Windows auth (shared memory) works for the admin account `matus`.
+- `node tools/api-smoke.mjs [api] [origin]`: every API route against the local API (submit/undo, search, admin, scene,
+  access code; with an origin also CORS on every response). Browser checks: wall timeline, /mapa detail, /zapoj-sa
+  submit + undo, /admin login + moderation + scene switch.
 - In the browser pane the dev server is the launch config `app` (`.claude/launch.json`: `npm run dev`, port 5173).
 - Windows machine: Git Bash and PowerShell; Python 3 with requests, beautifulsoup4, lxml. Temp scripts go to the session scratchpad.
 - Test lights: POST `/api/events/ples-2027/pins` with header `x-device-id: <16–64 hex chars>` and body
@@ -213,7 +218,9 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   `setCooperation` always clears star births (a replay without reveal showed no stars), year counter box fits the year.
 - 2026-10-20 (branch `mssql-tuke`, tag `pred-mssql` = 96b7446 before it): the user moved the official deployment to TUKE
   infrastructure. 0b4d69d: database layer on MS SQL Server (Kysely + tedious, T-SQL migrations, MERGE seed), Vercel Git
-  deployments off. 1def69f: build for IIS + iisnode, web and API on two hosts (CORS, VITE_API_URL).
+  deployments off. 1def69f: build for IIS + iisnode, web and API on two hosts (CORS, VITE_API_URL). 0514354: docs.
+  Verified locally on SQL Server (same-origin and cross-origin, the bundle over a named pipe like iisnode); the TUKE
+  database was migrated and seeded the same day with the user's OK (15 tables in dbo, no guest data yet).
 
 ## Open questions / next
 
