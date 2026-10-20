@@ -305,17 +305,15 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   coordinate check and diacritic place names in build_dataset.py: dataset 2026-10-20+aeb9797b (832 places, 86 countries).
   The 2D QR panel became a row that scales itself so no lit place lies under it on smaller screens. Guest lights became
   gold with a lasting golden arc from Košice (beam on arrival, then light both ways) on the globe and the map.
+  00f355d deployed the same evening (API + web; verified: health and /build.txt 00f355d, /globe 2026-10-20+aeb9797b from the
+  DB, new snapshot served, bundle has the fallback messages, `--join-scale`, the gold and the guest arcs, About text without
+  RU/BY, wall 3D + 2D running with API 200 and no console errors). No guest light tested on production yet.
 
 ## Open questions / next
 
 - Vercel retirement (the user, in the Vercel dashboard): copy any reviewer comments from https://tuke-ples-27.vercel.app/admin
   (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the
   Vercel paragraph in README.md.
-- Upload pending: on 2026-10-20 evening the production code was still f980fd7 (API and web), while the TUKE DB already
-  had dataset 2026-10-20+aeb9797b (Russia/Belarus shown). The zips in `deploy/` (built from the latest main) bring 9a3e639
-  (Slovak fallback error messages), the About page without the RU/BY sentence, the 2D QR panel fit, the gold guest lights
-  with their arcs and the new snapshot in the API: upload both (Plesk needs the TUKE network or VPN), then check
-  /app.js/api/health and /build.txt.
 - Docker PC: install Node 18.20.6 (nvm-windows or the portable zip) before the next API change, to test the bundle.
 - Production checks only the user can do: a guest light from a phone (/zapoj-sa → wall → undo), /admin login with the
   production password, hide/show a light, scene switch.
