@@ -158,7 +158,9 @@ iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App
 - No CDN: `shared()` computes /live once per 2 s and /summary once per 5 s per process; /globe is memoised for 60 s.
 - TUKE database (names only in `.env.tuke`): the login has roles db_ddladmin + db_datareader + db_datawriter (not db_owner)
   and a default schema of its own → all tables live in `dbo` and every name is qualified. SQL Server 2022 Enterprise
-  16.0.1160.1, collation SQL_Latin1_General_CP1_CI_AI, RCSI off, self-signed certificate. Migrated and seeded 2026-10-20.
+  16.0.1160.1, collation SQL_Latin1_General_CP1_CI_AI, RCSI off, self-signed certificate. Migrated and seeded 2026-10-20;
+  re-seeded the same evening with dataset 2026-10-20+aeb9797b (from the Docker PC over the TUKE VPN, 51 s; the seed adds
+  the new import beside the old one and switches `is_current` in one UPDATE, so the API never sees half a dataset).
 - Reachable from the TUKE network: 80, 443, FTP 21, Web Deploy 8172, Plesk 8443 (FTPS 990 not); SQL Server 1433 answered
   the native PC on 2026-10-20 (migrate + seed of the TUKE DB). From outside the TUKE network only 443 answers (checked
   2026-10-20 from the Docker PC: 1433, 8443, 21 and 8172 time out), so Plesk and every `--env .env.tuke` run need the TUKE
@@ -298,8 +300,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - Vercel retirement (the user, in the Vercel dashboard): copy any reviewer comments from https://tuke-ples-27.vercel.app/admin
   (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the
   Vercel paragraph in README.md.
-- Upload pending: production still showed f980fd7 (API and web) on 2026-10-20 evening, so 9a3e639 (Slovak fallback error
-  messages, web only) goes live with the next upload of the zips (needs the TUKE network or VPN for Plesk).
+- Upload pending: on 2026-10-20 evening the production code was still f980fd7 (API and web), while the TUKE DB already
+  had dataset 2026-10-20+aeb9797b (Russia/Belarus shown). The zips of 9737ab6 in `deploy/` bring 9a3e639 (Slovak fallback
+  error messages), the About page without the RU/BY sentence, the 2D QR panel fit and the new snapshot in the API: upload
+  both (Plesk needs the TUKE network or VPN), then check /app.js/api/health and /build.txt.
 - Docker PC: install Node 18.20.6 (nvm-windows or the portable zip) before the next API change, to test the bundle.
 - Production checks only the user can do: a guest light from a phone (/zapoj-sa → wall → undo), /admin login with the
   production password, hide/show a light, scene switch.
