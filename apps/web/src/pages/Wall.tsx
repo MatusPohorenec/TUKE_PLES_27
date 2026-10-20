@@ -16,6 +16,17 @@ import { useGuests } from '../lib/useGuests.ts';
 import { Link, queryParam } from '../lib/router.tsx';
 import './wall.css';
 
+/** 2D: the smallest the QR panel gets to keep lit places free, and the room it keeps around them (px). */
+const JOIN_MIN_SCALE = 0.5;
+const JOIN_PAD = 8;
+
+/** Screen boxes of the elements that exist and have a size (hidden panels on narrow screens have none). */
+function boxesOf(selectors: string[]): Box[] {
+  return selectors.flatMap(sel => {
+    const r = document.querySelector(sel)?.getBoundingClientRect();
+    return r && r.height > 0 ? [r] : [];
+  });
+}
 
 export default function Wall() {
   const kiosk = queryParam('kiosk') !== null;
@@ -97,23 +108,50 @@ export default function Wall() {
     return () => { lock?.release().catch(() => {}); removeEventListener('pointermove', show); clearTimeout(timer); document.body.style.cursor = ''; };
   }, [kiosk]);
 
-  // what the cards keep clear of: the title text while it is visible, the counters, the QR code and the buttons
-  const obstacles = useCallback((): Box[] => {
-    const rects: Box[] = [];
+  // the title text while it is visible (the text itself: the header box spans the whole width)
+  const titleBoxes = useCallback((): Box[] => {
     const title = titleRef.current;
-    if (title && Number(getComputedStyle(title).opacity) > 0.2) {
-      for (const line of title.children) { // the text itself, the header box spans the whole width
-        const range = document.createRange();
-        range.selectNodeContents(line);
-        rects.push(range.getBoundingClientRect());
-      }
-    }
-    for (const sel of ['.wall-stats', '.wall-join', '.wall-nav', '.feedback-open']) {
-      const r = document.querySelector(sel)?.getBoundingClientRect();
-      if (r && r.height > 0) rects.push(r); // hidden panels (narrow screens) have no size
-    }
-    return rects;
+    if (!title || Number(getComputedStyle(title).opacity) <= 0.2) return [];
+    return [...title.children].map(line => {
+      const range = document.createRange();
+      range.selectNodeContents(line);
+      return range.getBoundingClientRect();
+    });
   }, []);
+
+  // what the cards keep clear of: the title text while it is visible, the counters, the QR code and the buttons
+  const obstacles = useCallback(
+    (): Box[] => [...titleBoxes(), ...boxesOf(['.wall-stats', '.wall-join', '.wall-nav', '.feedback-open'])],
+    [titleBoxes],
+  );
+
+  // 2D: how much room the top right corner has depends on the screen (the LED wall's resolution is not known yet), so
+  // once the light has spread the QR panel shrinks until no lit place, the title or a button lies under it
+  const joinRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (view !== '2d' || !scene) return;
+    const fit = () => {
+      const el = joinRef.current;
+      if (!el || !el.offsetWidth || scene.revealing()) return;
+      const box = el.getBoundingClientRect(); // its top right corner stays put at any scale (transform-origin)
+      const w = el.offsetWidth, h = el.offsetHeight; // unscaled size
+      const lit = [...scene.visibleCoop(), ...scene.guestPlaces()].map(p => scene.screenPoint(p.lat, p.lon)).filter(p => p.facing > 0);
+      const others = [...titleBoxes(), ...boxesOf(['.wall-nav', '.feedback-open'])];
+      let scale = JOIN_MIN_SCALE;
+      for (let s = 1; s >= JOIN_MIN_SCALE - 1e-6; s = Math.round((s - 0.05) * 100) / 100) {
+        const r = { left: box.right - w * s - JOIN_PAD, right: box.right + JOIN_PAD, top: box.top - JOIN_PAD, bottom: box.top + h * s + JOIN_PAD };
+        if (lit.some(p => p.x > r.left && p.x < r.right && p.y > r.top && p.y < r.bottom)) continue;
+        if (others.some(b => b.left < r.right && b.right > r.left && b.top < r.bottom && b.bottom > r.top)) continue;
+        scale = s;
+        break;
+      }
+      if (el.style.getPropertyValue('--join-scale') !== String(scale)) el.style.setProperty('--join-scale', String(scale));
+    };
+    fit();
+    const timer = window.setInterval(fit, 2000); // guests add lights and names; after the opening the map settles
+    addEventListener('resize', fit);
+    return () => { clearInterval(timer); removeEventListener('resize', fit); };
+  }, [view, scene, titleBoxes]);
 
   const counts = useMemo(() => ({
     countries: new Set(visible.map(p => p.countryCode)).size,
@@ -161,7 +199,7 @@ export default function Wall() {
       </section>
 
       {collecting && (
-        <aside className="wall-join">
+        <aside className="wall-join" ref={joinRef}>
           <QrCode value={joinUrl} size={kiosk ? 150 : 112} />
           <div>
             <b>Pridaj svoje svetlo</b>

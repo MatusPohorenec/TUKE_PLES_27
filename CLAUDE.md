@@ -212,10 +212,13 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   in), short arcs keep less steady light after landing (`arcGlow` 0.2 → 1 between 400 and 3 500 km; the beam stays full).
 - No rotation. During the opening the view starts on Central Europe (12 % of the world's width) and only widens to hold
   Košice and every place whose beam is a third of the way there (+18 % padding), then shows the whole world.
-- Layout differences: on the flat map the bottom right is Australia, so the QR panel sits top right (Arctic) as a narrow
-  column (`.wall.view-2d .wall-join`). Measured 2026-10-20 with Russia shown: clear of every place at 1920×1080 (kiosk), but
-  at 1280×720 it covers Yakutsk, Khabarovsk, Vladivostok, Nakhodka, Beijing, Harbin and Kitami, and at 1536×730 Kitami
-  (without kiosk also Tokyo, Nagoya, Sendai …): smaller screens need a compact or relocated panel.
+- Layout differences: on the flat map the bottom right is Australia, so the QR panel sits top right as a row (QR beside
+  the text, `.wall.view-2d .wall-join`), beside the title and above the map's northern edge. How much room that corner has
+  depends on the screen, so once the light has spread Wall.tsx scales the panel (`--join-scale`, 1 → 0.5 in 0.05 steps,
+  transform-origin top right) until no lit place (coop + guests via `screenPoint`), the title text or a button lies under
+  it (+8 px); it re-checks every 2 s and on resize, never during the opening. Measured 2026-10-20 (Russia shown): scale 1 at
+  1920×1080, 0.95 at 1536×730 kiosk, 0.8 / 0.85 at 1280×720 kiosk / not (QR 120 / 95 px), nothing covered, also with three
+  guest names in the list. (The old narrow column covered Yakutsk, Beijing, Kitami, Tokyo … below 1920×1080.)
 - Cards never cover the map (the user: cards over half the map). Like TV lower thirds / docked map panels
   (Flightradar24, Esri dock, Datawrapper callouts), `MapScene.cardDock()` offers the empty southern ocean south of 38° S
   between 52° W and 138° E (stars there narrow it); the card docks there as wide as the band (`--dock-w`) and the place gets
@@ -288,6 +291,7 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   `ples-mssql`, ples_dev migrated + seeded, api-smoke passes; README got the Docker variant (B), this file the two-PC notes.
   Then, at the user's request, Russia and Belarus went on the map (the About page no longer says they are left out), with a
   coordinate check and diacritic place names in build_dataset.py: dataset 2026-10-20+aeb9797b (832 places, 86 countries).
+  The 2D QR panel became a row that scales itself so no lit place lies under it on smaller screens.
 
 ## Open questions / next
 
@@ -305,7 +309,6 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   iisnode.yml, /app.js/api and Node 18 (Artifact read by its URL, edit the saved file, publish with `url` set).
 - Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), what „kde si bol/a" means for guests, guest light
   colour, milestones wording, confirmation of the Erasmus list by the international office (OZVaM).
-- 2D view: the QR panel covers places on screens smaller than 1920×1080 (see the 2D section).
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome kiosk `/?kiosk=1&k=CODE`), rehearsal.
 - Load test with ~500 simulated guests against the TUKE server (one iisnode process); English version of the guest form;
   polish of /mapa on phones; counters say „1 svetiel hostí" for 1–4 lights (fixed label; `plural()` exists in lib/format.ts).
