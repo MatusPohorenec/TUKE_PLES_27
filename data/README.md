@@ -46,6 +46,8 @@ python scripts/build_dataset.py    # tuke_cooperation.json + .csv
 
 Potrebné balíky: `requests`, `beautifulsoup4`, `lxml`.
 
+Nový `tuke_cooperation.json` sa do databázy na TUKE dostane len príkazom `npm run db:seed -- --env .env.tuke` (pozri README.md v koreni). Seed rozpozná zmenu podľa hashu súboru a nahradí celý import naraz. Potom treba znova nasadiť API, lebo z pribalenej kópie tohto súboru servíruje zemeguľu, keď databáza neodpovedá.
+
 ## Známe obmedzenia
 
 - Časová os na stene (od 1952): miesto sa rozsvieti v roku svojej najstaršej datovanej väzby. Je to najstarší doklad v zdrojoch (prvá spoločná publikácia, začiatok projektu, zmluva, prvá nominácia), skutočná spolupráca mohla začať skôr. Miesta bez roka (asi 6 %) sa rozsvietia v poslednom roku.

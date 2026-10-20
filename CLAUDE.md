@@ -5,7 +5,9 @@ A dark, "switched-off" rotating globe is shown on the LED wall at the ball: ligh
 has documented cooperation, places light up as twinkling stars, and guests add the places they have been to via a QR code,
 live. Theme: midnight blue + silver, light / play of light (svetlohra). Visual polish and correct, sourced data both matter.
 
-- Production: https://tuke-ples-27.vercel.app (`/api/health` shows the deployed commit)
+- Production (TUKE, Plesk for Windows): web https://srdcom.tuke.sk, API https://api.srdcom.tuke.sk (`/api/health` shows the
+  deployed commit), database MS SQL Server 2022 on portal.msweb.tuke.sk. The old Vercel + Neon version
+  (https://tuke-ples-27.vercel.app) is frozen at tag `pred-mssql`; `vercel.json` disables Git deployments since the port.
 - Repo: https://github.com/MatusPohorenec/TUKE_PLES_27 (**public**: never commit secrets or personal data)
 - Architecture document for reviewers (Slovak, private artifact): https://claude.ai/artifact/VvkL4spi4XUYJMMVuNB68A
 - `README.md` (Slovak) = dev/deploy guide, `data/README.md` (Slovak) = data sources, pipeline, known limits
@@ -13,11 +15,15 @@ live. Theme: midnight blue + silver, light / play of light (svetlohra). Visual p
 ## Working agreements
 
 - Talk to the user in Slovak. UI texts are Slovak. Code, comments and commit messages are English.
-- Flow used throughout: implement → `npm run typecheck` → verify in the browser pane (local dev server) → commit → push to `main`
-  (**this deploys production**) → wait until `/api/health` reports the new commit → verify on production → short report.
+- Flow used throughout: implement → `npm run typecheck` → verify in the browser pane (local dev server, local SQL Server) →
+  commit → push → `npm run build:tuke` → the user uploads the zips in Plesk (README „Nasadenie na TUKE") → check that
+  https://api.srdcom.tuke.sk/api/health reports the new commit → verify on production → short report. A push deploys nothing.
 - Push over HTTPS without prompts: `GCM_INTERACTIVE=never GIT_TERMINAL_PROMPT=0 git push` (SSH push is denied on this machine).
 - Before big changes tag the current state (example: tag `pred-casovou-osou` = the wall before the timeline opening).
-- Never type passwords/secrets into anything; the user sets `ADMIN_PASSWORD` in Vercel himself. Don't print `DATABASE_URL`.
+- Never type passwords/secrets into anything; the user fills `env.config` on the server himself. Never print `MSSQL_PASSWORD`,
+  `.env`, `.env.tuke` or `db_pass.txt` (repo root, excluded via .git/info/exclude).
+- Never develop or experiment against the TUKE database; it is written only by `db:migrate` / `db:seed` with `--env .env.tuke`,
+  and only with the user's OK.
 - Guest data stays anonymous (device/IP only as HMAC hashes). Nomination PDFs contain names/e-mails: store aggregates only.
 
 ## Layout
@@ -35,14 +41,19 @@ apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r18
                    FeedbackButton („Pripomienka"), PlaceSearch
   src/lib          api.ts, useGuests.ts (summary + shared live feed), usePoll.ts (pauses in hidden tabs), useGlobeData.ts,
                    router.tsx (tiny router), format.ts (Slovak plural, number format), device.ts
-apps/api         Hono 4 REST API under /api (routes: globe, events, gazetteer, admin, feedback); snapshot.ts = bundled
-                 dataset fallback when the DB is unreachable; lib/http.ts (CACHE headers), lib/security.ts
-packages/db      Drizzle schema (schema.ts), migrations (drizzle/), seed CLI; drivers: Neon HTTP / node-postgres / PGlite
+apps/api         Hono 4 REST API under /api (routes: globe, events, gazetteer, admin, feedback); server.ts = the one entry
+                 (local port 8787, or the iisnode named pipe in PORT); app.ts (CORS by WEB_ORIGIN); snapshot.ts = bundled
+                 dataset fallback when the DB is unreachable; lib/http.ts (CACHE headers, shared() = per-process cache of
+                 live/summary), lib/security.ts (HMACs, client IP = last X-Forwarded-For entry, admin cookie)
+packages/db      MS SQL Server via Kysely 0.29 + tedious: migrations/*.sql (T-SQL, GO batches, applied by src/migrations.ts,
+                 recorded in dbo.schema_migrations), schema.ts (Kysely types, SQL names), client.ts (MSSQL_* env, pool,
+                 loadEnv with --env), cli/migrate.ts, cli/seed.ts
 packages/shared  constants.ts (ORIGIN, TUKE_FOUNDED, MILESTONES, CATEGORY_GROUPS, CATEGORIES, LIMITS …), api.ts (zod schemas,
                  response types); `@ples/shared/constants` has no zod, for the browser bundle
 data/            tuke_cooperation.json (+ .csv) = the versioned dataset (source of truth for hard facts), raw/, evidence/
 scripts/         Python pipeline that builds the dataset (order in data/README.md)
-tools/           dev.mjs (web + api), build-vercel.mjs (Vercel Build Output API)
+tools/           dev.mjs (web + api), build-tuke.mjs (deploy/web + deploy/api + zips), iis/ (web.config of both sites,
+                 env.config.example), mssql-dev-setup.mjs (local SQL Server login/database + .env)
 ```
 
 ## Commands
@@ -51,31 +62,51 @@ tools/           dev.mjs (web + api), build-vercel.mjs (Vercel Build Output API)
 npm install
 npm run dev          # web http://localhost:5173 (proxies /api), api http://localhost:8787/api/health
 npm run typecheck
-npm run db:migrate
-npm run db:seed      # imports data/tuke_cooperation.json when it changed (--force to re-import, --if-needed on Vercel)
-node tools/build-vercel.mjs   # local check of the production build
+npm run db:migrate   # add -- --env .env.tuke for the TUKE database (only with the user's OK)
+npm run db:seed      # imports data/tuke_cooperation.json when it changed (--force to re-import, --if-needed)
+npm run db:dev-setup # once: .data/mssql-dev-setup.sql (run in SSMS) + MSSQL_* in .env, new local password
+npm run build:tuke   # deploy/ for the TUKE servers (-- --api-url <url> for another API address)
 ```
 
-- Without `DATABASE_URL` the API uses PGlite in `.data/pglite`. PGlite allows one process: **stop the dev server before `db:seed`**.
+- Node 24 (nvm-windows; `nvm use 24.14.1` was done 2026-10-20, engines need >= 22.12).
+- Local DB: SQL Server 2022 Developer, default instance MSSQLSERVER on localhost:1433 (TCP/IP enabled), database and login
+  `ples_dev` set up like the TUKE login (own default schema, db_ddladmin + db_datareader + db_datawriter, collation
+  SQL_Latin1_General_CP1_CI_AI). Self-signed certificate, so `MSSQL_TRUST_SERVER_CERTIFICATE=true` (also at TUKE).
 - In the browser pane the dev server is the launch config `app` (`.claude/launch.json`: `npm run dev`, port 5173).
 - Windows machine: Git Bash and PowerShell; Python 3 with requests, beautifulsoup4, lxml. Temp scripts go to the session scratchpad.
-- Local DB has 6 test guest lights (JP, AT, BR×2, MX, US); production has none. Test lights: POST `/api/events/ples-2027/pins`
-  with header `x-device-id: <16–64 hex chars>` and body `{"places":[{"countryCode":"NP"}],"visitKind":"erasmus_study"}`;
-  undo with DELETE `/api/events/ples-2027/submissions/<submissionId>` and the same header.
+- Test lights: POST `/api/events/ples-2027/pins` with header `x-device-id: <16–64 hex chars>` and body
+  `{"places":[{"countryCode":"NP"}],"visitKind":"erasmus_study"}`; undo with DELETE
+  `/api/events/ples-2027/submissions/<submissionId>` and the same header. Production has none.
+- Cross-origin mode locally (like TUKE): run the API with `WEB_ORIGIN=http://localhost:4173` and serve a web build made with
+  `VITE_API_URL=http://localhost:8787/api` (e.g. `npm run preview -w @ples/web -- --port 4173`).
 
-## Deploy (Vercel)
+## Deploy (TUKE, Plesk for Windows; README „Nasadenie na TUKE" has the user's steps)
 
-- Vercel project deploys every push to `main`. `vercel.json`: `npm ci`, build `npm run vercel-build`
-  = migrate → seed `--if-needed` (re-imports when the dataset hash changes) → `tools/build-vercel.mjs`
-  (static web + one function `api.func`, nodejs22.x, fra1; routes /api → function, then files, then SPA fallback).
-  The build fails if the function bundle statically imports a package (PGlite is external).
-- Env: `DATABASE_URL` (Neon via Vercel Marketplace, Free plan, Frankfurt, prefix DATABASE), `ADMIN_PASSWORD`,
-  optional `SESSION_SECRET` (else generated and stored in table `app_settings`).
-- CDN caching (apps/api/src/lib/http.ts): globe 1 h + ETag, gazetteer 24 h, summary 5 s, live 2 s (identical for all viewers;
-  Vercel strips `s-maxage` from the response, check `X-Vercel-Cache: HIT`), everything else no-store.
-- Hobby plan is non-commercial only: an official TUKE deployment needs Pro or a university account (open decision).
-- Waiting for a deploy (foreground `sleep` is blocked for the agent): run in background
-  `for i in $(seq 1 40); do curl -s https://tuke-ples-27.vercel.app/api/health | grep -q <commit> && exit 0; sleep 10; done`.
+- Two Plesk sites on msweb.tuke.sk (147.232.16.54, IIS, `X-Powered-By-Plesk: PleskWin`): srdcom.tuke.sk = static web
+  (`deploy/web`), api.srdcom.tuke.sk = Node via iisnode (`deploy/api`). `npm run build:tuke` also writes
+  `deploy/srdcom-web.zip` / `srdcom-api.zip` for Plesk File Manager (Upload → Extract). Manual zip upload is the chosen
+  deploy path for the ball (Plesk Git would build on the server; GitHub Actions + FTPS is the later option: FTP 21,
+  Web Deploy 8172 and the panel 8443 are reachable from outside, FTPS 990 is not).
+- iisnode facts (checked in its source): it loads the startup file with require(), so `app.js` (CommonJS) imports `api.mjs`;
+  PORT is a named pipe; `<appSettings>` entries become env vars (converted to ANSI: ASCII values only); enableXFF appends
+  the client IP to X-Forwarded-For (last entry trusted); Node gets the original URL (X-Original-URL) after the rewrite;
+  defaults devErrorsEnabled/debuggingEnabled = true are switched off in tools/iis/api.web.config; watchedFiles restart Node.
+- Plesk for Windows: one Node.js version for the whole server (the admin picks it; we need ≥ 22, tedious 20 / kysely 0.29
+  require it), Application Root must equal Document Root, no environment-variable UI (Linux only) → settings live in
+  `env.config` (appSettings configSource of web.config; not in the build, never overwritten; missing file = 500.19).
+- Env: MSSQL_SERVER/DATABASE/USER/PASSWORD (+ MSSQL_ENCRYPT, MSSQL_TRUST_SERVER_CERTIFICATE=true: TUKE's SQL Server has a
+  self-signed certificate), ADMIN_PASSWORD, optional SESSION_SECRET (else generated into `app_settings`), WEB_ORIGIN
+  (CORS), NODE_ENV=production (under iisnode the API is production anyway). Build time: VITE_API_URL.
+- TUKE database and login (names in the local `.env.tuke`, kept out of the public repo; the login is spelled like the
+  database, with an underscore): roles db_ddladmin + db_datareader + db_datawriter, not db_owner, and a default schema
+  of its own → all tables are in `dbo` and every name is qualified. Collation SQL_Latin1_General_CP1_CI_AI, RCSI off, Enterprise 16.0.1160.1.
+- Cross-origin: the web sends `credentials: 'include'`, reads carry no x-device-id (simple requests, no preflight); the
+  admin cookie is host-only on api.srdcom.tuke.sk with SameSite=Strict (same site tuke.sk, so it is sent).
+- No CDN at TUKE: `shared()` in lib/http.ts computes /live once per 2 s and /summary once per 5 s per process.
+- DNS 2026-10-20: srdcom.tuke.sk resolved everywhere except TUKE's resolver rs1.tuke.sk (cached NXDOMAIN, SOA minimum 1 day).
+  Before the ball check the site from the TUKE network.
+- Second database (student lobby / vestibule, later): same migrations + seed with another env file; the API uses one database
+  at a time (switch = new values in env.config).
 
 ## The wall (/) – behaviour as built
 
@@ -102,7 +133,7 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   `[86,128,255,.2]`, unlit `[14,26,78,.55]`, Slovakia white `.55`. (A warm tint at low alpha rendered grey: don't.)
 - Scenes (admin): `cooperation` (arcs + coop stars, guests beside) and `live` (arcs fade out, coop stars dimmed, guest countries
   lit). Guest lights: warm stars/arcs `#ffd9a0`, one-by-one arrivals (max 8 animated per poll), country tints when the beam lands.
-- Live feed: wall polls `/live` every 2 s (map 5 s), CDN-cached newest 60; own cursor; resync from `/summary` after a gap
+- Live feed: wall polls `/live` every 2 s (map 5 s), shared newest 60; own cursor; resync from `/summary` after a gap
   bigger than the window and every 5 min (so hidden/undone lights disappear); polling pauses in hidden tabs.
 - Layout: title fitted above the globe and faded when the globe is zoomed into it; `?kiosk=1` hides links/cursor, keeps the
   screen awake; `R` replays the opening. Phones (≤760 px): one row of buttons, counters in one row with short labels, globe
@@ -164,9 +195,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   ≤ 15 institutions; scripts/openalex_first_years.py), start of the earliest shared EU project (CORDIS), first Erasmus
   nomination (agreements themselves are undated), dates from contracts/projects/CEEPUS. It is the earliest evidence, not
   necessarily the true start. Earliest: Praha 1980, Budapest 1982, Jena 1984. Nothing in the sources before 1980.
-- Rebuild: run the scripts in the order in data/README.md, then `python scripts/build_dataset.py`; a changed dataset is
-  re-imported on the next deploy. Sources and tricks: Wayback snapshots of erasmus.tuke.sk, EWP HEI registry, CORDIS CSV,
-  OpenAlex `I183764125`, crz.gov.sk, keep.eu, ceepus.info.
+- Rebuild: run the scripts in the order in data/README.md, then `python scripts/build_dataset.py`; then import it with
+  `npm run db:seed -- --env .env.tuke` (nothing imports on deploy any more) and redeploy the API (it carries the snapshot).
+  Sources and tricks: Wayback snapshots of erasmus.tuke.sk, EWP HEI registry, CORDIS CSV, OpenAlex `I183764125`,
+  crz.gov.sk, keep.eu, ceepus.info.
 
 ## History (session of 2026-10-06)
 
@@ -179,12 +211,16 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - c5e0f22: this file. f9744e8: 2D view + /porovnanie, shared WallScene core, beams kept within 3 years of their landing.
 - 2026-10-07: 2D calmer (soft sea edge, dimmer dense Europe, short arcs glow less), cards docked as a lower third,
   `setCooperation` always clears star births (a replay without reveal showed no stars), year counter box fits the year.
+- 2026-10-20 (branch `mssql-tuke`, tag `pred-mssql` = 96b7446 before it): the user moved the official deployment to TUKE
+  infrastructure. 0b4d69d: database layer on MS SQL Server (Kysely + tedious, T-SQL migrations, MERGE seed), Vercel Git
+  deployments off. 1def69f: build for IIS + iisnode, web and API on two hosts (CORS, VITE_API_URL).
 
 ## Open questions / next
 
 - Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), RU/BY on the map, what „kde si bol/a" means for
-  guests, guest light colour, milestones wording, Vercel plan,
-  confirmation of the Erasmus list by the international office (OZVaM).
+  guests, guest light colour, milestones wording, confirmation of the Erasmus list by the international office (OZVaM).
+- TUKE hosting: Node.js version on the Plesk server (≥ 22 needed), go-live of srdcom.tuke.sk, the second database for the
+  student lobby, deleting the Vercel project afterwards; merge `mssql-tuke` into `main` once TUKE is live.
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome kiosk `/?kiosk=1&k=CODE`), rehearsal.
 - Load test with ~500 simulated guests; English version of the guest form; polish of /mapa on phones.
 - Older cooperation (before 1980) would need archive sources; undated places (48) light up in the last year.

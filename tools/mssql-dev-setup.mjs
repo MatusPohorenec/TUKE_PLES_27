@@ -1,8 +1,9 @@
 // npm run db:dev-setup
 // Prepares a local SQL Server for development, mirroring the TUKE hosting:
-//  - writes .data/mssql-dev-setup.sql: SQL Server logins on, database ples_dev (same collation as TUKE),
-//    login ples_dev with its own default schema and the roles db_ddladmin, db_datareader, db_datawriter
-//    (the TUKE login is not db_owner either), with a freshly generated password
+//  - writes .data/mssql-dev-setup.sql: SQL Server logins on, database ples_dev (same collation as TUKE, and
+//    compatibility level 160 = SQL Server 2022 like TUKE, also on a newer local server), login ples_dev with its own
+//    default schema and the roles db_ddladmin, db_datareader, db_datawriter (the TUKE login is not db_owner either),
+//    with a freshly generated password
 //  - writes the connection (MSSQL_*) into .env, keeping the other lines; creates .env from .env.example if missing
 // The password goes only into these two git-ignored files, never to the terminal.
 // Run the .sql file in SSMS (localhost, Windows Authentication), then restart the SQL Server service.
@@ -22,6 +23,8 @@ USE master;
 -- allow SQL Server logins next to Windows logins (Mixed Mode); takes effect after the restart
 EXEC xp_instance_regwrite N'HKEY_LOCAL_MACHINE', N'Software\\Microsoft\\MSSQLServer\\MSSQLServer', N'LoginMode', REG_DWORD, 2;
 IF DB_ID(N'${NAME}') IS NULL CREATE DATABASE ${NAME} COLLATE ${COLLATION};
+-- T-SQL of SQL Server 2022 only, like the TUKE server (matters when the local server is newer)
+ALTER DATABASE ${NAME} SET COMPATIBILITY_LEVEL = 160;
 IF SUSER_ID(N'${NAME}') IS NULL
   CREATE LOGIN ${NAME} WITH PASSWORD = N'${password}', DEFAULT_DATABASE = ${NAME}, CHECK_POLICY = OFF;
 ELSE
