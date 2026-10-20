@@ -14,7 +14,12 @@ import type { ArcLayer } from './arcs.ts';
 import type { PlacedStar, StarLayer } from './stars.ts';
 
 export const GROUP_COLOR = Object.fromEntries(CATEGORY_GROUPS.map(g => [g.code, g.color])) as Record<GroupCode, string>;
-export const GUEST_COLOR = '#ffd9a0';
+/** Guest lights are gold: the cooperation colours are all cool (white, blues, violet), so the guests stand out. */
+export const GUEST_COLOR = '#ffb52e';
+/** A guest arc stays clearly lit and turns gold right after Košice (cooperation arcs: faint, white near Košice). */
+export const GUEST_ARC_STYLE = { base: 0.35, tintFrom: 0.06 } as const;
+/** Guest stars keep their gold in the core instead of burning white. */
+export const GUEST_STAR_WHITE = 0.3;
 const ALL_GROUPS = CATEGORY_GROUPS.map(g => g.code);
 
 export interface CountryFeature { type: 'Feature'; properties: { iso2: string; name: string }; geometry: object }
@@ -34,6 +39,10 @@ export const seconds = () => performance.now() / 1000;
 export const beamSeconds = (km: number) => 0.6 + km / 8000;
 /** Seconds from the launch of a guest light to its landing. */
 export const GUEST_LANDING = 1.82;
+/** One round of the steady light on a guest arc (arcs.ts: 4 × 3 × travel): spreads the pulses of the guest places. */
+const GUEST_CYCLE = GUEST_LANDING * 12;
+/** Stable 0–1 number for a key, so a guest arc keeps its rhythm however often the arcs are rebuilt. */
+const spread = (key: string) => ([...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 997) / 997;
 
 const REVEAL_DELAY = 0.8; // s before the first beam leaves Košice
 const REVEAL_SPAN = 24; // s over which the beams leave, nearest places first (when the places have no years)
@@ -63,6 +72,8 @@ export abstract class WallScene {
   protected coopStars!: StarLayer;
   protected guestStars!: StarLayer;
   protected arcs!: ArcLayer;
+  /** a golden arc from Košice to every guest place, lit in both scenes */
+  protected guestArcs!: ArcLayer;
 
   protected coop: GlobePlace[] = [];
   /** how many of this.coop have been reached by their beam (a prefix: places are kept in landing order) */
@@ -77,6 +88,8 @@ export abstract class WallScene {
   private notify = { pending: false, last: 0 };
   /** guest places whose light is still in the air: their country lights up when it lands */
   private readonly guestLanding = new Map<string, number>();
+  /** when the beam of each guest place left Košice (its latest light); places shown without a flight got a past time */
+  private readonly guestBeams = new Map<string, number>();
   private arrivalTimers = new Set<number>();
   private readonly countryLooks = new Map<string, Country>();
   private lookSets = { main: new Set<string>(), other: new Set<string>() };
@@ -106,10 +119,10 @@ export abstract class WallScene {
   abstract setAutoRotate(on: boolean): void;
   /** Keeps an overlay title clear of the map; bottom(): where the map has to end, in client pixels. */
   abstract attachTitle(el: HTMLElement, options?: { bottomGap?: number; bottom?: () => number | null }): void;
-  /** Draws the flight of a guest light from Košice; it lands GUEST_LANDING seconds later. */
-  protected abstract launchGuest(pin: GuestArrival): void;
   /** Line width of a cooperation arc, in scene units. */
   protected abstract arcWidth(place: GlobePlace): number;
+  /** Line width of a guest arc, in scene units (a little wider than the widest cooperation arc). */
+  protected abstract guestArcWidth(): number;
   /** Strength of an arc's steady light after its beam has landed (0–1). */
   protected arcGlow(_place: GlobePlace): number { return 1; }
   /** Brightness of a place's star (0–1), e.g. lower in a dense cluster. */
@@ -143,6 +156,7 @@ export abstract class WallScene {
       this.advanceYear(now / 1000);
       this.fadeCountries(now / 1000);
       this.arcs.update(now / 1000, dt);
+      this.guestArcs.update(now / 1000, dt);
       this.frameEnd(now, dt);
       this.frame = requestAnimationFrame(tick);
     };
@@ -271,20 +285,27 @@ export abstract class WallScene {
     this.arrivalTimers.clear();
     this.guestLanding.clear();
     this.guests = new Map(places.map(p => [p.key, p]));
+    for (const key of this.guestBeams.keys()) if (!this.guests.has(key)) this.guestBeams.delete(key);
+    for (const key of this.guests.keys()) this.litWithoutFlight(key);
     this.renderGuestStars();
+    this.renderGuestArcs();
     this.renderCountries();
     this.placesChanged();
   }
 
   /** Lights added without the flight, e.g. the older part of a big burst. */
   addGuests(pins: GuestPin[]): void {
-    for (const pin of pins) this.countGuest(pin);
+    for (const pin of pins) { this.countGuest(pin); this.litWithoutFlight(pin.key); }
     this.renderGuestStars();
+    this.renderGuestArcs();
     this.renderCountries();
     this.placesChanged();
   }
 
-  /** New lights: a bright dash flies from Košice; the star ignites and the country lights up when it lands. */
+  /**
+   * New lights: a beam flies from Košice along the place's golden arc, the star ignites and the country lights up
+   * when it lands; from then on light flows both ways on the arc. Another light for a known place sends a new beam.
+   */
   addGuestArrivals(pins: GuestArrival[]): void {
     pins.forEach((pin, i) => {
       const timer = window.setTimeout(() => {
@@ -293,7 +314,8 @@ export abstract class WallScene {
         if (!prev) this.guestLanding.set(pin.key, seconds() + GUEST_LANDING);
         this.guestStars.ignite(`guest:${pin.key}`, GUEST_LANDING);
         this.renderGuestStars(GUEST_LANDING);
-        this.launchGuest(pin);
+        this.guestBeams.set(pin.key, seconds());
+        this.renderGuestArcs();
         const landed = window.setTimeout(() => {
           this.arrivalTimers.delete(landed);
           this.guestLanding.delete(pin.key);
@@ -304,6 +326,11 @@ export abstract class WallScene {
       }, i * 450); // a burst arrives one by one, so every light gets its moment
       this.arrivalTimers.add(timer);
     });
+  }
+
+  /** A guest place shown without a flight: its arc is lit already, at its own point of the light's round. */
+  private litWithoutFlight(key: string): void {
+    if (!this.guestBeams.has(key)) this.guestBeams.set(key, seconds() - GUEST_LANDING - spread(key) * GUEST_CYCLE);
   }
 
   /** Adds one light to its place; returns the place as it was before (undefined for a new place). */
@@ -352,6 +379,7 @@ export abstract class WallScene {
     this.coopStars.dispose();
     this.guestStars.dispose();
     this.arcs.dispose();
+    this.guestArcs.dispose();
     for (const c of this.countryLooks.values()) c.material.dispose();
   }
 
@@ -382,9 +410,16 @@ export abstract class WallScene {
     ]);
   }
 
+  /** One golden arc per guest place, in both scenes (the cooperation arcs fade out in the guest-lights scene). */
+  protected renderGuestArcs(): void {
+    this.guestArcs.set([...this.guests.values()].map(g => ({
+      lat: g.lat, lon: g.lon, color: GUEST_COLOR, width: this.guestArcWidth(), launch: this.guestBeams.get(g.key) ?? 0, travel: GUEST_LANDING,
+    })));
+  }
+
   protected renderGuestStars(delay = 0): void {
     this.guestStars.set([...this.guests.values()].map(g => ({
-      id: `guest:${g.key}`, lat: g.lat, lon: g.lon, size: 14 + 6 * Math.sqrt(Math.min(g.count, 60)), color: GUEST_COLOR, delay,
+      id: `guest:${g.key}`, lat: g.lat, lon: g.lon, size: 26 + 8 * Math.sqrt(Math.min(g.count, 60)), color: GUEST_COLOR, delay,
     })));
   }
 

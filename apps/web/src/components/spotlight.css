@@ -23,7 +23,7 @@
 }
 .spot-card.leaving { opacity: 0; }
 .spot-card.measuring { visibility: hidden; animation: none; }
-.spot-guest { border-color: rgba(255, 217, 160, 0.45); }
+.spot-guest { border-color: rgba(255, 181, 46, 0.45); }
 
 .spot-kicker {
   display: flex; align-items: center; gap: 8px;
@@ -68,7 +68,7 @@
   font: italic 600 clamp(15px, 1vw, 22px)/1.2 var(--font-display);
   animation: spot-in 0.5s ease-out both; transition: opacity 0.45s ease;
 }
-.spot-chip-guest { color: var(--warm); border-color: rgba(255, 217, 160, 0.45); }
+.spot-chip-guest { color: var(--warm); border-color: rgba(255, 181, 46, 0.45); }
 .spot-chip small { margin-left: 0.7em; font: 500 0.62em var(--font-ui); letter-spacing: 0.04em; font-style: normal; color: var(--silver-dim); }
 .spot-chip.leaving { opacity: 0; }
 

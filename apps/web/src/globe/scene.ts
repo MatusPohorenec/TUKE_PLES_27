@@ -1,7 +1,7 @@
 /**
- * The 3D view: a dark planet (globe.gl), country outlines, arcs from Košice and two star layers (cooperation
- * places tinted by legend group, guest lights in warm white). The timeline, the guests and the country colours
- * are shared with the flat map (core.ts); this file adds the globe, its rotation and the screen positions.
+ * The 3D view: a dark planet (globe.gl), country outlines, arcs from Košice (cooperation tinted by legend group,
+ * guest lights in gold) and two star layers. The timeline, the guests and the country colours are shared with the
+ * flat map (core.ts); this file adds the globe, its rotation and the screen positions.
  */
 import Globe, { type GlobeInstance } from 'globe.gl';
 import { Vector3, type LineSegments, type PerspectiveCamera, type Scene, type WebGLRenderer } from 'three';
@@ -9,22 +9,14 @@ import { ORIGIN } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
 import { ArcLayer, globeArcPath } from './arcs.ts';
 import { createBorders } from './borders.ts';
-import { GUEST_COLOR, WallScene, type CountryFeature, type GuestArrival } from './core.ts';
+import { GUEST_ARC_STYLE, GUEST_STAR_WHITE, WallScene, type CountryFeature } from './core.ts';
 import { StarLayer } from './stars.ts';
 
 export { GROUP_COLOR, GUEST_COLOR, WallScene } from './core.ts';
 export type { CountryFeature, GuestPlace, PickResult, SceneMode } from './core.ts';
 
-interface GuestArc { id: string; lat: number; lon: number }
-
-const rgba = (hex: string, a: number) => {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
-};
 const smoothstep = (e0: number, e1: number, x: number) => { const k = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return k * k * (3 - 2 * k); };
 
-const GUEST_ARC_MS = 2600;
-const GUEST_DASH = 0.3; // the head lands after (1 - GUEST_DASH) × GUEST_ARC_MS = GUEST_LANDING
 const GLOBE_RADIUS = 100; // three-globe units
 const FOCUS_SPEED = 1.6; // × base speed at most while a card is on screen
 const REVEAL_SPEED = 0.3; // × base speed while the light spreads, so the beams can be followed
@@ -32,7 +24,6 @@ const REVEAL_SPEED = 0.3; // × base speed while the light spreads, so the beams
 export class GlobeScene extends WallScene {
   readonly globe: GlobeInstance;
   private readonly borders: LineSegments;
-  private guestArcs: GuestArc[] = [];
   private readonly ro: ResizeObserver;
   private title?: { el: HTMLElement; bottomGap: number; bottom: number; limit?: () => number | null };
   /** unit vectors of every lit place (x, y, z per place): how much is there to see in the current view */
@@ -50,15 +41,6 @@ export class GlobeScene extends WallScene {
       .polygonSideColor(() => '') // no sides
       .polygonCapMaterial((f: object) => this.countryMaterial((f as CountryFeature).properties.iso2)) // colours change without a rebuild
       .polygonsTransitionDuration(900)
-      // globe.gl's own arcs carry only the guest lights (a handful at a time); the cooperation arcs are in ArcLayer
-      .arcStartLat(() => ORIGIN.lat).arcStartLng(() => ORIGIN.lon)
-      .arcEndLat((d: object) => (d as GuestArc).lat).arcEndLng((d: object) => (d as GuestArc).lon)
-      .arcColor(() => [rgba('#ffffff', 1), rgba(GUEST_COLOR, 1)])
-      .arcAltitudeAutoScale(0.38)
-      .arcStroke(0.9)
-      .arcDashLength(GUEST_DASH).arcDashGap(8).arcDashInitialGap(0)
-      .arcDashAnimateTime(GUEST_ARC_MS)
-      .arcsTransitionDuration(0)
       .ringsData([ORIGIN]).ringLat('lat').ringLng('lon')
       .ringColor(() => (t: number) => `rgba(255,255,255,${1 - t})`)
       .ringMaxRadius(5).ringPropagationSpeed(2.2).ringRepeatPeriod(1100);
@@ -79,10 +61,12 @@ export class GlobeScene extends WallScene {
     const renderer = this.globe.renderer() as WebGLRenderer;
     this.borders = createBorders(this.globe, countries, { altitude: 0.0062, color: '#bed2ff', opacity: 0.22 });
     scene.add(this.borders);
+    // all arcs are ours (one mesh per layer); globe.gl's own arc layer stays unused
     this.arcs = new ArcLayer(scene, renderer, globeArcPath(this.globe, ORIGIN));
+    this.guestArcs = new ArcLayer(scene, renderer, globeArcPath(this.globe, ORIGIN), GUEST_ARC_STYLE);
     const onGlobe = (altitude: number) => (lat: number, lon: number) => { const c = this.globe.getCoords(lat, lon, altitude); return new Vector3(c.x, c.y, c.z); };
     this.coopStars = new StarLayer({ scene, renderer, camera: () => this.camera(), place: onGlobe(0.012) });
-    this.guestStars = new StarLayer({ scene, renderer, camera: () => this.camera(), place: onGlobe(0.016) });
+    this.guestStars = new StarLayer({ scene, renderer, camera: () => this.camera(), place: onGlobe(0.016), whiteCore: GUEST_STAR_WHITE });
     this.ro = new ResizeObserver(() => {
       this.globe.width(el.clientWidth).height(el.clientHeight);
       if (this.title) { this.fitBelowTitle(); this.fadeTitle(); }
@@ -226,12 +210,7 @@ export class GlobeScene extends WallScene {
 
   protected arcWidth(p: GlobePlace): number { return 0.12 + Math.min(p.links, 12) * 0.02; }
 
-  protected launchGuest(pin: GuestArrival): void {
-    const arc: GuestArc = { id: `g${pin.id}`, lat: pin.lat, lon: pin.lon };
-    this.guestArcs.push(arc);
-    this.globe.arcsData(this.guestArcs);
-    window.setTimeout(() => { this.guestArcs = this.guestArcs.filter(a => a !== arc); this.globe.arcsData(this.guestArcs); }, GUEST_ARC_MS + 200);
-  }
+  protected guestArcWidth(): number { return 0.42; }
 
   override dispose(): void {
     super.dispose();

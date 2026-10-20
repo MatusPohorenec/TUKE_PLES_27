@@ -194,8 +194,15 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   country, distance, institutions/links and the top 3 partners; guest cards the guest count. (The 2D map docks them, below.)
 - Countries: per-country MeshBasicMaterial with fades; palette blue only: scene subject `[86,128,255,.42]`, other layer
   `[86,128,255,.2]`, unlit `[14,26,78,.55]`, Slovakia white `.55`. (A warm tint at low alpha rendered grey: don't.)
-- Scenes (admin): `cooperation` (arcs + coop stars, guests beside) and `live` (arcs fade out, coop stars dimmed, guest countries
-  lit). Guest lights: warm stars/arcs `#ffd9a0`, one-by-one arrivals (max 8 animated per poll), country tints when the beam lands.
+- Scenes (admin): `cooperation` (arcs + coop stars, guests beside) and `live` (cooperation arcs fade out, coop stars dimmed,
+  guest countries lit); the guest arcs stay in both.
+- Guest lights are gold, `GUEST_COLOR` `#ffb52e` in core.ts = `--warm` in base.css (the cooperation colours are all cool).
+  Every guest place keeps a golden arc from Košice in its own ArcLayer (`guestArcs`, one draw call; `GUEST_ARC_STYLE`: steady
+  light 0.35 instead of 0.02, gold from 6 % of the way instead of 30 %). A new light (live feed, max 8 animated per poll,
+  450 ms apart) sends a beam along its arc (1.82 s, also for a known place); then the star ignites and the country tints,
+  and light flows both ways. Places from the summary (page load, resync) get their arc without a beam, each at its own point
+  of the pulse round (`spread(key)`). Guest stars: `whiteCore` 0.3 (stay gold), size 26 + 8·√count. Before 2026-10-20 the
+  arrival was a 2.6 s globe.gl dash that vanished, which read as "no connection".
 - Live feed: wall polls `/live` every 2 s (map 5 s), shared newest 60; own cursor; resync from `/summary` after a gap
   bigger than the window and every 5 min (so hidden/undone lights disappear); polling pauses in hidden tabs.
 - Layout: title fitted above the globe and faded when the globe is zoomed into it; `?kiosk=1` hides links/cursor, keeps the
@@ -206,9 +213,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 - MapScene draws the same wall on a Natural Earth projection (Antarctica left out): per-country meshes (triangulated from
   d3-geo projected rings, holes handled) using the shared country materials, outlines as one LineSegments, arcs bowing
-  northwards (quadratic, same ArcLayer shader), stars with the same StarLayer (`sphere: false`), guest beams as a one-shot
-  ArcLayer (`ambient: false`). The sea is a lon/lat grid whose vertex alpha fades out at the antimeridian and the far
-  north/south, so the map floats in the night (the user disliked the hard cut-out edge: "okliestené").
+  northwards (quadratic, same ArcLayer shader), stars with the same StarLayer (`sphere: false`), the golden guest arcs as on
+  the globe (width 2.2; guest stars shrink less with zoom, ×1.5). The sea is a lon/lat grid whose vertex alpha fades out at
+  the antimeridian and the far north/south, so the map floats in the night (the user disliked the hard cut-out edge:
+  "okliestené").
 - Europe must not burn white on the whole-world view: stars scale with zoom (`setSizeScale`, 0.55·zoom^0.4), rays 0.45
   (`setRays`), stars with many neighbours (within 16 units) are dimmer (`starDim`, faded out by `setDimAmount` when zoomed
   in), short arcs keep less steady light after landing (`arcGlow` 0.2 → 1 between 400 and 3 500 km; the beam stays full).
@@ -235,8 +243,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - Never re-colour countries with `globe.polygonCapColor(...)` during animation: globe.gl rebuilds all polygons (50–60 ms long
   tasks). Use the per-country materials in scene.ts.
 - Never add arcs one by one through `globe.arcsData` during the reveal (one mesh each, frame spikes). Cooperation arcs live in
-  ArcLayer (one draw call); globe.gl arcs only carry the few guest arrivals.
+  ArcLayer (one draw call), the guest arcs in a second one; globe.gl's own arc layer is unused.
 - Result: draw calls 2 221 → 568, triangles 700k → 114k, longest frame 92 ms → 13 ms, no long tasks during the opening.
+- Guest arcs (2026-10-20, 300 guest places): +1 draw call, rebuild on an arrival 1 ms, summary load 5 ms, render CPU 4 ms
+  (globe) / 2.4 ms (map).
 
 ## Verifying in the browser pane
 
@@ -293,7 +303,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   `ples-mssql`, ples_dev migrated + seeded, api-smoke passes; README got the Docker variant (B), this file the two-PC notes.
   Then, at the user's request, Russia and Belarus went on the map (the About page no longer says they are left out), with a
   coordinate check and diacritic place names in build_dataset.py: dataset 2026-10-20+aeb9797b (832 places, 86 countries).
-  The 2D QR panel became a row that scales itself so no lit place lies under it on smaller screens.
+  The 2D QR panel became a row that scales itself so no lit place lies under it on smaller screens. Guest lights became
+  gold with a lasting golden arc from Košice (beam on arrival, then light both ways) on the globe and the map.
 
 ## Open questions / next
 
@@ -301,9 +312,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the
   Vercel paragraph in README.md.
 - Upload pending: on 2026-10-20 evening the production code was still f980fd7 (API and web), while the TUKE DB already
-  had dataset 2026-10-20+aeb9797b (Russia/Belarus shown). The zips of 9737ab6 in `deploy/` bring 9a3e639 (Slovak fallback
-  error messages), the About page without the RU/BY sentence, the 2D QR panel fit and the new snapshot in the API: upload
-  both (Plesk needs the TUKE network or VPN), then check /app.js/api/health and /build.txt.
+  had dataset 2026-10-20+aeb9797b (Russia/Belarus shown). The zips in `deploy/` (built from the latest main) bring 9a3e639
+  (Slovak fallback error messages), the About page without the RU/BY sentence, the 2D QR panel fit, the gold guest lights
+  with their arcs and the new snapshot in the API: upload both (Plesk needs the TUKE network or VPN), then check
+  /app.js/api/health and /build.txt.
 - Docker PC: install Node 18.20.6 (nvm-windows or the portable zip) before the next API change, to test the bundle.
 - Production checks only the user can do: a guest light from a phone (/zapoj-sa → wall → undo), /admin login with the
   production password, hide/show a light, scene switch.
@@ -312,7 +324,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - The architecture document (v0.2) still says env.config / web.config, /api and Node 22: refresh it to App_Data\.env,
   iisnode.yml, /app.js/api and Node 18 (Artifact read by its URL, edit the saved file, publish with `url` set).
 - Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), what „kde si bol/a" means for guests, guest light
-  colour, milestones wording, confirmation of the Erasmus list by the international office (OZVaM).
+  colour (gold since 2026-10-20, one constant + `--warm`), milestones wording, confirmation of the Erasmus list by the
+  international office (OZVaM).
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome kiosk `/?kiosk=1&k=CODE`), rehearsal.
 - Load test with ~500 simulated guests against the TUKE server (one iisnode process); English version of the guest form;
   polish of /mapa on phones; counters say „1 svetiel hostí" for 1–4 lights (fixed label; `plural()` exists in lib/format.ts).

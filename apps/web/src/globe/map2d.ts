@@ -9,8 +9,8 @@ import * as THREE from 'three';
 import { geoNaturalEarth1, geoPath, type GeoPermissibleObjects, type GeoProjection } from 'd3-geo';
 import { ORIGIN } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
-import { ArcLayer, ARC_SEGMENTS, type ArcInput, type ArcPath } from './arcs.ts';
-import { GUEST_COLOR, GUEST_LANDING, WallScene, seconds, type CountryFeature, type GuestArrival } from './core.ts';
+import { ArcLayer, ARC_SEGMENTS, type ArcPath } from './arcs.ts';
+import { GUEST_ARC_STYLE, GUEST_STAR_WHITE, WallScene, type CountryFeature } from './core.ts';
 import { StarLayer } from './stars.ts';
 
 type XY = [number, number];
@@ -59,8 +59,6 @@ export class MapScene extends WallScene {
   private readonly centre: XY;
   /** the whole world in scene units */
   private readonly world: Box;
-  private readonly guestArcs: ArcLayer;
-  private flights: (ArcInput & { until: number })[] = [];
   private readonly ro: ResizeObserver;
   private title?: { el: HTMLElement; bottomGap: number; limit?: () => number | null };
   /** the part of the world on screen now, and the part the view moves to */
@@ -103,11 +101,11 @@ export class MapScene extends WallScene {
       }
     };
     this.arcs = new ArcLayer(this.scene, this.renderer, arcPath);
-    this.guestArcs = new ArcLayer(this.scene, this.renderer, arcPath, { ambient: false });
+    this.guestArcs = new ArcLayer(this.scene, this.renderer, arcPath, GUEST_ARC_STYLE);
     const onMap = (z: number) => (lat: number, lon: number) => { const [x, y] = this.lonLat(lon, lat); return new THREE.Vector3(x, y, z); };
     const stars = { scene: this.scene, renderer: this.renderer, camera: () => this.camera, refDist: CAMERA_Z, sphere: false };
     this.coopStars = new StarLayer({ ...stars, place: onMap(Z.stars) });
-    this.guestStars = new StarLayer({ ...stars, place: onMap(Z.guests) });
+    this.guestStars = new StarLayer({ ...stars, place: onMap(Z.guests), whiteCore: GUEST_STAR_WHITE });
     this.coopStars.setRays(0.45); // hundreds of rays crossing over Europe read as one white blot
     this.guestStars.setRays(0.6);
 
@@ -242,7 +240,8 @@ export class MapScene extends WallScene {
     const zoom = (this.world.x1 - this.world.x0) / bw;
     const size = Math.min(1, 0.55 * Math.pow(zoom, 0.4));
     const dim = Math.min(1, Math.max(0, (2.5 - zoom) / 1.5));
-    for (const layer of [this.coopStars, this.guestStars]) { layer?.setSizeScale(size); }
+    this.coopStars?.setSizeScale(size);
+    this.guestStars?.setSizeScale(Math.min(1, size * 1.5)); // the few guest lights need not shrink as much
     this.coopStars?.setDimAmount(dim);
   }
 
@@ -314,11 +313,6 @@ export class MapScene extends WallScene {
 
   protected override frameTick(now: number, dt: number): void {
     this.follow(now / 1000, dt);
-    this.guestArcs.update(now / 1000, dt);
-    if (this.flights.length && this.flights.some(f => f.until < now / 1000)) {
-      this.flights = this.flights.filter(f => f.until >= now / 1000);
-      this.guestArcs.set(this.flights);
-    }
   }
 
   protected override frameEnd(): void {
@@ -361,11 +355,7 @@ export class MapScene extends WallScene {
   /** Cards never cover the map: where no dock fits, the place only gets a name tag. */
   override cardsFloat(): boolean { return false; }
 
-  protected launchGuest(pin: GuestArrival): void {
-    const t = seconds();
-    this.flights.push({ lat: pin.lat, lon: pin.lon, color: GUEST_COLOR, width: 2.2, launch: t, travel: GUEST_LANDING, until: t + GUEST_LANDING * 1.4 });
-    this.guestArcs.set(this.flights);
-  }
+  protected guestArcWidth(): number { return 2.2; }
 
   screenPoint(lat: number, lon: number): { x: number; y: number; facing: number } {
     const [x, y] = this.lonLat(lon, lat);
@@ -396,7 +386,6 @@ export class MapScene extends WallScene {
   override dispose(): void {
     super.dispose();
     this.ro.disconnect();
-    this.guestArcs.dispose();
     for (const d of this.disposables) d.dispose();
     for (const o of this.scene.children) if (o instanceof THREE.Mesh) o.geometry.dispose();
     this.renderer.dispose();

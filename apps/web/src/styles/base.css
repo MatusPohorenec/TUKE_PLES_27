@@ -10,7 +10,7 @@
   --line: rgba(190, 210, 255, 0.16);
   --line-strong: rgba(190, 210, 255, 0.32);
   --glow: #4f7dff;
-  --warm: #ffd9a0;
+  --warm: #ffb52e; /* guest lights (GUEST_COLOR in globe/core.ts) */
   --danger: #ff8f9c;
   --ok: #8ff0c4;
 

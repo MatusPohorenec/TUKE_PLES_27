@@ -34,9 +34,9 @@
 .join-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .join-chip {
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 6px 6px 12px; border-radius: 99px;
-  border: 1px solid rgba(255, 217, 160, 0.45); color: var(--warm); background: rgba(255, 217, 160, 0.08); font-weight: 600; font-size: 14px;
+  border: 1px solid rgba(255, 181, 46, 0.45); color: var(--warm); background: rgba(255, 181, 46, 0.08); font-weight: 600; font-size: 14px;
 }
-.join-chip.lit { padding-right: 12px; box-shadow: 0 0 18px rgba(255, 210, 150, 0.35); }
+.join-chip.lit { padding-right: 12px; box-shadow: 0 0 18px rgba(255, 181, 46, 0.35); }
 .join-chip button { width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.08); cursor: pointer; font-size: 16px; line-height: 1; }
 
 .join-options { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -45,7 +45,7 @@
   border: 1px solid var(--line-strong); cursor: pointer; font-weight: 500; user-select: none;
 }
 .join-option input { position: absolute; opacity: 0; pointer-events: none; }
-.join-option.on { border-color: var(--warm); color: var(--warm); background: rgba(255, 217, 160, 0.1); }
+.join-option.on { border-color: var(--warm); color: var(--warm); background: rgba(255, 181, 46, 0.1); }
 .join-option:has(input:focus-visible) { outline: 2px solid var(--glow); outline-offset: 2px; }
 
 .join-submit { width: 100%; min-height: 54px; font-size: 17px; }

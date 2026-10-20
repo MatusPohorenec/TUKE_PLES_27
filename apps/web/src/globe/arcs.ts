@@ -2,8 +2,8 @@
  * Cooperation arcs on the GPU: all arcs in one mesh and one draw call. The reveal and the pulses run on time
  * inside the shaders, so nothing is rebuilt while the light spreads and JavaScript only moves a clock. An arc
  * first carries a beam from Košice to its place; when the beam lands, the place answers with light back to
- * Košice, and from then on light travels both ways, as cooperation does (unless the layer is one-shot, as for
- * guest lights). The shape of an arc comes from a path function: over the globe (globeArcPath) or on a flat map.
+ * Košice, and from then on light travels both ways, as cooperation does (a one-shot layer, `ambient: false`, ends
+ * with the landing). The shape of an arc comes from a path function: over the globe (globeArcPath) or on a flat map.
  */
 import * as THREE from 'three';
 import type { GlobeInstance } from 'globe.gl';
@@ -60,7 +60,7 @@ const VERTEX = /* glsl */ `
   }`;
 
 const FRAGMENT = /* glsl */ `
-  uniform float uTime, uOpacity, uBase, uAmbient;
+  uniform float uTime, uOpacity, uBase, uAmbient, uTintFrom;
   varying vec3 vColor;
   varying float vT, vSide, vLaunch, vTravel, vGlow;
   // a pulse whose head is at 'head' (0 = where it starts, 1 = where it ends) with a fading tail behind it
@@ -86,7 +86,7 @@ const FRAGMENT = /* glsl */ `
     }
     light *= 0.15 + 0.85 * smoothstep(0.0, 0.15, vT);   // hundreds of arcs meet in Košice
     float glow = exp(-vSide * vSide * mix(3.2, 1.8, min(beam, 1.0)));
-    vec3 col = mix(vec3(1.0), vColor, smoothstep(0.0, 0.3, vT));
+    vec3 col = mix(vec3(1.0), vColor, smoothstep(0.0, uTintFrom, vT));
     col = mix(col, vec3(1.0), clamp(light - 0.9, 0.0, 1.0) * 0.6); // only the head of the beam burns white
     gl_FragColor = vec4(col * light * glow * uOpacity, 1.0);
   }`;
@@ -123,16 +123,26 @@ export class ArcLayer {
   private opacity = 1;
   private targetOpacity = 1;
 
-  /** ambient: false for one-shot beams (guest lights) that end when they land */
-  constructor(private readonly scene: THREE.Scene, private readonly renderer: THREE.WebGLRenderer, private readonly path: ArcPath, { ambient = true } = {}) {
+  /**
+   * ambient: false for one-shot beams that end when they land. base: how bright the connection itself stays after
+   * the beam has landed (hundreds of cooperation arcs: faint; the few guest arcs: clearly lit). tintFrom: how far
+   * from Košice an arc is white before its colour takes over (where hundreds of cooperation arcs meet).
+   */
+  constructor(
+    private readonly scene: THREE.Scene,
+    private readonly renderer: THREE.WebGLRenderer,
+    private readonly path: ArcPath,
+    { ambient = true, base = 0.02, tintFrom = 0.3 } = {},
+  ) {
     this.material = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: performance.now() / 1000 },
         uResolution: { value: new THREE.Vector2(1, 1) },
         uMinPx: { value: renderer.getPixelRatio() },
         uOpacity: { value: 1 },
-        uBase: { value: 0.02 },
+        uBase: { value: base },
         uAmbient: { value: ambient ? 1 : 0 },
+        uTintFrom: { value: tintFrom },
       },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,

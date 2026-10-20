@@ -29,6 +29,8 @@ export interface StarLayerOptions {
   refDist?: number;
   /** stars on a sphere: picking skips the far side */
   sphere?: boolean;
+  /** 0–1: how white the core and the rays burn; lower keeps a star in its colour (the gold guest lights) */
+  whiteCore?: number;
 }
 
 const VERTEX = /* glsl */ `
@@ -54,7 +56,7 @@ const VERTEX = /* glsl */ `
   }`;
 
 const FRAGMENT = /* glsl */ `
-  uniform float uIntensity, uRays, uDimAmount;
+  uniform float uIntensity, uRays, uDimAmount, uWhite;
   varying vec3 vColor;
   varying float vTwinkle, vGlint, vAppear, vAngle, vDim;
   float ray(vec2 p, float len, float width) {
@@ -74,7 +76,7 @@ const FRAGMENT = /* glsl */ `
     float halo = exp(-r * 6.5) * 0.5;
     float light = (core * 1.6 + halo + spikes) * vTwinkle * (1.0 + 1.3 * vGlint) * vAppear * uIntensity * mix(mix(1.0, vDim, uDimAmount), 1.0, vGlint);
     light *= smoothstep(1.0, 0.75, r);
-    vec3 col = mix(vColor, vec3(1.0), clamp(core * 1.3 + spikes * 0.35, 0.0, 1.0));
+    vec3 col = mix(vColor, vec3(1.0), clamp((core * 1.3 + spikes * 0.35) * uWhite, 0.0, 1.0));
     gl_FragColor = vec4(col * light, 1.0);
   }`;
 
@@ -96,7 +98,7 @@ export class StarLayer {
   private readonly o: Required<StarLayerOptions>;
 
   constructor(options: StarLayerOptions) {
-    this.o = { refDist: 210, sphere: true, ...options };
+    this.o = { refDist: 210, sphere: true, whiteCore: 1, ...options };
     const renderer = this.o.renderer;
     const gl = renderer.getContext();
     const range = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE) as Float32Array;
@@ -110,6 +112,7 @@ export class StarLayer {
         uSizeScale: { value: 1 },
         uRays: { value: 1 },
         uDimAmount: { value: 1 },
+        uWhite: { value: this.o.whiteCore },
       },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
