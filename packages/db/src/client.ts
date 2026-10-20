@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Kysely, MssqlDialect } from 'kysely';
@@ -27,8 +27,24 @@ export function loadEnv(argv = process.argv): string | null {
     if (flag >= 0) throw new Error(`env file not found: ${file}`);
     return null;
   }
-  process.loadEnvFile(file);
+  applyEnvFile(file);
   return name;
+}
+
+/**
+ * Puts the KEY=value lines of an env file into process.env without overriding variables already set: # comments,
+ * optional "export ", values in single or double quotes, " #" starts a comment in an unquoted value. The rules of
+ * process.loadEnvFile, which the Node.js 18 of the TUKE server does not have yet.
+ */
+export function applyEnvFile(file: string): void {
+  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
+    if (!m) continue;
+    const [, key, raw] = m as unknown as [string, string, string];
+    const quoted = raw.length > 1 && (raw[0] === '"' || raw[0] === "'") && raw.endsWith(raw[0]);
+    const value = quoted ? raw.slice(1, -1) : raw.replace(/\s+#.*$/, '');
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
 }
 
 export interface DbConfig {

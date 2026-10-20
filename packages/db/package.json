@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@ples/shared": "*",
-    "kysely": "^0.29.7",
+    "kysely": "^0.27.6",
     "tarn": "^3.1.2",
-    "tedious": "^20.3.8"
+    "tedious": "^19.2.2"
   }
 }

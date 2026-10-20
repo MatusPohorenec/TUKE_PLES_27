@@ -29,7 +29,7 @@ Architektúra, schéma databázy a otvorené otázky sú v dokumente „Architek
 
 ## Lokálny vývoj
 
-Potrebné: Node.js 22.12 alebo novší (odporúčaný 24) a lokálny Microsoft SQL Server. Nikdy nevyvíjaj proti databáze na serveri TUKE.
+Potrebné: Node.js 22.12 alebo novší (odporúčaný 24) na vývoj a build a lokálny Microsoft SQL Server. Samotné API (`deploy/api`) beží aj na Node.js 18, ktorý má server TUKE. Nikdy nevyvíjaj proti databáze na serveri TUKE.
 
 ### SQL Server na vlastnom počítači (raz)
 
@@ -80,7 +80,7 @@ Zmena schémy databázy: pridaj nový súbor `packages/db/migrations/NNNN_popis.
 | API | https://api.srdcom.tuke.sk | Node.js cez iisnode: `app.js` (štartovací súbor), `api.mjs` (celé API v jednom súbore, bez `node_modules`), `tuke_cooperation.json`, `iisnode.yml` (nastavenia iisnode), `App_Data\.env` (nastavenia s heslami, len na serveri) |
 | Databáza | `portal.msweb.tuke.sk`, databáza a login z Plesku (*Databases*) | SQL Server 2022; login má roly `db_ddladmin`, `db_datareader`, `db_datawriter` a vlastnú predvolenú schému, tabuľky sú v schéme `dbo` |
 
-`web.config` oboch stránok spravuje Plesk a nasadenie ho nemení (pravidlo TUKE). Preto nič z aplikácie na ňom nestojí: stránky webu sú skutočné priečinky, nastavenia iisnode sú v `iisnode.yml` (iisnode ho číta popri `web.config`) a nastavenia API v `App_Data\.env`. Web volá API na inej adrese (`VITE_API_URL`), API to povolí cez CORS (`WEB_ORIGIN`). Prihlásenie do `/admin` funguje aj naprieč adresami: cookie patrí `api.srdcom.tuke.sk` a obe adresy sú pod tou istou doménou `tuke.sk`, takže `SameSite=Strict` platí. Kým sa API nespojí s databázou, zemeguľa beží z dátového balíka pribaleného k API a formulár hostí hlási, že zbieranie ešte nie je spustené.
+`web.config` oboch stránok spravuje Plesk a nasadenie ho nemení (pravidlo TUKE). Preto nič z aplikácie na ňom nestojí: stránky webu sú skutočné priečinky, nastavenia iisnode sú v `iisnode.yml` (iisnode ho číta popri `web.config`) a nastavenia API v `App_Data\.env`. `web.config` od Plesku posiela na iisnode len adresy začínajúce `/app.js`, preto je adresa API `https://api.srdcom.tuke.sk/app.js/api` (API predponu `/app.js` samo odstráni; keby správcovia doplnili pravidlo pre všetky adresy, funguje aj `/api`). Web volá API na inej adrese (`VITE_API_URL`), API to povolí cez CORS (`WEB_ORIGIN`). Prihlásenie do `/admin` funguje aj naprieč adresami: cookie patrí `api.srdcom.tuke.sk` a obe adresy sú pod tou istou doménou `tuke.sk`, takže `SameSite=Strict` platí. Kým sa API nespojí s databázou, zemeguľa beží z dátového balíka pribaleného k API a formulár hostí hlási, že zbieranie ešte nie je spustené.
 
 ### Nastavenia (premenné prostredia)
 
@@ -99,7 +99,7 @@ Plesk pre Windows nemá pri Node.js políčko na premenné prostredia (to má le
 | `NODE_ENV` | `production` | pod iisnode sa API aj tak správa produkčne (napr. cookie len cez HTTPS) |
 | `WEB_ORIGIN` | `https://srdcom.tuke.sk` | adresa webu pre CORS, viac adries oddeľ čiarkou |
 
-Pri builde webu: **`VITE_API_URL`** = `https://api.srdcom.tuke.sk/api` (predvolené v `npm run build:tuke`, iná adresa cez `npm run build:tuke -- --api-url <url>`). Bez nej web volá `/api` na vlastnej adrese.
+Pri builde webu: **`VITE_API_URL`** = `https://api.srdcom.tuke.sk/app.js/api` (predvolené v `npm run build:tuke`, iná adresa cez `npm run build:tuke -- --api-url <url>`). Bez nej web volá `/api` na vlastnej adrese.
 
 ### Databáza: migrácie a seed
 
@@ -136,10 +136,10 @@ Vznikne `deploy/srdcom-web.zip` a `deploy/srdcom-api.zip` (a tie isté súbory r
 
 **api.srdcom.tuke.sk**
 
-1. Plesk → *Websites & Domains* → `api.srdcom.tuke.sk` → **Node.js**: verzia Node.js **22 alebo novšia** (na Windows je jedna verzia pre celý server, vyberá ju správca), *Application Root* = *Document Root* = koreňový priečinok stránky (na Windows musia byť rovnaké), *Application Startup File* = `app.js`, *Application Mode* = production. **Enable Node.js**. Netreba *NPM install* ani *Auto-configure*, `api.mjs` obsahuje všetky knižnice.
+1. Plesk → *Websites & Domains* → `api.srdcom.tuke.sk` → **Node.js**: *Application Root* = *Document Root* = koreňový priečinok stránky (na Windows musia byť rovnaké), *Application Startup File* = `app.js`, *Application Mode* = production. **Enable Node.js**. Netreba *NPM install* ani *Auto-configure*, `api.mjs` obsahuje všetky knižnice. Verziu Node.js vyberá správca pre celý server, 20. 10. 2026 to bola 18.20.6 a API je na ňu prispôsobené.
 2. *File Manager* → koreňový priečinok stránky: zmaž predvolený `index.html` od Plesku (`web.config` nechaj tak). **Upload** `srdcom-api.zip` → pravý klik → **Extract Files** (pridá aj súbory do existujúceho priečinka `App_Data`).
 3. V `App_Data` skopíruj `.env.example` na **`.env`** a vyplň hodnoty (databáza a login z Plesku, heslo k databáze, `ADMIN_PASSWORD`).
-4. Over https://api.srdcom.tuke.sk/api/health: `"database":"up"` a `"commit"` podľa `build.txt`.
+4. Over https://api.srdcom.tuke.sk/app.js/api/health: `"database":"up"` a `"commit"` podľa `build.txt`.
 
 **srdcom.tuke.sk**
 
@@ -163,8 +163,8 @@ Odporúčanie: na ples **ručné nasadenie zo zipu**. Build sa robí lokálne a 
 
 ### Riešenie problémov
 
-- **HTTP 404 na `/api/...`**: Node.js na stránke nie je zapnutý, alebo `web.config` od Plesku neposiela požiadavky na `app.js` (pozri, čo v ňom je, a riešte to so správcami TUKE).
-- **HTTP 500.1xxx (iisnode)**: Node sa nespustil. Log je v `App_Data\iisnode` (File Manager). Najčastejšie príčiny sú stará verzia Node.js (treba 22+) alebo chyba v `App_Data\.env`.
+- **HTTP 404 na `/api/...`**: `web.config` od Plesku nemá pravidlo, ktoré posiela `/api/...` na `app.js`. Preto web volá API cez `/app.js/api/...` (IIS posiela `/app.js/...` na iisnode sám). Ak 404 vracia aj `/app.js/api/health`, Node.js na stránke nie je zapnutý.
+- **HTTP 500 na `/app.js/...`**: Node sa nespustil. Log je v `App_Data\iisnode` (File Manager). Najčastejšie príčiny sú verzia Node.js staršia ako 18.17 alebo chyba v `App_Data\.env`.
 - **CORS chyba v prehliadači**: `WEB_ORIGIN` sa musí presne zhodovať s adresou webu (`https://srdcom.tuke.sk`, bez lomky na konci).
 - **`"database":"down"`** alebo **`"not_configured"`**: zlé údaje v `App_Data\.env`, súbor chýba, alebo firewall databázy. Stena aj tak beží z pribaleného dátového balíka.
 

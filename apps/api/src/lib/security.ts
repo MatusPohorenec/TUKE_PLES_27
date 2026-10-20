@@ -78,16 +78,17 @@ export function checkAdminPassword(password: string): boolean {
 /**
  * Host-only cookie of the API host. SameSite=Strict still works when the web runs on another host of the
  * same site (srdcom.tuke.sk -> api.srdcom.tuke.sk): SameSite compares sites (tuke.sk), not origins.
+ * Path / because at TUKE the API is reached as /app.js/api/… (see server.ts), not only as /api/….
  */
 export function startSession(c: Context): void {
   const exp = Date.now() + SESSION_HOURS * 3600_000;
   setCookie(c, COOKIE, `${exp}.${hmac(`admin|${exp}`)}`, {
-    httpOnly: true, secure: isProduction(), sameSite: 'Strict', path: '/api/admin', maxAge: SESSION_HOURS * 3600,
+    httpOnly: true, secure: isProduction(), sameSite: 'Strict', path: '/', maxAge: SESSION_HOURS * 3600,
   });
 }
 
 export function endSession(c: Context): void {
-  deleteCookie(c, COOKIE, { path: '/api/admin', secure: isProduction(), sameSite: 'Strict' });
+  deleteCookie(c, COOKIE, { path: '/', secure: isProduction(), sameSite: 'Strict' });
 }
 
 export function hasSession(c: Context): boolean {

@@ -7,10 +7,13 @@
 //                                       no node_modules on the server) + the dataset snapshot + iisnode.yml
 //                                       (iisnode settings) + App_Data/ (source map, .env.example; never served)
 //   deploy/srdcom-web.zip, deploy/srdcom-api.zip  the same folders zipped for Plesk File Manager (Upload, Extract)
-// The web calls the API at --api-url, else VITE_API_URL, else https://api.srdcom.tuke.sk/api.
+// The web calls the API at --api-url, else VITE_API_URL, else https://api.srdcom.tuke.sk/app.js/api: the Plesk
+// web.config has no rewrite to app.js, but IIS hands /app.js/<path> to iisnode and server.ts drops the prefix.
+// The API bundle targets Node.js 18, the version Plesk runs at TUKE.
 // The settings with passwords (App_Data/.env) are never part of the build: they are created once on the server.
 import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
+import { builtinModules } from 'node:module';
 import { cpSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,7 +22,7 @@ import { crc32, deflateRawSync } from 'node:zlib';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = join(root, 'deploy');
 const arg = name => { const i = process.argv.indexOf(name); return i >= 0 ? process.argv[i + 1] : undefined; };
-const apiUrl = (arg('--api-url') ?? process.env.VITE_API_URL ?? 'https://api.srdcom.tuke.sk/api').replace(/\/+$/, '');
+const apiUrl = (arg('--api-url') ?? process.env.VITE_API_URL ?? 'https://api.srdcom.tuke.sk/app.js/api').replace(/\/+$/, '');
 const git = cmd => execSync(`git ${cmd}`, { cwd: root, encoding: 'utf8' }).trim();
 const commit = git('rev-parse --short=7 HEAD') + (git('status --porcelain') ? '-dirty' : '');
 
@@ -43,7 +46,7 @@ await build({
   outfile: join(out, 'api/api.mjs'),
   bundle: true,
   platform: 'node',
-  target: 'node22',
+  target: 'node18',
   format: 'esm',
   sourcemap: 'linked',
   define: { 'process.env.APP_COMMIT': JSON.stringify(commit) },
@@ -54,7 +57,7 @@ await build({
 // the server has no node_modules: any import of a package left in the bundle would crash at start
 const bundle = readFileSync(join(out, 'api/api.mjs'), 'utf8');
 const imports = [...bundle.matchAll(/^import\s[^;]*?from\s*["']([^"']+)["']/gm), ...bundle.matchAll(/\bimport\(\s*["']([^"']+)["']\s*\)/g)]
-  .map(m => m[1]).filter(s => !s.startsWith('node:') && !s.startsWith('.'));
+  .map(m => m[1]).filter(s => !s.startsWith('node:') && !s.startsWith('.') && !builtinModules.includes(s));
 if (imports.length) throw new Error(`API bundle imports packages that are not bundled: ${[...new Set(imports)].join(', ')}`);
 // the source map (readable stack traces in the logs) goes to App_Data, which IIS never serves
 mkdirSync(join(out, 'api/App_Data'), { recursive: true });
