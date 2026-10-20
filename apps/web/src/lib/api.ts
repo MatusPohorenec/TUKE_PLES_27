@@ -5,13 +5,22 @@ export class ApiError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message); }
 }
 
+/**
+ * Where the API lives: the same origin (/api, the Vite proxy in development), or another host set at build
+ * time, e.g. VITE_API_URL=https://api.srdcom.tuke.sk/api on the TUKE servers. Across hosts the admin cookie
+ * needs credentials: 'include' and the API lists this origin in WEB_ORIGIN (CORS).
+ */
+const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
+const credentials: RequestCredentials = API_URL.startsWith('/') ? 'same-origin' : 'include';
+
 async function request<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  headers.set('x-device-id', deviceId());
+  // only writes need the device id (undo, rate limits); reads stay simple requests without a CORS preflight
+  if (init.method && init.method !== 'GET') headers.set('x-device-id', deviceId());
   if (init.json !== undefined) headers.set('content-type', 'application/json');
   let res: Response;
   try {
-    res = await fetch(`/api${path}`, { ...init, headers, body: init.json !== undefined ? JSON.stringify(init.json) : init.body, credentials: 'same-origin' });
+    res = await fetch(`${API_URL}${path}`, { ...init, headers, body: init.json !== undefined ? JSON.stringify(init.json) : init.body, credentials });
   } catch {
     throw new ApiError(0, 'offline', 'Server je nedostupný. Skontroluj pripojenie a skús znova.');
   }

@@ -14,3 +14,6 @@ __pycache__/
 data/cache/cordis/
 data/cache/hei/
 data/cache/geonames/
+
+# deployment build for the TUKE servers (npm run build:tuke)
+deploy/
