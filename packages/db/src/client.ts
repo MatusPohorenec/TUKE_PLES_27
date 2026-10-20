@@ -15,7 +15,7 @@ export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
  * Loads environment variables from a file of the repository: `.env` by default (local development), or the
  * file given by `--env <file>` on the command line, e.g. `npm run db:seed -- --env .env.tuke` for the TUKE
  * database. Only that one file is read, so a run against TUKE never picks up the local settings.
- * Under IIS (iisnode) nothing is loaded: the variables come from the appSettings of web.config.
+ * Under IIS (iisnode) nothing is loaded here: server.ts reads App_Data/.env of the API site.
  */
 export function loadEnv(argv = process.argv): string | null {
   if (process.env.IISNODE_VERSION) return null;

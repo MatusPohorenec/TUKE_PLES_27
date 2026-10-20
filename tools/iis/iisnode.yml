@@ -1,0 +1,15 @@
+# iisnode settings of the API (api.srdcom.tuke.sk). iisnode reads this file next to app.js on top of web.config,
+# which Plesk manages at TUKE and which is never changed by a deploy. Copied to deploy/api by tools/build-tuke.mjs.
+# Syntax of iisnode: one "key: value" per line.
+
+# the client address reaches Node as the last X-Forwarded-For entry (rate limits per address)
+enableXFF: true
+# no error details and no remote debugger (/app.js/debug) for visitors
+devErrorsEnabled: false
+debuggingEnabled: false
+# stdout/stderr of Node go to App_Data\iisnode: readable in Plesk File Manager, never served by IIS
+loggingEnabled: true
+logDirectory: App_Data\iisnode
+node_env: production
+# a new bundle or new settings restart the Node process
+watchedFiles: *.js;*.mjs;iisnode.yml;App_Data\.env

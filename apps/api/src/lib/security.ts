@@ -43,7 +43,7 @@ export function safeEqual(a: string, b: string): boolean {
 }
 
 /**
- * Client address, or null when unknown (local development). iisnode (enableXFF in web.config) appends the
+ * Client address, or null when unknown (local development). iisnode (enableXFF in iisnode.yml) appends the
  * address IIS sees to X-Forwarded-For, so only the last entry is trusted; earlier entries come from the client.
  */
 export function clientIp(c: Context): string | null {

@@ -1,14 +1,17 @@
 // npm run build:tuke [-- --api-url https://api.srdcom.tuke.sk/api]
-// Builds the deployment for the TUKE Plesk server (Windows, IIS + iisnode) into deploy/:
-//   deploy/web/  -> srdcom.tuke.sk      static web app + web.config (SPA fallback, caching, MIME types)
+// Builds the deployment for the TUKE Plesk server (Windows, IIS + iisnode) into deploy/. Plesk manages web.config
+// at TUKE and a deploy never changes it, so nothing here relies on one:
+//   deploy/web/  -> srdcom.tuke.sk      the static web app; every page route also gets a folder with a copy of
+//                                       index.html (/mapa -> mapa/index.html), so IIS serves it without a rewrite
 //   deploy/api/  -> api.srdcom.tuke.sk  app.js (iisnode startup file) + api.mjs (the whole API in one ES module,
-//                                       no node_modules on the server) + the dataset snapshot + web.config
+//                                       no node_modules on the server) + the dataset snapshot + iisnode.yml
+//                                       (iisnode settings) + App_Data/ (source map, .env.example; never served)
 //   deploy/srdcom-web.zip, deploy/srdcom-api.zip  the same folders zipped for Plesk File Manager (Upload, Extract)
 // The web calls the API at --api-url, else VITE_API_URL, else https://api.srdcom.tuke.sk/api.
-// env.config (secrets) is never part of the build: it is created once on the server (README.md).
+// The settings with passwords (App_Data/.env) are never part of the build: they are created once on the server.
 import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
-import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { crc32, deflateRawSync } from 'node:zlib';
@@ -26,7 +29,13 @@ mkdirSync(join(out, 'api'), { recursive: true });
 // ------------------------------------------------------------ web
 execSync('npm run build -w @ples/web', { cwd: root, stdio: 'inherit', env: { ...process.env, VITE_API_URL: apiUrl } });
 cpSync(join(root, 'apps/web/dist'), join(out, 'web'), { recursive: true });
-cpSync(join(root, 'tools/iis/web.web.config'), join(out, 'web/web.config'));
+// the page routes of apps/web/src/main.tsx (ROUTES); the app ignores the trailing slash IIS adds for a folder
+const routes = [...readFileSync(join(root, 'apps/web/src/main.tsx'), 'utf8').matchAll(/^\s*'\/([a-z0-9-]+)':/gm)].map(m => m[1]);
+if (!routes.includes('mapa') || !routes.includes('zapoj-sa')) throw new Error(`page routes not found in main.tsx: ${routes.join(', ')}`);
+for (const route of routes) {
+  mkdirSync(join(out, 'web', route), { recursive: true });
+  cpSync(join(out, 'web/index.html'), join(out, 'web', route, 'index.html'));
+}
 
 // ------------------------------------------------------------ api
 await build({
@@ -47,6 +56,10 @@ const bundle = readFileSync(join(out, 'api/api.mjs'), 'utf8');
 const imports = [...bundle.matchAll(/^import\s[^;]*?from\s*["']([^"']+)["']/gm), ...bundle.matchAll(/\bimport\(\s*["']([^"']+)["']\s*\)/g)]
   .map(m => m[1]).filter(s => !s.startsWith('node:') && !s.startsWith('.'));
 if (imports.length) throw new Error(`API bundle imports packages that are not bundled: ${[...new Set(imports)].join(', ')}`);
+// the source map (readable stack traces in the logs) goes to App_Data, which IIS never serves
+mkdirSync(join(out, 'api/App_Data'), { recursive: true });
+renameSync(join(out, 'api/api.mjs.map'), join(out, 'api/App_Data/api.mjs.map'));
+writeFileSync(join(out, 'api/api.mjs'), bundle.replace(/\/\/# sourceMappingURL=api\.mjs\.map\s*$/, '//# sourceMappingURL=App_Data/api.mjs.map\n'));
 
 writeFileSync(join(out, 'api/app.js'), `// iisnode startup file. iisnode loads it with require(), the API is an ES module: start it with import().
 process.setSourceMapsEnabled(true);
@@ -54,8 +67,8 @@ import('./api.mjs').catch(err => { console.error('[api] failed to start', err); 
 `);
 writeFileSync(join(out, 'api/package.json'), `${JSON.stringify({ private: true, type: 'commonjs', description: `TUKE ball API ${commit}` }, null, 2)}\n`);
 cpSync(join(root, 'data/tuke_cooperation.json'), join(out, 'api/tuke_cooperation.json'));
-cpSync(join(root, 'tools/iis/api.web.config'), join(out, 'api/web.config'));
-cpSync(join(root, 'tools/iis/env.config.example'), join(out, 'api/env.config.example'));
+cpSync(join(root, 'tools/iis/iisnode.yml'), join(out, 'api/iisnode.yml'));
+cpSync(join(root, 'tools/iis/env.example'), join(out, 'api/App_Data/.env.example'));
 
 const info = `commit ${commit}\nbuilt ${new Date().toISOString()}\napi ${apiUrl}\n`;
 writeFileSync(join(out, 'web/build.txt'), info);

@@ -76,15 +76,15 @@ Zmena schémy databázy: pridaj nový súbor `packages/db/migrations/NNNN_popis.
 
 | Čo | Kde | Obsah |
 |---|---|---|
-| Web | https://srdcom.tuke.sk | statické súbory z `deploy/web` + `web.config` (presmerovanie stránok na `index.html`, cache, MIME typy) |
-| API | https://api.srdcom.tuke.sk | Node.js cez iisnode: `app.js` (štartovací súbor), `api.mjs` (celé API v jednom súbore, bez `node_modules`), `tuke_cooperation.json`, `web.config`, `env.config` (nastavenia, len na serveri) |
+| Web | https://srdcom.tuke.sk | statické súbory z `deploy/web`; každá stránka (`/mapa`, `/zapoj-sa`, `/admin` …) má vlastný priečinok s kópiou `index.html` |
+| API | https://api.srdcom.tuke.sk | Node.js cez iisnode: `app.js` (štartovací súbor), `api.mjs` (celé API v jednom súbore, bez `node_modules`), `tuke_cooperation.json`, `iisnode.yml` (nastavenia iisnode), `App_Data\.env` (nastavenia s heslami, len na serveri) |
 | Databáza | `portal.msweb.tuke.sk`, databáza a login z Plesku (*Databases*) | SQL Server 2022; login má roly `db_ddladmin`, `db_datareader`, `db_datawriter` a vlastnú predvolenú schému, tabuľky sú v schéme `dbo` |
 
-Web volá API na inej adrese (`VITE_API_URL`), API to povolí cez CORS (`WEB_ORIGIN`). Prihlásenie do `/admin` funguje aj naprieč adresami: cookie patrí `api.srdcom.tuke.sk` a obe adresy sú pod tou istou doménou `tuke.sk`, takže `SameSite=Strict` platí. Kým sa API nespojí s databázou, zemeguľa beží z dátového balíka pribaleného k API a formulár hostí hlási, že zbieranie ešte nie je spustené.
+`web.config` oboch stránok spravuje Plesk a nasadenie ho nemení (pravidlo TUKE). Preto nič z aplikácie na ňom nestojí: stránky webu sú skutočné priečinky, nastavenia iisnode sú v `iisnode.yml` (iisnode ho číta popri `web.config`) a nastavenia API v `App_Data\.env`. Web volá API na inej adrese (`VITE_API_URL`), API to povolí cez CORS (`WEB_ORIGIN`). Prihlásenie do `/admin` funguje aj naprieč adresami: cookie patrí `api.srdcom.tuke.sk` a obe adresy sú pod tou istou doménou `tuke.sk`, takže `SameSite=Strict` platí. Kým sa API nespojí s databázou, zemeguľa beží z dátového balíka pribaleného k API a formulár hostí hlási, že zbieranie ešte nie je spustené.
 
 ### Nastavenia (premenné prostredia)
 
-Plesk pre Windows nemá pri Node.js políčko na premenné prostredia (to má len Plesk pre Linux). Nastavenia API sú preto v súbore **`env.config`** v koreni stránky `api.srdcom.tuke.sk`, vedľa `web.config`. `web.config` ho načíta (`<appSettings configSource="env.config" />`) a iisnode z neho urobí premenné prostredia pre Node. Vzor je `env.config.example`. `env.config` nie je v builde, nasadenie ho neprepíše a do gitu nepatrí. Hodnoty majú byť len ASCII (bez diakritiky), lebo iisnode ich prevádza do ANSI. V XML treba zapísať `&` ako `&amp;`, `<` ako `&lt;` a `"` ako `&quot;`. Po zmene sa API reštartuje samo.
+Plesk pre Windows nemá pri Node.js políčko na premenné prostredia (to má len Plesk pre Linux) a `web.config` sa na TUKE nemení. Nastavenia API sú preto v súbore **`App_Data\.env`** na stránke `api.srdcom.tuke.sk`, vo formáte `KĽÚČ=hodnota` ako `.env` pri vývoji; API ho pri štarte načíta samo. Vzor je `App_Data\.env.example`. IIS z priečinka `App_Data` nikdy nič nevydá, build tento súbor neobsahuje, nasadenie ho neprepíše a do gitu nepatrí. Po zmene sa API reštartuje samo (`iisnode.yml` ho sleduje). Ak súbor chýba, API beží bez databázy a zapíše to do logu.
 
 | Premenná | Hodnota na TUKE | Načo |
 |---|---|---|
@@ -136,20 +136,20 @@ Vznikne `deploy/srdcom-web.zip` a `deploy/srdcom-api.zip` (a tie isté súbory r
 
 **api.srdcom.tuke.sk**
 
-1. Plesk → *Websites & Domains* → `api.srdcom.tuke.sk` → **Node.js**: verzia Node.js **22 alebo novšia** (na Windows je jedna verzia pre celý server, vyberá ju správca), *Application Root* = *Document Root* = koreňový priečinok stránky (na Windows musia byť rovnaké), *Application Startup File* = `app.js`, *Application Mode* = production. **Enable Node.js**. Netreba *NPM install*, `api.mjs` obsahuje všetky knižnice.
-2. *File Manager* → koreňový priečinok stránky: ak tam Plesk vytvoril `web.config`, stiahni si ho a nechaj si ho na porovnanie (obsahuje len cesty, žiadne heslá). Zmaž predvolené súbory Plesku (`index.html` a pod.). **Upload** `srdcom-api.zip` → pravý klik → **Extract Files**.
-3. Skopíruj `env.config.example` na **`env.config`** a vyplň hodnoty (heslo k databáze a `ADMIN_PASSWORD`).
+1. Plesk → *Websites & Domains* → `api.srdcom.tuke.sk` → **Node.js**: verzia Node.js **22 alebo novšia** (na Windows je jedna verzia pre celý server, vyberá ju správca), *Application Root* = *Document Root* = koreňový priečinok stránky (na Windows musia byť rovnaké), *Application Startup File* = `app.js`, *Application Mode* = production. **Enable Node.js**. Netreba *NPM install* ani *Auto-configure*, `api.mjs` obsahuje všetky knižnice.
+2. *File Manager* → koreňový priečinok stránky: zmaž predvolený `index.html` od Plesku (`web.config` nechaj tak). **Upload** `srdcom-api.zip` → pravý klik → **Extract Files** (pridá aj súbory do existujúceho priečinka `App_Data`).
+3. V `App_Data` skopíruj `.env.example` na **`.env`** a vyplň hodnoty (databáza a login z Plesku, heslo k databáze, `ADMIN_PASSWORD`).
 4. Over https://api.srdcom.tuke.sk/api/health: `"database":"up"` a `"commit"` podľa `build.txt`.
 
 **srdcom.tuke.sk**
 
 1. Node.js na tejto stránke **nezapínaj**, je statická.
-2. *File Manager* → koreňový priečinok (`httpdocs`): zmaž predvolené súbory Plesku, **Upload** `srdcom-web.zip` → **Extract Files**.
+2. *File Manager* → koreňový priečinok (`httpdocs`): zmaž predvolené súbory Plesku okrem `web.config`, **Upload** `srdcom-web.zip` → **Extract Files**.
 3. Over https://srdcom.tuke.sk, https://srdcom.tuke.sk/mapa a prihlásenie na https://srdcom.tuke.sk/admin.
 
 ### Ďalšie nasadenia
 
-`npm run build:tuke`, potom nahraj a rozbaľ zip do tých istých priečinkov (súbory sa prepíšu, `env.config` ostane). Nové API sa spustí samo pri prvej požiadavke, lebo `web.config` sleduje `app.js`, `api.mjs` a `env.config`. Staré súbory v `assets/` môžu na webe ostať, nevadia. Ak sa zmenila schéma alebo dátový balík, najprv spusti migrácie a seed s `--env .env.tuke`.
+`npm run build:tuke`, potom nahraj a rozbaľ zip do tých istých priečinkov (súbory sa prepíšu, `App_Data\.env` aj `web.config` ostanú). Nové API sa spustí samo pri prvej požiadavke, lebo iisnode sleduje `app.js`, `api.mjs`, `iisnode.yml` a `App_Data\.env`. Staré súbory v `assets/` môžu na webe ostať, nevadia. Ak sa zmenila schéma alebo dátový balík, najprv spusti migrácie a seed s `--env .env.tuke`.
 
 ### Spôsob nasadenia
 
@@ -159,14 +159,14 @@ Vznikne `deploy/srdcom-web.zip` a `deploy/srdcom-api.zip` (a tie isté súbory r
 | Čo treba | prihlásenie do Plesku | FTP účet v Plesku ako GitHub secret; port 21 je zvonku otvorený | Git a deployment actions povolené v Plesku; na serveri `npm ci` s dev balíkmi a prístupom na registry.npmjs.org |
 | Riziká | ručné kroky | heslo k FTP v GitHube (verejný repozitár, secrets sú však skryté) | build (vite, esbuild) na produkčnom serveri, celý repozitár na serveri, ťažké ladenie bez prístupu k shellu |
 
-Odporúčanie: na ples **ručné nasadenie zo zipu**. Build sa robí lokálne a overí sa ešte pred nahratím. Netreba žiadne ďalšie prístupy a nasadení bude len pár. Ak bude stena neskôr trvalo vo vestibule a nasadzovať sa bude častejšie, oplatí sa GitHub Actions: rovnaký `npm run build:tuke` a upload `deploy/web` a `deploy/api` cez FTPS (napr. `lftp mirror -R`, bez mazania, aby ostal `env.config`). Plesk Git sa nehodí, lebo by build bežal na produkčnom serveri.
+Odporúčanie: na ples **ručné nasadenie zo zipu**. Build sa robí lokálne a overí sa ešte pred nahratím. Netreba žiadne ďalšie prístupy a nasadení bude len pár. Ak bude stena neskôr trvalo vo vestibule a nasadzovať sa bude častejšie, oplatí sa GitHub Actions: rovnaký `npm run build:tuke` a upload `deploy/web` a `deploy/api` cez FTPS (napr. `lftp mirror -R`, bez mazania, aby ostali `App_Data\.env` a `web.config`). Plesk Git sa nehodí, lebo by build bežal na produkčnom serveri.
 
 ### Riešenie problémov
 
-- **HTTP 500.19** na `api.srdcom.tuke.sk`: chýba `env.config`, alebo server nepovoľuje niektorý atribút `<iisnode>` vo `web.config` (potom ho zmaž).
-- **HTTP 500.1xxx (iisnode)**: Node sa nespustil. Log je v priečinku `iisnode` vedľa `web.config` (File Manager). Najčastejšie príčiny sú stará verzia Node.js (treba 22+) alebo chyba v `env.config`.
+- **HTTP 404 na `/api/...`**: Node.js na stránke nie je zapnutý, alebo `web.config` od Plesku neposiela požiadavky na `app.js` (pozri, čo v ňom je, a riešte to so správcami TUKE).
+- **HTTP 500.1xxx (iisnode)**: Node sa nespustil. Log je v `App_Data\iisnode` (File Manager). Najčastejšie príčiny sú stará verzia Node.js (treba 22+) alebo chyba v `App_Data\.env`.
 - **CORS chyba v prehliadači**: `WEB_ORIGIN` sa musí presne zhodovať s adresou webu (`https://srdcom.tuke.sk`, bez lomky na konci).
-- **`"database":"down"`**: zlé údaje v `env.config` alebo firewall databázy. Stena aj tak beží z pribaleného dátového balíka.
+- **`"database":"down"`** alebo **`"not_configured"`**: zlé údaje v `App_Data\.env`, súbor chýba, alebo firewall databázy. Stena aj tak beží z pribaleného dátového balíka.
 
 ### Vercel (pôvodné nasadenie)
 
