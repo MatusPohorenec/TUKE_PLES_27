@@ -62,8 +62,9 @@ export const api = {
   event: (slug: string) => request<EventInfo>(`/events/${slug}`),
   submit: (slug: string, body: PinSubmit) => request<SubmitResponse>(`/events/${slug}/pins`, { method: 'POST', json: body }),
   undo: (slug: string, submissionId: string) => request<{ ok: true }>(`/events/${slug}/submissions/${submissionId}`, { method: 'DELETE' }),
-  live: (slug: string) => request<LiveResponse>(`/events/${slug}/live`),
-  summary: (slug: string) => request<SummaryResponse>(`/events/${slug}/summary`),
+  // polled by the wall and the map: always from the server, never an older copy from the browser cache
+  live: (slug: string) => request<LiveResponse>(`/events/${slug}/live`, { cache: 'no-store' }),
+  summary: (slug: string) => request<SummaryResponse>(`/events/${slug}/summary`, { cache: 'no-store' }),
   feedback: (body: FeedbackInput) => request<{ id: number }>('/feedback', { method: 'POST', json: body }),
   admin: {
     login: (password: string) => request<{ ok: true }>('/admin/login', { method: 'POST', json: { password } }),

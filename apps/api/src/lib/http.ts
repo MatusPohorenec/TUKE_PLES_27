@@ -15,9 +15,13 @@ export const fail = (status: ContentfulStatusCode, code: string, message: string
 export const CACHE = {
   dataset: 'public, max-age=60, s-maxage=3600, stale-while-revalidate=604800',
   dictionary: 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-  summary: 'public, max-age=0, s-maxage=5, stale-while-revalidate=30',
-  /** same response for every viewer, see shared() */
-  live: 'public, max-age=0, s-maxage=2, stale-while-revalidate=2',
+  /**
+   * The polled feeds are never served stale by the browser: with stale-while-revalidate (left from the Vercel CDN)
+   * Chrome answered the wall's resync during a burst of lights with a summary up to 30 s old, and lights and counters
+   * fell back (load test 2026-10-27). Same response for every viewer, see shared().
+   */
+  summary: 'public, max-age=0, s-maxage=2',
+  live: 'public, max-age=0, s-maxage=2',
   none: 'no-store',
 } as const;
 

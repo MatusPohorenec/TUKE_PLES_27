@@ -165,7 +165,7 @@ const live = await call('GET', `${EV}/live`);
 check('live has the new lights', live.status === 200 && live.json.pins.some(p => p.id === submit.json.pins?.[0]?.id), `cursor ${live.json.cursor}, totals ${JSON.stringify(live.json.totals)}`);
 const after = await call('GET', `${EV}/live?after=${(submit.json.pins?.[0]?.id ?? 1) - 1}`);
 check('live after cursor', after.status === 200 && after.json.pins.length >= 2, `${after.json.pins.length} pins`);
-await new Promise(r => setTimeout(r, 5200)); // summary is shared for 5 s
+await new Promise(r => setTimeout(r, 2100)); // summary is shared for 2 s
 const summary = await call('GET', `${EV}/summary`);
 check('summary counts the lights', summary.json.totals.pins === before.json.totals.pins + 2, `${JSON.stringify(summary.json.totals)}, keys ${summary.json.places.map(p => p.key).join(' ')}`);
 const othersAfter = await otherTotals();

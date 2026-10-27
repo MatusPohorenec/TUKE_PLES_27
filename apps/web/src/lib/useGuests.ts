@@ -1,6 +1,6 @@
 /**
  * Guest lights of an event for a globe page: one summary request, then the shared live feed every 2 s.
- * The feed is the same for every viewer (CDN cached), each page keeps its own cursor and takes only
+ * The feed is the same for every viewer (the API computes it once per 2 s), each page keeps its own cursor and takes only
  * pins newer than it. Hidden tabs do not poll (usePoll). Every few minutes the summary is loaded again,
  * so lights an admin hid or a guest took back disappear from the wall too.
  */
@@ -27,8 +27,11 @@ export function useGuests(scene: WallScene | null, slug: string, { intervalMs = 
   const synced = useRef(0); // when the summary was loaded
   const seen = useRef(0); // newest pin this page has shown, so a resync does not fly the same light in twice
   const shown = useRef(0); // lights on the wall: the summary's count plus every new light from the feed since
+  // once the live feed has answered, the counters and the event follow it alone: a resync's summary may be a moment
+  // older than the feed, and the counters must not step back while lights pour in
+  const fed = useRef(false);
 
-  useEffect(() => { cursor.current = null; seen.current = 0; }, [scene, slug]);
+  useEffect(() => { cursor.current = null; seen.current = 0; fed.current = false; }, [scene, slug]);
 
   usePoll(async () => {
     if (!scene) return;
@@ -41,10 +44,10 @@ export function useGuests(scene: WallScene | null, slug: string, { intervalMs = 
         seen.current = Math.max(seen.current, s.cursor);
         shown.current = s.totals.pins;
         synced.current = Date.now();
-        setEvent(s.event);
-        setTotals(s.totals);
+        if (!fed.current) { setEvent(s.event); setTotals(s.totals); }
       } else {
         const live = await api.live(slug);
+        fed.current = true;
         const since = cursor.current;
         const fresh = live.pins.filter(p => p.id > since);
         if (fresh.length && live.pins.length >= LIMITS.liveWindow && live.pins[0]!.id > since + 1) {

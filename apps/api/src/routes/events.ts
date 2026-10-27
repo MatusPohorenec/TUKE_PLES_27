@@ -5,7 +5,7 @@
  *   DELETE /api/events/:slug/submissions/:id    undo from the same browser within LIMITS.undoMinutes
  *   GET    /api/events/:slug/live               newest lights, shared for 2 s (the wall polls every 2 s)
  *   GET    /api/events/:slug/live?after=<id>    lights since a cursor, uncached (debugging, tools)
- *   GET    /api/events/:slug/summary            all lights aggregated per place (initial load, shared for 5 s)
+ *   GET    /api/events/:slug/summary            all lights aggregated per place (initial load, shared for 2 s)
  *   POST   /api/events/:slug/attendees          confirmation of attendance from /onboarding (before and during the ball)
  * Lights are accepted while the ball is live; before it (status open) only from a logged-in admin (rehearsal).
  */
@@ -63,7 +63,7 @@ const toLivePin = (p: PinRow): LivePin => ({
 // identical for every viewer: computed once per interval, whatever the number of screens and phones polling;
 // keyed by venue and event, the venues never see each other's lights
 const liveFeed = shared<LiveResponse>(2_000);
-const summaryFeed = shared<SummaryResponse>(5_000);
+const summaryFeed = shared<SummaryResponse>(2_000); // as fresh as the live feed: a resync must not fall behind it
 
 export const eventRoutes = new Hono()
   .get('/:slug', async c => {

@@ -133,7 +133,8 @@ export type DisplayScene = (typeof DISPLAY_SCENES)[number]['code'];
 export const LIMITS = {
   placesPerSubmission: 10,
   submissionsPerDevice10min: 5,
-  submissionsPerIp10min: 300, // the venue Wi-Fi puts every guest behind one address
+  /** the venue Wi-Fi puts every guest behind one address: ~450 guests sending lights after the QR is announced */
+  submissionsPerIp10min: 2000,
   undoMinutes: 15,
   /** newest lights in the shared, CDN-cached live feed; clients keep their own cursor */
   liveWindow: 60,

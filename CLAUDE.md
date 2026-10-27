@@ -65,7 +65,7 @@ apps/api         Hono 4 REST API under /api (routes: gate, globe, events, gazett
                  under /api/vestibul on the lobby's database; server.ts = the one entry (local port 8787, or the iisnode
                  named pipe in PORT; loads App_Data/.env under iisnode; strips a leading /app.js); app.ts (CORS by
                  WEB_ORIGIN, routes per venue, health); snapshot.ts = bundled dataset fallback when the DB is down;
-                 lib/http.ts (CACHE headers, shared() = per-process cache of live 2 s / summary 5 s), lib/security.ts
+                 lib/http.ts (CACHE headers, shared() = per-process cache of live and summary, 2 s), lib/security.ts
                  (HMACs, client IP = last X-Forwarded-For entry, admin cookie Path=/ SameSite=Strict), lib/venue.ts
                  (venueOf(c) from the path)
 packages/db      MS SQL Server via Kysely 0.27 + tedious 19: migrations/*.sql (T-SQL, GO batches, applied by
@@ -181,7 +181,11 @@ iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App
 - Cross-origin: the web sends `credentials: 'include'`; GETs carry no custom header (no preflight); writes send x-device-id
   (preflight → 204 from the API's CORS middleware, max-age 86400). The admin cookie is host-only on api.srdcom.tuke.sk,
   SameSite=Strict (same site tuke.sk), Path=/.
-- No CDN: `shared()` computes /live once per 2 s and /summary once per 5 s per process; /globe is memoised for 60 s.
+- No CDN: `shared()` computes /live and /summary once per 2 s per process; /globe is memoised for 60 s. The two feeds
+  carry no `stale-while-revalidate` and the web fetches them with `cache: 'no-store'`: with the old Vercel header
+  (summary `stale-while-revalidate=30`) Chrome answered the wall's resync from its own cache, up to 30 s old.
+- Rate limits per 10 min: lights 5 per browser and 2 000 per address (was 300 until 2026-10-27: the venue Wi-Fi puts
+  ~450 guests behind one address), attendances 8 / 300. The per-address count is skipped when the address is unknown.
 - TUKE database (names only in `.env.tuke`): the login has roles db_ddladmin + db_datareader + db_datawriter (not db_owner)
   and a default schema of its own → all tables live in `dbo` and every name is qualified. SQL Server 2022 Enterprise
   16.0.1160.1, collation SQL_Latin1_General_CP1_CI_AI, RCSI off, self-signed certificate. Migrated and seeded 2026-10-20;
@@ -322,6 +326,9 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   bigger than the window, every 5 min, and as soon as `live.totals.pins` differs from the lights the wall counted (summary
   count + new feed lights): a guest's undo or an admin's hide/show shows within seconds, and names that left the feed leave
   the „recent" list (useGuests.ts). Polling pauses in hidden tabs (`document.hidden`; override it when testing in the pane).
+  Once the feed has answered, the counters and the event follow `/live` only (a resync's summary may be a moment older,
+  so the counters never step back). A country chosen as a whole sits on its capital, so the summary can list two places
+  with one key (Island + Reykjavík): `setGuests` adds their counts into one star.
 - Guest form (/zapoj-sa): after sending, the main action is „Pridať ďalšie miesta"; undo is a text link „Zrušiť toto svetlo"
   (it deletes the lights, 15 min, same browser) followed by a notice in the form. It used to be a button „Vrátiť späť",
   which read as "back" (the user lost lights that way, 2026-10-20).
@@ -372,6 +379,13 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - Result: draw calls 2 221 → 568, triangles 700k → 114k, longest frame 92 ms → 13 ms, no long tasks during the opening.
 - Guest arcs (2026-10-20, 300 guest places): +1 draw call, rebuild on an arrival 1 ms, summary load 5 ms, render CPU 4 ms
   (globe) / 2.4 ms (map).
+- Load test 2026-10-27 (native PC; script in the session scratchpad: 450 simulated guests start within 20 s, each opens
+  the gate and the event, searches 2× per place, sends 1–3 places, ~700 lights): every request answered (no 4xx/5xx),
+  POST /pins p50 23 ms / p95 52 ms / max 83 ms warm (p95 1.3–2.1 s while the 3D wall rendered on the same PC), peak 75–141
+  lights per 2 s. The wall (3D, 1920×1080) stayed at 48–69 fps without long tasks: `setGuests` 8–9 ms, `renderGuestArcs`
+  ≤ 7 ms; bursts over the 60-light window resync from the summary (lights appear at once, no beams). Production reads
+  (read only): 50–90 parallel requests (gate, event, live, search) p95 ≤ 241 ms. The guest form loads ~75 kB (brotli);
+  the globe chunk (0.8 MB) only on the wall and /mapa. Not tested: writes on the TUKE server itself.
 
 ## Verifying in the browser pane
 
@@ -382,6 +396,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   `requestAnimationFrame`/`cancelAnimationFrame` with 16 ms timeouts, then remount the wall by SPA navigation
   (`history.pushState` + `popstate` to `/o-projekte` and back) so the new scene uses them. A hidden pane also delivers no
   ResizeObserver callbacks: after `resize_window` call `renderer.setSize(el.clientWidth, el.clientHeight)` + `placeCamera()`.
+  On 2026-10-27 the pane reported `document.hidden` whenever no tool was acting on it and throttled page timers to 1 s:
+  a dedicated Worker (`setInterval` → `postMessage`) drove timers and rAF at full speed, but rendering the 3D wall that way
+  in the hidden pane hung the renderer after a few minutes (close the tab). Do not dispatch `visibilitychange` after
+  patching the timers: usePoll then starts a second poll chain (its old timer cannot be cleared).
 - Visual check without screenshots: render the scene, draw the canvases into a 2D canvas, add the DOM as an SVG
   `foreignObject` clone with inlined computed styles (remove `<style>` from the clone, else CSS animations keep cards at
   opacity 0; skip animation/transition/opacity/filter/backdrop-filter) and POST the JPEG to a tiny local receiver
@@ -450,8 +468,20 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   Then the user asked for the pre-ball onboarding + gate (section „Before the ball"), the 2D/3D cycle as the ball's
   default wall (section „The wall") and the lobby switched off. Tag `pred-onboardingom`; built and verified locally
   (api-smoke both venues, the gate as visitor and as admin, onboarding submit, teaser, the fast cycle in the pane).
+  Later the same day, at the user's request, 361 test lights went to production (170 submissions from the pane, 120
+  places; the wall kept 60 fps at 1920×1080) to be deleted when the user says so. The user then asked whether ~450 guests
+  at once would bring the site down: load test (section „Performance lessons"). It found the browser answering the wall's
+  resync with a summary up to 30 s old (`stale-while-revalidate`): during the burst the counter fell from 484 to 261 and
+  lights left the wall for a while. Fixed (no SWR on the feeds, `cache: 'no-store'`, summary shared 2 s instead of 5 s,
+  counters follow /live), the light limit per address 300 → 2 000, and a country's lights now add up with its capital's.
 
 ## Open questions / next
+
+- Deploy pending: the load-test fixes (commit after 5ddcd1f) need **both zips** (API: headers, summary 2 s, limit 2 000;
+  web: no-store, counters, capital + country). Then check /app.js/api/health and /build.txt.
+- Production still holds the 361 test lights of 2026-10-27 on ples-2027 (+1, probably the user's phone): delete them all
+  when the user says so (a script with `--env .env.tuke`, every submission of the event; pins cascade), and check that
+  /summary shows 0 before the ball. A write load test on the TUKE server itself (with the user's OK) is still open.
 
 - Production: web 5ddcd1f (verified 2026-10-27: unknown addresses → 302 → /index.html → the centred teaser; before it
   068c935 the kiosk wall: / without bar or comment button, phone button „Pridaj svoje svetlo", /?kiosk=0 with the bar and,
@@ -489,7 +519,7 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   international office (OZVaM).
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome fullscreen `/?k=CODE`, the wall is a kiosk
   anyway), rehearsal.
-- Load test with ~500 simulated guests against the TUKE server (one iisnode process); English version of the guest form;
-  polish of /mapa on phones.
+- English version of the guest form; polish of /mapa on phones. For the ball night: an access code (`?k=CODE` on the
+  wall's QR) keeps strangers from sending lights now that the per-address limit is loose.
 - Student lobby: wording of the lobby texts (name „Vestibul TUKE", status labels) and whether its QR needs an access code.
 - Older cooperation (before 1980) would need archive sources; undated places (50) light up in the last year.

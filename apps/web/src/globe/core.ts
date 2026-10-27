@@ -347,7 +347,12 @@ export abstract class WallScene {
     for (const t of this.arrivalTimers) clearTimeout(t);
     this.arrivalTimers.clear();
     this.guestLanding.clear();
-    this.guests = new Map(places.map(p => [p.key, p]));
+    // a country chosen as a whole sits on its capital: one star with the capital city, so their lights add up
+    this.guests = new Map();
+    for (const p of places) {
+      const prev = this.guests.get(p.key);
+      this.guests.set(p.key, prev ? { ...prev, count: prev.count + p.count } : p);
+    }
     for (const key of this.guestBeams.keys()) if (!this.guests.has(key)) this.guestBeams.delete(key);
     if (this.revealing()) this.scheduleGuests(); // during the opening: its finale (again, with the new snapshot)
     else for (const key of this.guests.keys()) this.litWithoutFlight(key);
