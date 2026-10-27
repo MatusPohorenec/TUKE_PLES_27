@@ -1,0 +1,15 @@
+/* The closed page: one star breathing above the words, everything centred in the night. */
+.teaser { min-height: 100%; align-content: center; justify-items: center; text-align: center; }
+.teaser .join-head p { margin-inline: auto; }
+.teaser-star {
+  width: 12px; height: 12px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.85), 0 0 36px 12px rgba(255, 181, 46, 0.45), 0 0 90px 30px rgba(79, 125, 255, 0.28);
+  animation: teaser-breathe 3.4s ease-in-out infinite;
+}
+@keyframes teaser-breathe {
+  0%, 100% { transform: scale(0.8); opacity: 0.75; }
+  50% { transform: scale(1.18); opacity: 1; }
+}
+.teaser-cta { min-height: 52px; padding: 0 28px; text-decoration: none; }
+.teaser-sign { margin: 0; font: italic 500 20px/1.2 var(--font-display); color: var(--silver-dim); }
+@media (prefers-reduced-motion: reduce) { .teaser-star { animation: none; } }

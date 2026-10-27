@@ -6,15 +6,17 @@
  *   GET    /api/events/:slug/live               newest lights, shared for 2 s (the wall polls every 2 s)
  *   GET    /api/events/:slug/live?after=<id>    lights since a cursor, uncached (debugging, tools)
  *   GET    /api/events/:slug/summary            all lights aggregated per place (initial load, shared for 5 s)
+ *   POST   /api/events/:slug/attendees          confirmation of attendance from /onboarding (before and during the ball)
+ * Lights are accepted while the ball is live; before it (status open) only from a logged-in admin (rehearsal).
  */
 import { Hono } from 'hono';
 import {
-  LIMITS, PinSubmitSchema, type EventInfo, type LivePin, type LiveResponse, type LiveTotals, type SubmitResponse, type SummaryPlace, type SummaryResponse,
-  type VenueKey,
+  AttendeeSchema, LIMITS, PinSubmitSchema, type AttendeeResponse, type EventInfo, type LivePin, type LiveResponse, type LiveTotals,
+  type SubmitResponse, type SummaryPlace, type SummaryResponse, type VenueKey,
 } from '@ples/shared';
 import { getDb, isDatabaseConfigured, sql, type Db, type EventRow, type PinRow } from '@ples/db';
 import { CACHE, fail, readJson, shared } from '../lib/http.ts';
-import { clientIp, deviceHash, ipHash, safeEqual, sha256 } from '../lib/security.ts';
+import { clientIp, deviceHash, hasSession, ipHash, safeEqual, sha256 } from '../lib/security.ts';
 import { venueOf } from '../lib/venue.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -73,7 +75,8 @@ export const eventRoutes = new Hono()
   .post('/:slug/pins', async c => {
     const venue = venueOf(c);
     const ev = await loadEvent(venue, c.req.param('slug'));
-    if (ev.status !== 'open' && ev.status !== 'live') fail(409, 'event_closed', 'Pridávanie svetiel je momentálne zatvorené.');
+    // the ball night; before it only an admin trying the whole flow (the wall, the form) on the venue screen
+    if (ev.status !== 'live' && !(ev.status === 'open' && hasSession(c))) fail(409, 'event_closed', 'Pridávanie svetiel je momentálne zatvorené.');
     const input = await readJson(c, PinSubmitSchema);
     if (ev.code_hash && !(input.code && safeEqual(sha256(input.code.toUpperCase()), ev.code_hash))) {
       fail(403, 'code_invalid', SCAN_HINT[venue]);
@@ -124,6 +127,31 @@ export const eventRoutes = new Hono()
     };
     c.header('Cache-Control', CACHE.none);
     return c.json(body, 201);
+  })
+
+  .post('/:slug/attendees', async c => {
+    const venue = venueOf(c);
+    const ev = await loadEvent(venue, c.req.param('slug'));
+    if (ev.status !== 'open' && ev.status !== 'live') fail(409, 'onboarding_closed', 'Potvrdzovanie účasti je uzavreté.');
+    const input = await readJson(c, AttendeeSchema);
+    const device = deviceHash(c);
+    const ip = ipHash(c);
+    const d = await db(venue);
+    // one phone may confirm a few people (a couple, a family); a shared network gets a loose limit
+    const since = new Date(Date.now() - 10 * 60_000);
+    const recent = d.selectFrom('attendees').select(eb => eb.fn.countAll<number>().as('n'))
+      .where('event_id', '=', ev.id).where('created_at', '>', since);
+    const byDevice = await recent.where('device_hash', '=', device).executeTakeFirst();
+    if ((byDevice?.n ?? 0) >= LIMITS.attendeesPerDevice10min) fail(429, 'too_many', 'Veľa potvrdení naraz. Skús to o pár minút.');
+    if (clientIp(c)) {
+      const byIp = await recent.where('ip_hash', '=', ip).executeTakeFirst();
+      if ((byIp?.n ?? 0) >= LIMITS.attendeesPerIp10min) fail(429, 'too_many', 'Veľa potvrdení naraz. Skús to o pár minút.');
+    }
+    const row = await d.insertInto('attendees')
+      .values({ event_id: ev.id, full_name: input.name, affiliation: input.affiliation, device_hash: device, ip_hash: ip })
+      .output('inserted.id').executeTakeFirstOrThrow();
+    c.header('Cache-Control', CACHE.none);
+    return c.json({ id: row.id, name: input.name } satisfies AttendeeResponse, 201);
   })
 
   .delete('/:slug/submissions/:id', async c => {

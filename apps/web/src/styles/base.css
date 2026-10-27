@@ -47,6 +47,16 @@ button { font: inherit; color: inherit; }
 }
 .starfield { position: fixed; inset: 0; pointer-events: none; }
 .globe-host { position: fixed; inset: 0; }
+/* one layer per scene inside .globe-host; the wall's 2D/3D cycle cross-fades them (CROSSFADE_MS in useGlobeScene.ts):
+   the flat map gathers into the globe, the globe opens out into the flat map */
+.scene-layer { position: absolute; inset: 0; transition: opacity 2.6s ease, transform 2.6s cubic-bezier(0.4, 0, 0.2, 1); }
+.scene-layer.entering, .scene-layer.leaving { opacity: 0; }
+.scene-layer.leaving { pointer-events: none; }
+.scene-layer.view-2d.leaving { transform: scale(0.8); }
+.scene-layer.view-3d.entering { transform: scale(1.12); }
+.scene-layer.view-3d.leaving { transform: scale(1.08); }
+.scene-layer.view-2d.entering { transform: scale(0.92); }
+@media (prefers-reduced-motion: reduce) { .scene-layer { transition: opacity 2.6s ease; transform: none !important; } }
 
 .title-block { text-align: center; pointer-events: none; }
 .title-block small {

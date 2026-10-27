@@ -6,9 +6,10 @@ import { venueHref } from './venue.ts';
 const listeners = new Set<() => void>();
 window.addEventListener('popstate', () => listeners.forEach(l => l()));
 
-export function navigate(to: string): void {
+export function navigate(to: string, { replace = false } = {}): void {
   if (to === location.pathname + location.search) return;
-  history.pushState(null, '', to);
+  if (replace) history.replaceState(null, '', to);
+  else history.pushState(null, '', to);
   listeners.forEach(l => l());
   window.scrollTo(0, 0);
 }

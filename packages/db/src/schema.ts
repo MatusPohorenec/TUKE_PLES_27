@@ -117,7 +117,7 @@ export interface EventsTable {
   id: Generated<number>;
   slug: string;
   name: string;
-  /** draft: hidden · open: collecting before the ball · live: the ball night · closed: read only */
+  /** draft: off · open: before the ball, only the onboarding · live: the ball night · closed: read only (gateOf) */
   status: ColumnType<EventStatus, EventStatus | undefined, EventStatus>;
   /** sha256 of the access code from the QR link; null = form open without a code */
   code_hash: string | null;
@@ -156,6 +156,17 @@ export interface PinsTable {
   created_at: CreatedAt;
 }
 
+/** Confirmed attendance from /onboarding (personal data, organisers only; not linked to the lights). */
+export interface AttendeesTable {
+  id: Generated<number>;
+  event_id: number;
+  full_name: string;
+  affiliation: string;
+  device_hash: string;
+  ip_hash: string | null;
+  created_at: CreatedAt;
+}
+
 /** Comments from reviewers (pripomienky) sent from the prototype. */
 export interface FeedbackTable {
   id: Generated<number>;
@@ -170,7 +181,7 @@ export type FeedbackStatus = 'new' | 'accepted' | 'rejected' | 'done';
 
 export interface AdminAuditTable {
   id: Generated<number>;
-  /** login_ok, login_fail, event_update, pin_status, feedback_status */
+  /** login_ok, login_fail, event_update, pin_status, feedback_status, attendee_delete */
   action: string;
   target: string | null;
   payload: JsonText | null;
@@ -203,6 +214,7 @@ export interface Database {
   events: EventsTable;
   submissions: SubmissionsTable;
   pins: PinsTable;
+  attendees: AttendeesTable;
   feedback: FeedbackTable;
   admin_audit: AdminAuditTable;
   app_settings: AppSettingsTable;

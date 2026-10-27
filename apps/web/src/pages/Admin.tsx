@@ -1,20 +1,45 @@
 /**
- * Operator console of a venue: the wall scene, collecting on/off, the QR access code, moderation of lights,
- * reviewer comments. /admin manages the ball's database, /vestibul/admin the student lobby's; one login opens both.
+ * Operator console of a venue: what the venue shows (before the ball only the onboarding, the ball night, after the
+ * ball, off), the wall scene, the QR access code, confirmed attendance, moderation of lights, reviewer comments.
+ * /admin manages the ball's database, /vestibul/admin the student lobby's; one login opens both.
  */
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { DISPLAY_SCENES, FACULTIES, PERSON_ROLES, VENUES, VISIT_KINDS, type EventStatus, type Venue, type VenueKey } from '@ples/shared/constants';
-import type { AdminFeedback, AdminPin, EventInfo } from '@ples/shared';
+import type { AdminAttendee, AdminFeedback, AdminPin, EventInfo } from '@ples/shared';
 import { ApiError, api } from '../lib/api.ts';
+import { refreshGate } from '../lib/gate.ts';
 import { Link, useVenue } from '../lib/router.tsx';
 import './admin.css';
 
-const STATUS_LABEL: Record<VenueKey, Record<EventStatus, string>> = {
-  ples: { draft: 'Koncept (skryté)', open: 'Otvorené pred plesom', live: 'Ples práve prebieha', closed: 'Uzavreté' },
-  vestibul: { draft: 'Koncept (skryté)', open: 'Otvorené', live: 'Prebieha podujatie', closed: 'Uzavreté' },
+/** The event status as the operator's switch (gateOf in packages/shared decides what visitors see). */
+const STATUS: Record<VenueKey, Record<EventStatus, { label: string; hint: string }>> = {
+  ples: {
+    open: { label: 'Pred plesom', hint: 'Hostia vidia len potvrdenie účasti (/onboarding), ostatné stránky ukazujú teaser. Ty ako admin vidíš všetko.' },
+    live: { label: 'Ples prebieha', hint: 'Všetky stránky sú otvorené, hostia pridávajú svetlá cez QR na stene.' },
+    closed: { label: 'Po plese', hint: 'Stránky sú otvorené len na pozeranie, svetlá ani potvrdenia sa už nepridávajú.' },
+    draft: { label: 'Vypnuté', hint: 'Hostia vidia len teaser, nič sa nedá poslať.' },
+  },
+  vestibul: {
+    draft: { label: 'Vypnutý', hint: 'Všetky stránky vestibulu ukazujú teaser.' },
+    open: { label: 'Pripravený', hint: 'Stránky sú stále skryté (teaser), ty ako admin ich vidíš a môžeš skúšať svetlá.' },
+    live: { label: 'Zapnutý', hint: 'Stena vestibulu a formulár sú otvorené pre všetkých.' },
+    closed: { label: 'Len na pozeranie', hint: 'Stránky sú otvorené, svetlá sa už nepridávajú.' },
+  },
 };
 const label = (list: readonly { code: string; label: string }[], code: string | null) => list.find(x => x.code === code)?.label ?? '–';
 const time = (iso: string) => new Date(iso).toLocaleString('sk', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+/** Confirmed attendance as a CSV for Excel (semicolons, UTF-8 with BOM); formula-like cells are defused. */
+function downloadAttendees(rows: AdminAttendee[], slug: string): void {
+  const cell = (v: string) => `"${(/^[=+\-@\t\r]/.test(v) ? `'${v}` : v).replace(/"/g, '""')}"`;
+  const lines = ['Meno;Príslušnosť;Potvrdené', ...[...rows].reverse().map(r => [r.name, r.affiliation, new Date(r.createdAt).toLocaleString('sk')].map(cell).join(';'))];
+  const url = URL.createObjectURL(new Blob([`﻿${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ucast-${slug}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 export default function Admin() {
   const venue = useVenue();
@@ -38,10 +63,10 @@ export default function Admin() {
             <a key={v.key} className={`chip${v.key === venue.key ? '' : ' off'}`} href={`${v.prefix}/admin`} aria-current={v.key === venue.key ? 'page' : undefined}>{v.name}</a>
           ))}
         </nav>
-        {authed && <button type="button" className="chip" onClick={() => api.admin.logout().then(() => setAuthed(false))}>Odhlásiť</button>}
+        {authed && <button type="button" className="chip" onClick={() => api.admin.logout().then(() => { setAuthed(false); refreshGate(); })}>Odhlásiť</button>}
       </header>
       {notice && <p className="join-note">{notice}</p>}
-      {authed === false && !notice && <Login onDone={() => setAuthed(true)} />}
+      {authed === false && !notice && <Login onDone={() => { setAuthed(true); refreshGate(); }} />}
       {authed && <Console venue={venue} />}
     </main>
   );
@@ -68,23 +93,70 @@ function Console({ venue }: { venue: Venue }) {
   const [event, setEvent] = useState<EventInfo | null>(null);
   const [pins, setPins] = useState<AdminPin[]>([]);
   const [feedback, setFeedback] = useState<AdminFeedback[]>([]);
+  const [attendees, setAttendees] = useState<AdminAttendee[]>([]);
   const [error, setError] = useState('');
   const [code, setCode] = useState('');
 
   const load = useCallback(() => {
-    Promise.all([api.admin.event(venue.event), api.admin.pins(), api.admin.feedback()])
-      .then(([e, p, f]) => { setEvent(e); setPins(p.pins); setFeedback(f.feedback); setError(''); })
+    Promise.all([
+      api.admin.event(venue.event), api.admin.pins(), api.admin.feedback(),
+      venue.onboarding ? api.admin.attendees() : Promise.resolve({ attendees: [] }),
+    ])
+      .then(([e, p, f, a]) => { setEvent(e); setPins(p.pins); setFeedback(f.feedback); setAttendees(a.attendees); setError(''); })
       .catch(err => setError((err as Error).message));
-  }, [venue.event]);
+  }, [venue.event, venue.onboarding]);
   useEffect(() => { load(); const t = window.setInterval(load, 10_000); return () => clearInterval(t); }, [load]);
 
   const patch = async (p: Parameters<typeof api.admin.patchEvent>[1]) => {
     try { setEvent(await api.admin.patchEvent(venue.event, p)); } catch (err) { setError((err as Error).message); }
   };
+  const removeAttendee = async (a: AdminAttendee) => {
+    if (!confirm(`Zmazať potvrdenie účasti: ${a.name}?`)) return;
+    try { await api.admin.deleteAttendee(a.id); load(); } catch (err) { setError((err as Error).message); }
+  };
+  const statuses = STATUS[venue.key];
 
   return (
     <div className="admin-grid">
       {error && <p className="error" role="alert">{error}</p>}
+
+      <section className="admin-card admin-wide">
+        <h2>{venue.key === 'ples' ? 'Stav plesu' : 'Stav vestibulu'}</h2>
+        <div className="join-options">
+          {(Object.keys(statuses) as EventStatus[]).map(s => (
+            <button key={s} type="button" className={`join-option${event?.status === s ? ' on' : ''}`} onClick={() => patch({ status: s })}>{statuses[s].label}</button>
+          ))}
+        </div>
+        {event && <p className="muted">{statuses[event.status].hint}</p>}
+      </section>
+
+      {venue.onboarding && (
+        <section className="admin-card admin-wide">
+          <h2>Potvrdená účasť <span className="muted">({attendees.length})</span></h2>
+          <p className="muted small">Mená a príslušnosť z /onboarding. Osobné údaje: len pre organizátorov, po plese ich zmaž.</p>
+          <div className="admin-code">
+            <div>
+              <button className="button" type="button" disabled={!attendees.length} onClick={() => downloadAttendees(attendees, venue.event)}>Stiahnuť CSV</button>
+            </div>
+          </div>
+          <div className="admin-table">
+            <table>
+              <thead><tr><th>Čas</th><th>Meno</th><th>Príslušnosť</th><th /></tr></thead>
+              <tbody>
+                {attendees.map(a => (
+                  <tr key={a.id}>
+                    <td>{time(a.createdAt)}</td>
+                    <td>{a.name}</td>
+                    <td>{a.affiliation}</td>
+                    <td><button type="button" className="chip" onClick={() => removeAttendee(a)}>Zmazať</button></td>
+                  </tr>
+                ))}
+                {!attendees.length && <tr><td colSpan={4} className="muted">Zatiaľ nikto nepotvrdil účasť.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       <section className="admin-card">
         <h2>Stena</h2>
@@ -97,12 +169,7 @@ function Console({ venue }: { venue: Venue }) {
       </section>
 
       <section className="admin-card">
-        <h2>Zbieranie svetiel</h2>
-        <div className="join-options">
-          {(Object.keys(STATUS_LABEL[venue.key]) as EventStatus[]).map(s => (
-            <button key={s} type="button" className={`join-option${event?.status === s ? ' on' : ''}`} onClick={() => patch({ status: s })}>{STATUS_LABEL[venue.key][s]}</button>
-          ))}
-        </div>
+        <h2>Kód pre svetlá</h2>
         <form className="admin-code" onSubmit={e => { e.preventDefault(); patch({ code }); setCode(''); }}>
           <label htmlFor="admin-code">Kód v QR odkaze {event?.requiresCode ? <span className="ok">(nastavený)</span> : <span className="muted">(bez kódu)</span>}</label>
           <div>

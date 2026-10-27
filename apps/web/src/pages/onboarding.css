@@ -1,0 +1,3 @@
+/* The onboarding uses the guest form's look (join.css); the night sky stays behind it. */
+.onboarding .join-field input::placeholder { color: var(--silver-faint); }
+.onboarding-done { margin: 0; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 181, 46, 0.35); color: var(--warm); background: rgba(255, 181, 46, 0.07); }

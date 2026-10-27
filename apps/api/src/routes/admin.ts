@@ -5,10 +5,11 @@
  *   GET   /api/admin/events/:slug            PATCH: status, wall scene, access code
  *   GET   /api/admin/pins?limit=100          PATCH /api/admin/pins/:id   hide or show a light
  *   GET   /api/admin/feedback                PATCH /api/admin/feedback/:id
+ *   GET   /api/admin/attendees               DELETE /api/admin/attendees/:id   confirmed attendance (personal data)
  */
 import { Hono, type Context } from 'hono';
 import {
-  EventPatchSchema, FeedbackPatchSchema, LoginSchema, PinPatchSchema, type AdminFeedback, type AdminPin,
+  EventPatchSchema, FeedbackPatchSchema, LoginSchema, PinPatchSchema, type AdminAttendee, type AdminFeedback, type AdminPin,
 } from '@ples/shared';
 import { getDb, isDatabaseConfigured, sql, toJson } from '@ples/db';
 import { CACHE, fail, positiveInt, readJson } from '../lib/http.ts';
@@ -101,6 +102,21 @@ export const adminRoutes = new Hono()
     const row = await (await dbOf(c)).updateTable('pins').set({ status }).where('id', '=', id).output('inserted.id').executeTakeFirst();
     if (!row) fail(404, 'not_found', 'Svetlo neexistuje.');
     await audit(c, 'pin_status', String(id), { status });
+    return c.json({ ok: true });
+  })
+
+  .get('/attendees', async c => {
+    const rows = await (await dbOf(c)).selectFrom('attendees').select(['id', 'full_name', 'affiliation', 'created_at'])
+      .orderBy('id', 'desc').top(5000).execute();
+    const list: AdminAttendee[] = rows.map(r => ({ id: r.id, name: r.full_name, affiliation: r.affiliation, createdAt: r.created_at.toISOString() }));
+    return c.json({ attendees: list });
+  })
+
+  .delete('/attendees/:id', async c => {
+    const id = idParam(c.req.param('id'));
+    const row = await (await dbOf(c)).deleteFrom('attendees').where('id', '=', id).output('deleted.id').executeTakeFirst();
+    if (!row) fail(404, 'not_found', 'Záznam neexistuje.');
+    await audit(c, 'attendee_delete', String(id), null); // the name stays out of the audit log
     return c.json({ ok: true });
   })
 

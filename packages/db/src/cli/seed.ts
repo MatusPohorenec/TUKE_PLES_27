@@ -229,7 +229,8 @@ async function seed(db: Db): Promise<void> {
   }
 
   // ------------------------------------------------------------ 4. the venue's event
-  await upsert(db, 'events', ['slug'], [{ slug: venue.event, name: venue.name, status: 'open' }], { update: false });
+  // a new ball starts before the ball (only the onboarding), a new lobby switched off; an existing event keeps its status
+  await upsert(db, 'events', ['slug'], [{ slug: venue.event, name: venue.name, status: venue.key === 'ples' ? 'open' : 'draft' }], { update: false });
   const ev = await db.selectFrom('events').select('status').where('slug', '=', venue.event).executeTakeFirst();
   log('event', venue.event, ev?.status);
 }

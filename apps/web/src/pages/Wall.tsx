@@ -2,10 +2,15 @@
  * The wall: what the LED screen at the ball shows (/), or in the student lobby (/vestibul, its own database).
  * Open with ?kiosk=1 on the playback PC (no links, no comment button, cursor hidden). ?k=CODE puts the event
  * access code into the QR link.
+ *
+ * By default the wall alternates the flat map and the globe (the cycle below); ?view=2d or ?view=3d keeps one.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ORIGIN } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
-import { useGlobeScene } from '../globe/useGlobeScene.ts';
+import { MapScene } from '../globe/map2d.ts';
+import { GlobeScene } from '../globe/scene.ts';
+import { CROSSFADE_MS, useGlobeScene, type View } from '../globe/useGlobeScene.ts';
 import { CountUp } from '../components/CountUp.tsx';
 import { GlobeTooltip } from '../components/GlobeTooltip.tsx';
 import { PlaceSpotlight, type Box } from '../components/PlaceSpotlight.tsx';
@@ -32,6 +37,20 @@ const LABELS = {
 const JOIN_MIN_SCALE = 0.5;
 const JOIN_PAD = 8;
 
+/**
+ * The cycle of the ball's wall: the flat map opens (the timeline 1952 → 2027) and stays for holdMs; its lights go
+ * out (the timeline backwards) and it turns into the globe, which opens the same way and makes `turns` turns; its
+ * lights go out, it faces Košice and opens out into the flat map, which flies in to Košice, and it starts over.
+ * On site without a new deploy: ?hold=<minutes> and ?turns=<number>; ?cycle=fast for a quick test.
+ */
+const CYCLE = { holdMs: 30 * 60_000, turns: 3, fadeS: 20 };
+const FAST_CYCLE = { holdMs: 15_000, turns: 0.3, fadeS: 9 };
+function cycleTiming() {
+  const base = queryParam('cycle') === 'fast' ? FAST_CYCLE : CYCLE;
+  const hold = Number(queryParam('hold')), turns = Number(queryParam('turns'));
+  return { ...base, ...(hold > 0 ? { holdMs: hold * 60_000 } : {}), ...(turns > 0 ? { turns } : {}) };
+}
+
 /** Screen boxes of the elements that exist and have a size (hidden panels on narrow screens have none). */
 function boxesOf(selectors: string[]): Box[] {
   return selectors.flatMap(sel => {
@@ -45,14 +64,21 @@ export default function Wall() {
   const venue = useVenue();
   const slug = queryParam('event') ?? venue.event;
   const code = queryParam('k');
-  // ?view=2d shows the same wall on a flat world map (to compare readability with the globe)
-  const view = queryParam('view') === '2d' ? '2d' : '3d';
+  // without ?view the flat map and the globe take turns (the cycle); ?view=2d or ?view=3d keeps one of them
+  const viewParam = queryParam('view');
+  const fixedView: View | null = viewParam === '2d' || viewParam === '3d' ? viewParam : null;
+  const [cycleView, setCycleView] = useState<View>('2d');
+  const view = fixedView ?? cycleView;
   const { ref, scene } = useGlobeScene({ view });
-  const otherView = (() => {
+  /** the cycle has changed the scene: the next openings start after the cross-fade */
+  const switched = useRef(false);
+  const [switching, setSwitching] = useState(false);
+  // the nav switches cycle → map only → globe only → cycle
+  const nextMode = (() => {
     const q = new URLSearchParams(location.search);
-    if (view === '2d') q.delete('view'); else q.set('view', '2d');
+    if (fixedView === null) q.set('view', '2d'); else if (fixedView === '2d') q.set('view', '3d'); else q.delete('view');
     const s = q.toString();
-    return location.pathname + (s ? `?${s}` : '');
+    return { href: location.pathname + (s ? `?${s}` : ''), label: fixedView === null ? '2D' : fixedView === '2d' ? '3D' : '2D ↔ 3D' };
   })();
   const titleRef = useRef<HTMLElement>(null);
   const { data, error } = useGlobeData();
@@ -87,8 +113,54 @@ export default function Wall() {
     if (!scene || !data) return;
     scene.onCoopChange = setVisible;
     scene.onYear = onYear;
-    scene.setCooperation(data.places, { reveal: true });
+    // after a change of scene the opening waits for the cross-fade, and the flat map first flies in to Košice
+    const flat = scene instanceof MapScene;
+    scene.setCooperation(data.places, switched.current ? { reveal: true, delay: flat ? 4 : 2.4, zoomIn: flat } : { reveal: true });
   }, [scene, data, onYear]);
+
+  // the cycle: opening, hold (the map: a while; the globe: a few turns), the lights go out, the other view
+  useEffect(() => {
+    if (fixedView || !scene || !data) return;
+    // right after the view changed the old scene is still the current one: wait for the new one
+    if (view === '3d' ? !(scene instanceof GlobeScene) : !(scene instanceof MapScene)) return;
+    const timing = cycleTiming();
+    let cancelled = false;
+    const timers = new Set<number>();
+    const sleep = (ms: number) => new Promise<void>(resolve => {
+      const id = window.setTimeout(() => { timers.delete(id); resolve(); }, ms);
+      timers.add(id);
+    });
+    const until = async (done: () => boolean) => { while (!cancelled && !done()) await sleep(1000); };
+    (async () => {
+      await until(() => !scene.revealing());
+      if (scene instanceof GlobeScene) {
+        scene.resetTurns();
+        await until(() => scene.turns() >= timing.turns);
+      } else {
+        await sleep(timing.holdMs);
+      }
+      if (cancelled) return;
+      await sleep(scene.fadeOut(timing.fadeS) * 1000 + 1500);
+      if (cancelled) return;
+      if (scene instanceof GlobeScene) {
+        scene.turnTo(ORIGIN.lat, ORIGIN.lon, 2500);
+        await sleep(2700);
+      }
+      if (cancelled) return;
+      setSwitching(true); // the QR panel fades out before it changes its place
+      await sleep(700);
+      if (cancelled) return;
+      switched.current = true;
+      setCycleView(v => (v === '2d' ? '3d' : '2d'));
+    })();
+    return () => { cancelled = true; for (const id of timers) clearTimeout(id); };
+  }, [fixedView, scene, data, view]);
+
+  useEffect(() => {
+    if (!switching) return;
+    const id = window.setTimeout(() => setSwitching(false), CROSSFADE_MS);
+    return () => clearTimeout(id);
+  }, [switching, view]);
 
   useEffect(() => { scene?.setMode(mode); }, [scene, mode]);
 
@@ -142,7 +214,7 @@ export default function Wall() {
   // once the light has spread the QR panel shrinks until no lit place, the title or a button lies under it
   const joinRef = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (view !== '2d' || !scene) return;
+    if (view !== '2d' || !(scene instanceof MapScene)) return;
     const fit = () => {
       const el = joinRef.current;
       if (!el || !el.offsetWidth || scene.revealing()) return;
@@ -177,7 +249,7 @@ export default function Wall() {
   const collecting = guests.available && (guests.event?.status === 'open' || guests.event?.status === 'live');
 
   return (
-    <div className={`wall mode-${mode} view-${view}${kiosk ? ' kiosk' : ''}`}>
+    <div className={`wall mode-${mode} view-${view}${kiosk ? ' kiosk' : ''}${switching ? ' switching' : ''}`}>
       <div className="stage-light" />
       <Starfield />
       <div className="globe-host" ref={ref} />
@@ -232,7 +304,7 @@ export default function Wall() {
           <Link className="chip" href="/mapa">Preskúmať mapu</Link>
           <Link className="chip" href="/zapoj-sa">Zapoj sa</Link>
           <Link className="chip" href="/o-projekte">O projekte</Link>
-          <a className="chip wall-view" href={otherView} title="Prepnúť medzi zemeguľou a mapou">{view === '2d' ? '3D' : '2D'}</a>
+          <a className="chip wall-view" href={nextMode.href} title="Prepnúť: striedanie mapy a zemegule → len mapa → len zemeguľa">{nextMode.label}</a>
           <button type="button" className="chip wall-replay" aria-label="Znova" onClick={() => scene?.replay()}>↻ <span>Znova (R)</span></button>
         </nav>
       )}

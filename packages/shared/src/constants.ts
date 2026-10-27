@@ -20,11 +20,12 @@ export const MILESTONES: readonly { year: number; text: string }[] = [
  * Where a wall runs. Each venue keeps its data in a database of its own (the ball: MSSQL_*, the student lobby:
  * MSSQL_VESTIBUL_*, see packages/db/src/client.ts) and lives under its own path prefix, on the web (/vestibul,
  * /vestibul/zapoj-sa …) and in the API (/api/vestibul/…). The ball keeps the plain paths. `event` is the event
- * the seed creates in the venue's database and the pages of the venue use.
+ * the seed creates in the venue's database and the pages of the venue use. `onboarding`: guests confirm their
+ * attendance at /onboarding before the venue opens (the ball only).
  */
 export const VENUES = {
-  ples: { key: 'ples', prefix: '', event: 'ples-2027', name: 'Ples TUKE 2027', brand: 'TUKE · Ples 2027' },
-  vestibul: { key: 'vestibul', prefix: '/vestibul', event: 'vestibul', name: 'Vestibul TUKE', brand: 'TUKE · Vestibul' },
+  ples: { key: 'ples', prefix: '', event: 'ples-2027', name: 'Ples TUKE 2027', brand: 'TUKE · Ples 2027', onboarding: true },
+  vestibul: { key: 'vestibul', prefix: '/vestibul', event: 'vestibul', name: 'Vestibul TUKE', brand: 'TUKE · Vestibul', onboarding: false },
 } as const;
 export type VenueKey = keyof typeof VENUES;
 export type Venue = (typeof VENUES)[VenueKey];
@@ -104,8 +105,22 @@ export const FACULTIES = [
 ] as const;
 export type FacultyCode = (typeof FACULTIES)[number]['code'];
 
+/**
+ * draft: the venue is off · open: before the ball (only the onboarding) · live: the ball night (every page, lights)
+ * · closed: after the ball (every page, read only). The operator switches it in /admin.
+ */
 export const EVENT_STATUSES = ['draft', 'open', 'live', 'closed'] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
+
+/**
+ * What a venue shows visitors who are not logged in as admin (admins see every page):
+ *  - off: nothing but a teaser page (draft, or no event)
+ *  - onboarding: before the ball only /onboarding, the confirmation of attendance; the rest shows the teaser
+ *  - open: every page
+ */
+export type GateState = 'off' | 'onboarding' | 'open';
+export const gateOf = (status: EventStatus | null | undefined): GateState =>
+  status === 'live' || status === 'closed' ? 'open' : status === 'open' ? 'onboarding' : 'off';
 
 /** Scenes the wall can show; the operator switches them in /admin. */
 export const DISPLAY_SCENES = [
@@ -123,4 +138,9 @@ export const LIMITS = {
   /** newest lights in the shared, CDN-cached live feed; clients keep their own cursor */
   liveWindow: 60,
   feedbackChars: 2000,
+  /** confirmation of attendance (/onboarding): one phone may confirm a few people (a couple, a family) */
+  attendeesPerDevice10min: 8,
+  attendeesPerIp10min: 300,
+  attendeeNameChars: 120,
+  attendeeAffiliationChars: 160,
 } as const;

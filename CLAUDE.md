@@ -5,7 +5,9 @@ A dark, "switched-off" rotating globe is shown on the LED wall at the ball: ligh
 has documented cooperation, places light up as twinkling stars, and guests add the places they have been to via a QR code,
 live. Theme: midnight blue + silver, light / play of light (svetlohra). Visual polish and correct, sourced data both matter.
 After the ball the wall moves permanently to the student lobby (vestibul): `/vestibul` is the same app on a database of its
-own, running beside the ball (built 2026-10-27, see „Venues").
+own, running beside the ball (built 2026-10-27, see „Venues"; switched off for now). Before the ball the site shows only
+/onboarding (guests confirm their attendance; the QR on the invitations) and a teaser elsewhere; the admin switches the
+ball on in /admin. The wall alternates the 2D map and the 3D globe (see „Before the ball" and „The wall").
 
 - **Production = TUKE hosting** (Plesk for Windows on msweb.tuke.sk, live since 2026-10-20):
   web https://srdcom.tuke.sk, API https://api.srdcom.tuke.sk/app.js/api (health with the deployed commit:
@@ -34,14 +36,17 @@ own, running beside the ball (built 2026-10-27, see „Venues").
   (repo root, excluded via .git/info/exclude); read them only from scripts.
 - Never develop or experiment against the TUKE database; it is written only by `db:migrate` / `db:seed` with
   `--env .env.tuke`, and only with the user's OK. Test lights on production only with the user's OK (they show on the wall).
-- Guest data stays anonymous (device/IP only as HMAC hashes). Nomination PDFs contain names/e-mails: store aggregates only.
+- Guest lights stay anonymous (device/IP only as HMAC hashes). The onboarding stores a name and an affiliation (personal
+  data, the user's decision 2026-10-27): only in the ball's database, shown only in /admin (and its CSV), deleted after the
+  ball, never linked to lights, never in the repo or in logs. Nomination PDFs contain names/e-mails: store aggregates only.
 
 ## Layout
 
 ```
 apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r186 with own shaders
-  src/pages        Wall.tsx (/ – the LED wall, `?view=2d` = flat map), MapPage.tsx (/mapa), Join.tsx (/zapoj-sa),
-                   Admin.tsx (/admin), About.tsx (/o-projekte), Compare.tsx (/porovnanie – 3D and 2D side by side);
+  src/pages        Wall.tsx (/ – the LED wall: the 2D/3D cycle, `?view=2d`/`?view=3d` keeps one), MapPage.tsx (/mapa),
+                   Join.tsx (/zapoj-sa), Onboarding.tsx (/onboarding), Teaser.tsx (closed pages), Admin.tsx (/admin),
+                   About.tsx (/o-projekte), Compare.tsx (/porovnanie – 3D and 2D side by side);
                    the routes are listed in src/main.tsx (ROUTES; build:tuke makes a folder per route, also under
                    /vestibul); every page also runs under /vestibul for the student lobby (lib/venue.ts)
   src/globe        core.ts (abstract WallScene: timeline, cooperation/guest state, country colours, counters, year, picking),
@@ -54,8 +59,9 @@ apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r18
   src/lib          api.ts (VITE_API_URL base + the venue prefix, credentials, fallback error messages), useGuests.ts
                    (summary + shared live feed), usePoll.ts (pauses in hidden tabs), useGlobeData.ts, router.tsx (tiny
                    router, ignores a trailing slash; Link keeps paths inside the open venue; useVenue), venue.ts
-                   (currentVenue, pageOf, venueHref), format.ts (Slovak plural, number format), device.ts
-apps/api         Hono 4 REST API under /api (routes: globe, events, gazetteer, admin, feedback), the same routes again
+                   (currentVenue, pageOf, venueHref), gate.ts (useGate, pageAllowed, refreshGate), format.ts (Slovak
+                   plural, number format), device.ts
+apps/api         Hono 4 REST API under /api (routes: gate, globe, events, gazetteer, admin, feedback), the same routes again
                  under /api/vestibul on the lobby's database; server.ts = the one entry (local port 8787, or the iisnode
                  named pipe in PORT; loads App_Data/.env under iisnode; strips a leading /app.js); app.ts (CORS by
                  WEB_ORIGIN, routes per venue, health); snapshot.ts = bundled dataset fallback when the DB is down;
@@ -131,6 +137,8 @@ name=ples-mssql` (Docker PC) or `Get-Service MSSQLSERVER` (native PC); `git refl
 - Local test lights: POST `/api/events/ples-2027/pins` with header `x-device-id: <16–64 hex chars>` and body
   `{"places":[{"countryCode":"NP"}],"visitKind":"erasmus_study"}`; undo with DELETE
   `/api/events/ples-2027/submissions/<submissionId>` and the same header. The lobby: `/api/vestibul/events/vestibul/…`.
+  Lights need the status live (or the admin cookie while open); the wall is visible to visitors only while live/closed:
+  for a local wall test set the local status to live (PATCH /api/admin/events/ples-2027 after login) and back to open.
 
 ## Production: TUKE hosting (Plesk for Windows)
 
@@ -223,7 +231,53 @@ the lobby. `VENUES` in packages/shared/constants.ts: `ples` (prefix '', event `p
   only; without the lobby database the bundle serves the ball normally and /vestibul from the snapshot (events, search,
   admin 503).
 
+## Before the ball: gate and onboarding (built 2026-10-27, tag `pred-onboardingom` = before)
+
+The user: before the ball everybody who types srdcom.tuke.sk gets only the onboarding (the invitations carry a QR code to
+it); every other page is blocked with a playful, poetic hint of the ball; just before the ball the user logs in to /admin
+and switches „Ples prebieha".
+- The switch is the event status (`EVENT_STATUSES`), `gateOf()` in constants.ts maps it for visitors: draft → `off`
+  (teaser only), open → `onboarding` (only /onboarding), live/closed → `open` (every page). GET `/api/gate` (per venue,
+  no-store) returns `{ state, admin }` (admin = valid session cookie). The web asks once per venue (`useGate`, last answer
+  kept in localStorage for an API hiccup at the ball), `pageAllowed()` decides, main.tsx shows the page, the Teaser, or
+  replaces `/` with `/onboarding`; /admin is always open; `refreshGate()` after login/logout. A logged-in admin sees every
+  page in every state (rehearsal on the LED wall: log in on the playback PC). The gate is a client-side curtain: the API's
+  read endpoints stay public; lights are refused server-side unless live (or open + admin), attendance unless open/live.
+- Admin labels (Admin.tsx `STATUS`): ball open „Pred plesom", live „Ples prebieha", closed „Po plese", draft „Vypnuté";
+  lobby draft „Vypnutý", open „Pripravený", live „Zapnutý", closed „Len na pozeranie". The seed creates a new ball as open
+  and a new lobby as draft. The lobby has no onboarding (`VENUES[…].onboarding`), so it shows the teaser unless live.
+- Onboarding (/onboarding, Onboarding.tsx): name + affiliation (free text with a datalist: roles, faculties „FEI TUKE",
+  partner, guest), button „Záväzne potvrdiť účasť", privacy line, thank-you card „Uvidíme sa pod hviezdami", „Potvrdiť
+  účasť ďalšej osoby"; names confirmed from the browser are remembered (localStorage). During the ball it links to
+  /zapoj-sa. POST `/api/events/:slug/attendees` (zod AttendeeSchema, 2–120 / 2–160 chars, 8 per device and 300 per IP per
+  10 min) → table `dbo.attendees` (migration 0002, device/IP as HMACs). Admin: GET/DELETE `/api/admin/attendees`, card
+  „Potvrdená účasť" with the list, „Stiahnuť CSV" (semicolons, UTF-8 BOM, formula cells defused) and delete (audit without
+  the name).
+- Teaser (Teaser.tsx): breathing star, „Pst… ešte je zhasnuté.", the hint (remember every place you have been to, at the
+  ball they become stars that accompany you through the night), button „Potvrdiť účasť na plese", „75 rokov TUKE · Do
+  videnia pod hviezdami". The lobby's variant has no button. Backgrounds (stage light, Starfield) sit outside `<main>`:
+  `.join > *` would make the fixed canvas a full-screen grid item.
+- api-smoke walks the states (open: visitor light 409, admin light 201, attendance; live; closed: 409s) and puts the
+  starting status back; a random device per run keeps the rate limits clear.
+
 ## The wall (/) – behaviour as built
+
+**The cycle** (default without `?view`; Wall.tsx `CYCLE`, on site `?hold=<min>`, `?turns=<n>`, test `?cycle=fast` = 15 s
+hold, 0.3 turns, 9 s fade): 2D opening → 2D hold 30 min → `fadeOut(20)` → cross-fade to the globe → 3D opening → 3 turns
+(`GlobeScene.turns()`, counted from the camera azimuth after the opening) → `fadeOut` → `turnTo(Košice)` 2.5 s → cross-fade
+to the flat map, which starts on the whole world and flies in to Košice (`zoomIn`, opening `delay` 4 s; the globe's 2.4 s)
+→ again. useGlobeScene puts each scene into its own `.scene-layer` (base.css): on a view change the new one fades in
+(2D→3D: the map shrinks to 0.8, the globe settles from 1.12; 3D→2D: 1.08 / from 0.92) and the old one is disposed after
+`CROSSFADE_MS` (2.6 s); disposal calls `forceContextLoss()` (a new WebGL context every round). The QR panel fades out
+before the view changes (`.wall.switching`), because 2D and 3D place it differently. `fadeOut` = the timeline backwards:
+places go out in reverse landing order over 70 % of the duration (arc withdraws from Košice to the place, `aDeath` in
+arcs.ts, then the star dims and shrinks, `aDeath` in stars.ts, then the country darkens), the guests' gold lights in the
+last third; Košice's star stays; counters count down; `busy()` (revealing or fading/dark) keeps cards away. The guests'
+lights are the finale of every opening: `setGuests` during a reveal (and `setCooperation` with reveal) schedules their
+beams 0.8 s after the last landing, all within 6 s (`scheduleGuests`), stars ignite on landing (per-star delay from
+`guestLanding`), countries follow via `nextGuestEvent`. Verified 2026-10-27 at 1280×720: the whole fast cycle (2D → 3D →
+2D), finale, fade schedule (832 → 0 on time), zoom-in (2000 → 240 units); a pane without focus runs at 1 fps, so counters
+lag there (the playback PC's browser must stay in front).
 
 Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places, { reveal: true })`:
 - Every year from `TUKE_FOUNDED` to max(current year, latest `since`) gets a slot: empty 0.09 s, else 0.16 s + 0.018 s per new
@@ -381,12 +435,22 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   databases up; CORS and preflights (204) in both venues; /vestibul ran the whole timeline (86 countries, 832 places,
   2 118 institutions; QR → /vestibul/zapoj-sa); /vestibul/zapoj-sa loads the event and searches places; the ball's wall and
   form; /admin and /vestibul/admin show the login (401).
+  Then the user asked for the pre-ball onboarding + gate (section „Before the ball"), the 2D/3D cycle as the ball's
+  default wall (section „The wall") and the lobby switched off. Tag `pred-onboardingom`; built and verified locally
+  (api-smoke both venues, the gate as visitor and as admin, onboarding submit, teaser, the fast cycle in the pane).
 
 ## Open questions / next
 
-- Production runs 8c9a61e (API + web, verified 2026-10-27). Checks only the user can do: log in at /admin and
-  /vestibul/admin (one password); a guest light from a phone on the ball (golden arc, „Zrušiť toto svetlo", the wall drops
-  it within seconds: the 6abb1f4 fix, first time on production) and one in the lobby; hide/show a light; scene switch.
+- Deploy of the onboarding + gate + cycle: first, with the user's OK, `npm run db:migrate -- --env .env.tuke` and the same
+  with `--venue vestibul` (migration 0002_attendees; the API's attendance routes need it), then both zips. After the upload
+  production (status open) shows visitors only /onboarding and the teaser; the wall only to a logged-in admin until
+  „Ples prebieha". Check: /app.js/api/gate (`onboarding`), srdcom.tuke.sk → /onboarding, /mapa → teaser, an attendance
+  (then delete it in /admin), /admin card „Potvrdená účasť". The user sets the lobby to „Vypnutý" in /vestibul/admin.
+- Production checks only the user can do: log in at /admin and /vestibul/admin (one password); the wall cycle on the LED
+  wall PC (browser in front; `?hold`, `?turns`); a guest light from a phone during a test with „Ples prebieha" (golden arc,
+  „Zrušiť toto svetlo": the 6abb1f4 fix); hide/show a light; scene switch.
+- Organisers: the onboarding and teaser texts, the privacy line of the onboarding (TUKE's data protection), whether names
+  are deleted right after the ball, the hold time and number of turns of the cycle.
 - Docker PC: create ples_vestibul_dev (see Local environment).
 - Vercel retirement (the user, in the Vercel dashboard): copy any reviewer comments from https://tuke-ples-27.vercel.app/admin
   (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the

@@ -29,6 +29,8 @@ export class GlobeScene extends WallScene {
   /** unit vectors of every lit place (x, y, z per place): how much is there to see in the current view */
   private interest = new Float32Array(0);
   private readonly rotation: { base: number; max: number; speed: number; focused: boolean; last: number };
+  /** degrees the view has turned since resetTurns(), and the camera's last azimuth */
+  private turned = { degrees: 0, azimuth: NaN };
 
   constructor(private readonly el: HTMLElement, countries: CountryFeature[], opts: { autoRotateSpeed?: number; altitude?: number } = {}) {
     super();
@@ -89,6 +91,13 @@ export class GlobeScene extends WallScene {
     const r = this.rotation;
     const dt = Math.min(0.1, (now - r.last) / 1000);
     r.last = now;
+    const cam = this.camera().position;
+    const azimuth = (Math.atan2(cam.x, cam.z) * 180) / Math.PI;
+    if (!Number.isNaN(this.turned.azimuth)) {
+      const step = ((azimuth - this.turned.azimuth + 540) % 360) - 180; // across ±180° without a jump
+      this.turned.degrees += Math.abs(step);
+    }
+    this.turned.azimuth = azimuth;
     if (!controls.autoRotate) return;
     let target = this.revealing() ? r.base * REVEAL_SPEED : r.base;
     if (!this.revealing()) {
@@ -121,6 +130,18 @@ export class GlobeScene extends WallScene {
 
   setAutoRotate(on: boolean): void {
     (this.globe.controls() as unknown as { autoRotate: boolean }).autoRotate = on;
+  }
+
+  /** Full turns the globe has made since resetTurns() (the wall's cycle counts them after the opening). */
+  turns(): number { return this.turned.degrees / 360; }
+
+  resetTurns(): void { this.turned.degrees = 0; }
+
+  /** Stops turning and brings a place to the middle of the view (before the flat map takes over). */
+  turnTo(lat: number, lon: number, ms: number): void {
+    this.setAutoRotate(false);
+    const { altitude } = this.globe.pointOfView();
+    this.globe.pointOfView({ lat, lng: lon, altitude }, ms);
   }
 
   protected override placesChanged(): void {
@@ -217,7 +238,10 @@ export class GlobeScene extends WallScene {
     this.ro.disconnect();
     this.borders.geometry.dispose();
     (this.borders.material as { dispose(): void }).dispose();
+    const renderer = this.globe.renderer() as WebGLRenderer;
     this.globe._destructor?.();
+    // the wall's 2D/3D cycle makes a new scene every round: give the WebGL context back at once
+    try { renderer.dispose(); renderer.forceContextLoss(); } catch { /* already gone */ }
     this.el.replaceChildren();
   }
 }

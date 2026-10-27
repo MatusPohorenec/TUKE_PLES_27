@@ -1,4 +1,7 @@
-import type { AdminFeedback, AdminPin, EventInfo, EventPatch, FeedbackInput, GazetteerHit, GlobeResponse, LiveResponse, PinSubmit, PlaceDetail, SubmitResponse, SummaryResponse } from '@ples/shared';
+import type {
+  AdminAttendee, AdminFeedback, AdminPin, AttendeeInput, AttendeeResponse, EventInfo, EventPatch, FeedbackInput, GateResponse, GazetteerHit,
+  GlobeResponse, LiveResponse, PinSubmit, PlaceDetail, SubmitResponse, SummaryResponse,
+} from '@ples/shared';
 import { deviceId } from './device.ts';
 import { currentVenue } from './venue.ts';
 
@@ -37,19 +40,22 @@ async function request<T>(path: string, init: RequestInit & { json?: unknown } =
  */
 function fallbackMessage(status: number, path: string, method: string): string {
   const login = path === '/admin/login';
+  const attendance = path.endsWith('/attendees') && method === 'POST';
   switch (status) {
     case 400: return 'Neplatné údaje. Skús to znova.';
     case 401: return login ? 'Nesprávne heslo.' : 'Prihlás sa.';
     case 403: return currentVenue().key === 'ples' ? 'Na pridanie svetla naskenuj QR kód z plesu.' : 'Na pridanie svetla naskenuj QR kód na stene vo vestibule.';
-    case 404: return method === 'DELETE' ? 'Svetlá sa už nedajú vrátiť.' : 'Nenašlo sa.';
-    case 409: return 'Pridávanie svetiel je momentálne zatvorené.';
-    case 429: return login ? 'Priveľa pokusov. Skús to o 15 minút.' : 'Veľa požiadaviek naraz. Skús to o pár minút.';
+    case 404: return path.startsWith('/admin/attendees') ? 'Záznam už neexistuje.' : method === 'DELETE' ? 'Svetlá sa už nedajú vrátiť.' : 'Nenašlo sa.';
+    case 409: return attendance ? 'Potvrdzovanie účasti je uzavreté.' : 'Pridávanie svetiel je momentálne zatvorené.';
+    case 429: return login ? 'Priveľa pokusov. Skús to o 15 minút.' : attendance ? 'Veľa potvrdení naraz. Skús to o pár minút.' : 'Veľa požiadaviek naraz. Skús to o pár minút.';
     case 503: return path.startsWith('/admin') ? 'Administrácia nie je zapnutá.' : 'Služba je dočasne nedostupná. Skús to o chvíľu.';
     default: return status >= 500 ? 'Na serveri sa niečo pokazilo. Skús to znova.' : `Chyba ${status}`;
   }
 }
 
 export const api = {
+  gate: () => request<GateResponse>('/gate'),
+  attend: (slug: string, body: AttendeeInput) => request<AttendeeResponse>(`/events/${slug}/attendees`, { method: 'POST', json: body }),
   globe: () => request<GlobeResponse>('/globe'),
   place: (id: string) => request<PlaceDetail>(`/globe/places/${encodeURIComponent(id)}`),
   search: (q: string, signal?: AbortSignal) => request<{ query: string; hits: GazetteerHit[] }>(`/gazetteer/search?q=${encodeURIComponent(q)}`, { signal }),
@@ -67,6 +73,8 @@ export const api = {
     patchEvent: (slug: string, patch: EventPatch) => request<EventInfo>(`/admin/events/${slug}`, { method: 'PATCH', json: patch }),
     pins: () => request<{ pins: AdminPin[] }>('/admin/pins?limit=200'),
     patchPin: (id: number, status: 'visible' | 'hidden') => request<{ ok: true }>(`/admin/pins/${id}`, { method: 'PATCH', json: { status } }),
+    attendees: () => request<{ attendees: AdminAttendee[] }>('/admin/attendees'),
+    deleteAttendee: (id: number) => request<{ ok: true }>(`/admin/attendees/${id}`, { method: 'DELETE' }),
     feedback: () => request<{ feedback: AdminFeedback[] }>('/admin/feedback'),
     patchFeedback: (id: number, status: string) => request<{ ok: true }>(`/admin/feedback/${id}`, { method: 'PATCH', json: { status } }),
   },

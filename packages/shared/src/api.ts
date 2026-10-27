@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
   DISPLAY_SCENES, EVENT_STATUSES, FACULTIES, LIMITS, PERSON_ROLES, VISIT_KINDS,
-  type DisplayScene, type EventStatus, type GroupCode, type VisitKind,
+  type DisplayScene, type EventStatus, type GateState, type GroupCode, type VisitKind,
 } from './constants.ts';
 
 const codes = <T extends readonly { code: string }[]>(list: T) => list.map(x => x.code) as unknown as [T[number]['code'], ...T[number]['code'][]];
@@ -29,6 +29,13 @@ export const FeedbackSchema = z.object({
   author: z.string().trim().max(120).optional(),
 });
 export type FeedbackInput = z.infer<typeof FeedbackSchema>;
+
+/** Confirmation of attendance before the ball (/onboarding). Personal data: seen only by the organisers. */
+export const AttendeeSchema = z.object({
+  name: z.string().trim().min(2).max(LIMITS.attendeeNameChars),
+  affiliation: z.string().trim().min(2).max(LIMITS.attendeeAffiliationChars),
+});
+export type AttendeeInput = z.infer<typeof AttendeeSchema>;
 
 export const LoginSchema = z.object({ password: z.string().min(1).max(200) });
 
@@ -137,3 +144,8 @@ export interface SubmitResponse { submissionId: string; pins: LivePin[]; undoUnt
 
 export interface AdminPin extends LivePin { status: 'visible' | 'hidden'; role: string | null; faculty: string | null }
 export interface AdminFeedback { id: number; page: string; message: string; author: string | null; status: string; createdAt: string }
+export interface AdminAttendee { id: number; name: string; affiliation: string; createdAt: string }
+
+/** GET /api/gate: which pages the venue shows this visitor (gateOf in constants.ts), never cached. */
+export interface GateResponse { state: GateState; admin: boolean }
+export interface AttendeeResponse { id: number; name: string }

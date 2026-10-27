@@ -9,7 +9,7 @@ import './compare.css';
 const WALL = { w: 1920, h: 1080 };
 // the wall of the venue that is open (/porovnanie: the ball, /vestibul/porovnanie: the student lobby)
 const VIEWS = [
-  { label: '3D – zemeguľa', src: '/?kiosk=1' },
+  { label: '3D – zemeguľa', src: '/?kiosk=1&view=3d' },
   { label: '2D – mapa sveta', src: '/?kiosk=1&view=2d' },
 ];
 

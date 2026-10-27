@@ -292,7 +292,8 @@ export class MapScene extends WallScene {
 
   // ---------------------------------------------------------------- WallScene
 
-  override setCooperation(places: GlobePlace[], options: { reveal?: boolean } = {}): void {
+  /** zoomIn: the opening starts on the whole world and the view flies to Košice first (after the globe, in the cycle). */
+  override setCooperation(places: GlobePlace[], options: { reveal?: boolean; delay?: number; zoomIn?: boolean } = {}): void {
     this.placeXY.clear();
     for (const p of places) this.placeXY.set(p.id, this.lonLat(p.lon, p.lat));
     // how crowded each place is on the whole-world view: neighbours within about a star's width
@@ -304,8 +305,9 @@ export class MapScene extends WallScene {
       this.density.set(p.id, near);
     });
     if (options.reveal) {
-      this.view = this.startBox();
-      this.target = { ...this.view };
+      // the view eases from where it is (the whole world with zoomIn) to the start around Košice (follow())
+      this.view = options.zoomIn ? { ...this.world } : this.startBox();
+      this.target = this.startBox();
       this.placeCamera();
     }
     super.setCooperation(places, options);
@@ -389,6 +391,7 @@ export class MapScene extends WallScene {
     for (const d of this.disposables) d.dispose();
     for (const o of this.scene.children) if (o instanceof THREE.Mesh) o.geometry.dispose();
     this.renderer.dispose();
+    this.renderer.forceContextLoss(); // the wall's 2D/3D cycle makes a new scene every round
     this.el.replaceChildren();
   }
 }

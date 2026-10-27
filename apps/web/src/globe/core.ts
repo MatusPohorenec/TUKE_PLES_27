@@ -5,12 +5,13 @@
  *
  * The reveal runs on a clock: every place gets a launch time, its beam flies on the GPU (arcs.ts), its star
  * lights up when the beam lands (stars.ts) and its country fades in at that moment. Nothing is rebuilt while
- * the light spreads, which keeps the first half minute smooth.
+ * the light spreads, which keeps the first half minute smooth. The guests' gold lights fly in as the finale of
+ * the opening. fadeOut() runs the timeline backwards (the wall's 2D/3D cycle): the lights go out the same way.
  */
 import { DoubleSide, MeshBasicMaterial, SRGBColorSpace } from 'three';
 import { CATEGORY_GROUPS, MILESTONES, ORIGIN, TUKE_FOUNDED, type GroupCode } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
-import type { ArcLayer } from './arcs.ts';
+import { DEATH_FADE, type ArcLayer } from './arcs.ts';
 import type { PlacedStar, StarLayer } from './stars.ts';
 
 export const GROUP_COLOR = Object.fromEntries(CATEGORY_GROUPS.map(g => [g.code, g.color])) as Record<GroupCode, string>;
@@ -56,6 +57,9 @@ const LAUNCH_WINDOW = 3; // a beam leaves at most this many years before the yea
 const YEAR_AFTER = 3; // s the last year stays on screen after the last light has landed
 const COUNTRY_FADE = 0.8; // s for a country to light up
 const NOTIFY_MS = 150; // the counters follow the landings at most this often
+const FINALE_GAP = 0.8; // s after the last landing of the opening before the guests' lights leave Košice …
+const FINALE_SPAN = 6; // … all of them within this time
+const STAR_AFTER_ARC = 1; // s: going out, the arc withdraws to its place first, then the star goes out
 
 // one blue for both layers, so the map stays in the palette: the scene's subject lit, the other one faint
 // (a warm tint at this strength reads as grey on the dark map)
@@ -98,6 +102,14 @@ export abstract class WallScene {
   private years: { year: number; start: number; end: number }[] = [];
   private shownYear: number | null = null;
   private frame = 0;
+  /** while the lights go out (fadeOut): when the star of each place in this.coop goes out; null otherwise */
+  private deathAt: number[] | null = null;
+  /** when each place's arc starts to go out, by place id (fadeOut) */
+  private readonly arcDeath = new Map<string, number>();
+  /** when each guest place goes out (fadeOut) */
+  private readonly guestDeath = new Map<string, number>();
+  /** the next moment a guest light lands or goes out: its country changes then */
+  private nextGuestEvent = 0;
 
   /** Called whenever the set of visible cooperation places changes (reveal, filters). */
   onCoopChange?: (visible: GlobePlace[]) => void;
@@ -169,12 +181,17 @@ export abstract class WallScene {
    * With reveal the light spreads through time: every year from the founding of TUKE to today has its moment
    * and each place lights up in the year of its earliest dated cooperation (places without a year at the end).
    * Without years in the data the beams leave by distance instead. Without reveal everything is lit at once.
+   * delay: seconds before the first beam leaves Košice (e.g. while the view zooms in after a change of scene).
    */
-  setCooperation(places: GlobePlace[], { reveal = false } = {}): void {
+  setCooperation(places: GlobePlace[], { reveal = false, delay = REVEAL_DELAY }: { reveal?: boolean; delay?: number; zoomIn?: boolean } = {}): void {
     const first = this.coop.length === 0;
     const t = seconds();
     this.timing.clear();
     this.years = [];
+    const wasDark = this.deathAt !== null;
+    this.deathAt = null;
+    this.arcDeath.clear();
+    this.guestDeath.clear();
     const byDistance = [...places].sort((a, b) => a.distanceKm - b.distanceKm);
     const land = new Map<string, number>();
     if (reveal && places.some(p => p.since)) {
@@ -183,7 +200,7 @@ export abstract class WallScene {
       const perYear = new Map<number, GlobePlace[]>();
       for (const p of byDistance) perYear.set(yearOf(p), [...(perYear.get(yearOf(p)) ?? []), p]); // nearest first within a year
       const milestones = new Set(MILESTONES.map(m => m.year));
-      let at = t + REVEAL_DELAY;
+      let at = t + delay;
       for (let year = TUKE_FOUNDED; year <= last; year++) {
         const list = perYear.get(year) ?? [];
         let length = list.length ? Math.min(YEAR_MAX, YEAR_BASE + YEAR_PER_PLACE * list.length) : YEAR_EMPTY;
@@ -201,7 +218,7 @@ export abstract class WallScene {
         at += length;
       }
     } else if (reveal) {
-      byDistance.forEach((p, i) => land.set(p.id, t + REVEAL_DELAY + (REVEAL_SPAN * i) / Math.max(1, byDistance.length - 1) + beamSeconds(p.distanceKm)));
+      byDistance.forEach((p, i) => land.set(p.id, t + delay + (REVEAL_SPAN * i) / Math.max(1, byDistance.length - 1) + beamSeconds(p.distanceKm)));
     }
     // landing order: the reveal counts places in this order (visibleCoop() is a prefix)
     this.coop = reveal ? [...byDistance].sort((a, b) => land.get(a.id)! - land.get(b.id)!) : byDistance;
@@ -218,11 +235,44 @@ export abstract class WallScene {
     if (reveal) this.revealStarts(first);
     this.renderArcs();
     this.renderCoopStars();
+    // the guests' lights: again as the finale of a new opening, lit at once without one (or after going out)
+    if (reveal || wasDark) this.scheduleGuests();
     this.renderCountries();
     this.notifyCoop();
   }
 
   replay(): void { this.setCooperation(this.coop, { reveal: true }); }
+
+  /**
+   * The lights go out, the timeline running backwards: the newest cooperation first, the oldest last (Košice's own
+   * star stays lit), the guests' gold lights towards the end. Every arc withdraws to its place, then the star goes
+   * out and the country darkens. Returns the seconds until everything is dark.
+   */
+  fadeOut(duration = 20): number {
+    const t = seconds();
+    this.coopShown = this.coop.length; // a beam still in the air would land now: nothing is left half-lit
+    this.years = [];
+    if (this.shownYear !== null) { this.shownYear = null; this.onYear?.(null, null); }
+    const n = this.coop.length;
+    const span = duration * 0.7;
+    this.arcDeath.clear();
+    this.deathAt = this.coop.map((p, i) => {
+      const arc = t + 0.5 + (span * (n - 1 - i)) / Math.max(1, n - 1); // in landing order: the last landed goes first
+      this.arcDeath.set(p.id, arc);
+      return arc + STAR_AFTER_ARC;
+    });
+    const guests = [...this.guests.keys()].sort((a, b) => spread(a) - spread(b));
+    guests.forEach((key, j) => this.guestDeath.set(key, t + 0.5 + duration * 0.6 + (duration * 0.25 * j) / Math.max(1, guests.length)));
+    this.nextGuestEvent = this.nextGuestTime(t);
+    this.renderArcs();
+    this.renderCoopStars();
+    this.renderGuestArcs();
+    this.renderGuestStars();
+    return duration;
+  }
+
+  /** No place for cards: the light is spreading, going out, or out. */
+  busy(): boolean { return this.revealing() || this.deathAt !== null; }
 
   setGroups(groups: Iterable<GroupCode>): void {
     this.groups = new Set(groups);
@@ -233,7 +283,7 @@ export abstract class WallScene {
   }
 
   /** True while beams are still on their way (the counters are rising). */
-  revealing(): boolean { return this.coopShown < this.coop.length; }
+  revealing(): boolean { return this.deathAt === null && this.coopShown < this.coop.length; }
 
   /** Cooperation places in the active groups that their beam has reached. */
   visibleCoop(): GlobePlace[] {
@@ -242,13 +292,23 @@ export abstract class WallScene {
 
   protected inGroups(p: GlobePlace): boolean { return p.groups.some(g => this.groups.has(g)); }
 
-  /** Moves the reveal on: places whose beam has landed count, and their countries light up. */
+  /**
+   * Moves the reveal on: places whose beam has landed count, and their countries light up. While the lights go out
+   * it runs backwards: places whose star has gone out no longer count (the alive ones stay a prefix of this.coop).
+   */
   private advanceReveal(nowMs: number): void {
     const t = nowMs / 1000;
     let k = this.coopShown;
-    while (k < this.coop.length && this.landAt[k]! <= t) k++;
+    if (this.deathAt) while (k > 0 && this.deathAt[k - 1]! <= t) k--;
+    else while (k < this.coop.length && this.landAt[k]! <= t) k++;
     if (k !== this.coopShown) {
       this.coopShown = k;
+      this.renderCountries();
+      this.notify.pending = true;
+    }
+    if (this.nextGuestEvent && t >= this.nextGuestEvent) {
+      // a scheduled guest light landed (the finale) or went out (fadeOut): its country follows
+      this.nextGuestEvent = this.nextGuestTime(t);
       this.renderCountries();
       this.notify.pending = true;
     }
@@ -278,7 +338,10 @@ export abstract class WallScene {
 
   // ---------------------------------------------------------------- guests
 
-  /** All guest lights at once (initial load, reconnect), no arrival animation. */
+  /**
+   * All guest lights at once (initial load, reconnect). While the opening runs they fly in as its finale, after the
+   * last cooperation has landed; otherwise they are lit at once, without the flight.
+   */
   setGuests(places: GuestPlace[]): void {
     // arrivals still waiting for their turn are part of the new snapshot (or come again from the feed)
     for (const t of this.arrivalTimers) clearTimeout(t);
@@ -286,11 +349,41 @@ export abstract class WallScene {
     this.guestLanding.clear();
     this.guests = new Map(places.map(p => [p.key, p]));
     for (const key of this.guestBeams.keys()) if (!this.guests.has(key)) this.guestBeams.delete(key);
-    for (const key of this.guests.keys()) this.litWithoutFlight(key);
+    if (this.revealing()) this.scheduleGuests(); // during the opening: its finale (again, with the new snapshot)
+    else for (const key of this.guests.keys()) this.litWithoutFlight(key);
     this.renderGuestStars();
     this.renderGuestArcs();
     this.renderCountries();
     this.placesChanged();
+  }
+
+  /**
+   * The guests' lights fly in one after another as the finale of the opening (or appear at once when there is no
+   * opening running); their stars ignite and their countries light up when they land.
+   */
+  private scheduleGuests(): void {
+    const t = seconds();
+    this.guestLanding.clear();
+    this.guestStars.clear(); // the stars ignite again when their light lands
+    const finale = this.revealing() ? Math.max(t, ...this.landAt) + FINALE_GAP : 0;
+    const list = [...this.guests.values()].sort((a, b) => spread(a.key) - spread(b.key));
+    list.forEach((g, i) => {
+      if (!finale) { this.guestBeams.delete(g.key); this.litWithoutFlight(g.key); return; }
+      const launch = finale + (FINALE_SPAN * i) / Math.max(1, list.length);
+      this.guestBeams.set(g.key, launch);
+      this.guestLanding.set(g.key, launch + GUEST_LANDING);
+    });
+    this.nextGuestEvent = this.nextGuestTime(t);
+    this.renderGuestStars();
+    this.renderGuestArcs();
+  }
+
+  /** The next landing or going out of a guest light after t (0: none). */
+  private nextGuestTime(t: number): number {
+    let next = Infinity;
+    for (const at of this.guestLanding.values()) if (at > t && at < next) next = at;
+    for (const at of this.guestDeath.values()) if (at > t && at < next) next = at;
+    return next === Infinity ? 0 : next;
   }
 
   /** Lights added without the flight, e.g. the older part of a big burst. */
@@ -313,7 +406,7 @@ export abstract class WallScene {
         const prev = this.countGuest(pin);
         if (!prev) this.guestLanding.set(pin.key, seconds() + GUEST_LANDING);
         this.guestStars.ignite(`guest:${pin.key}`, GUEST_LANDING);
-        this.renderGuestStars(GUEST_LANDING);
+        this.renderGuestStars();
         this.guestBeams.set(pin.key, seconds());
         this.renderGuestArcs();
         const landed = window.setTimeout(() => {
@@ -345,7 +438,7 @@ export abstract class WallScene {
 
   protected landedGuests(): GuestPlace[] {
     const t = seconds();
-    return [...this.guests.values()].filter(g => !((this.guestLanding.get(g.key) ?? 0) > t));
+    return [...this.guests.values()].filter(g => !((this.guestLanding.get(g.key) ?? 0) > t) && !((this.guestDeath.get(g.key) ?? Infinity) <= t));
   }
 
   // ---------------------------------------------------------------- scene, picking, teardown
@@ -388,7 +481,10 @@ export abstract class WallScene {
   private renderArcs(): void {
     this.arcs.set(this.coop.filter(p => this.inGroups(p)).map(p => {
       const { launch, travel } = this.timing.get(p.id)!;
-      return { lat: p.lat, lon: p.lon, color: GROUP_COLOR[p.groups.find(g => this.groups.has(g))!], width: this.arcWidth(p), glow: this.arcGlow(p), launch, travel };
+      return {
+        lat: p.lat, lon: p.lon, color: GROUP_COLOR[p.groups.find(g => this.groups.has(g))!], width: this.arcWidth(p), glow: this.arcGlow(p),
+        launch, travel, death: this.arcDeath.get(p.id),
+      };
     }));
   }
 
@@ -405,6 +501,7 @@ export abstract class WallScene {
           color: GROUP_COLOR[p.groups.find(g => this.groups.has(g))!],
           delay: launch + travel - t,
           dim: this.starDim(p),
+          death: this.arcDeath.has(p.id) ? this.arcDeath.get(p.id)! + STAR_AFTER_ARC : undefined,
         };
       }),
     ]);
@@ -414,12 +511,16 @@ export abstract class WallScene {
   protected renderGuestArcs(): void {
     this.guestArcs.set([...this.guests.values()].map(g => ({
       lat: g.lat, lon: g.lon, color: GUEST_COLOR, width: this.guestArcWidth(), launch: this.guestBeams.get(g.key) ?? 0, travel: GUEST_LANDING,
+      death: this.guestDeath.has(g.key) ? this.guestDeath.get(g.key)! - DEATH_FADE : undefined,
     })));
   }
 
-  protected renderGuestStars(delay = 0): void {
+  /** A guest star ignites when its light lands (an arrival, the finale of the opening) and goes out with fadeOut. */
+  protected renderGuestStars(): void {
+    const t = seconds();
     this.guestStars.set([...this.guests.values()].map(g => ({
-      id: `guest:${g.key}`, lat: g.lat, lon: g.lon, size: 26 + 8 * Math.sqrt(Math.min(g.count, 60)), color: GUEST_COLOR, delay,
+      id: `guest:${g.key}`, lat: g.lat, lon: g.lon, size: 26 + 8 * Math.sqrt(Math.min(g.count, 60)), color: GUEST_COLOR,
+      delay: Math.max(0, (this.guestLanding.get(g.key) ?? t) - t), death: this.guestDeath.get(g.key),
     })));
   }
 

@@ -20,7 +20,13 @@ export interface ArcInput {
   travel: number;
   /** 0–1: strength of the steady light after the beam has landed (the first beam is always full); default 1 */
   glow?: number;
+  /** when the arc's light goes out (fading over DEATH_FADE), in seconds of performance.now(); default never */
+  death?: number;
 }
+
+/** Seconds an arc or a star takes to go out (WallScene.fadeOut). */
+export const DEATH_FADE = 1.4;
+const NEVER = 1e9;
 
 /** Fills `out` (ARC_SEGMENTS + 1 points) with the arc from Košice to the place at lat/lon. */
 export type ArcPath = (lat: number, lon: number, out: THREE.Vector3[]) => void;
@@ -35,9 +41,9 @@ const VERTEX = /* glsl */ `
   uniform vec2 uResolution;
   uniform float uMinPx;
   attribute vec3 aPrev, aNext, aColor;
-  attribute float aSide, aT, aWidth, aLaunch, aTravel, aGlow;
+  attribute float aSide, aT, aWidth, aLaunch, aTravel, aGlow, aDeath;
   varying vec3 vColor;
-  varying float vT, vSide, vLaunch, vTravel, vGlow;
+  varying float vT, vSide, vLaunch, vTravel, vGlow, vDeath;
   void main() {
     mat4 mvp = projectionMatrix * modelViewMatrix;
     vec4 c = mvp * vec4(position, 1.0);
@@ -57,12 +63,13 @@ const VERTEX = /* glsl */ `
     vLaunch = aLaunch;
     vTravel = aTravel;
     vGlow = aGlow;
+    vDeath = aDeath;
   }`;
 
 const FRAGMENT = /* glsl */ `
-  uniform float uTime, uOpacity, uBase, uAmbient, uTintFrom;
+  uniform float uTime, uOpacity, uBase, uAmbient, uTintFrom, uDeathFade;
   varying vec3 vColor;
-  varying float vT, vSide, vLaunch, vTravel, vGlow;
+  varying float vT, vSide, vLaunch, vTravel, vGlow, vDeath;
   // a pulse whose head is at 'head' (0 = where it starts, 1 = where it ends) with a fading tail behind it
   float pulse(float head, float s, float len) {
     float d = head - s;
@@ -73,6 +80,9 @@ const FRAGMENT = /* glsl */ `
   void main() {
     float age = uTime - vLaunch;
     if (age <= 0.0) discard;
+    // the light going out: from Košice outwards, so the connection seems to withdraw to its place
+    float alive = 1.0 - smoothstep(0.0, 1.0, (uTime - vDeath) / uDeathFade * 1.6 - vT * 0.6);
+    if (alive <= 0.0) discard;
     float h = age / vTravel;
     float beam = pulse(h, vT, 0.25);
     float light = beam * 1.4;                           // the beam that lights the place
@@ -88,7 +98,7 @@ const FRAGMENT = /* glsl */ `
     float glow = exp(-vSide * vSide * mix(3.2, 1.8, min(beam, 1.0)));
     vec3 col = mix(vec3(1.0), vColor, smoothstep(0.0, uTintFrom, vT));
     col = mix(col, vec3(1.0), clamp(light - 0.9, 0.0, 1.0) * 0.6); // only the head of the beam burns white
-    gl_FragColor = vec4(col * light * glow * uOpacity, 1.0);
+    gl_FragColor = vec4(col * light * glow * uOpacity * alive, 1.0);
   }`;
 
 function slerp(a: THREE.Vector3, b: THREE.Vector3, t: number): THREE.Vector3 {
@@ -143,6 +153,7 @@ export class ArcLayer {
         uBase: { value: base },
         uAmbient: { value: ambient ? 1 : 0 },
         uTintFrom: { value: tintFrom },
+        uDeathFade: { value: DEATH_FADE },
       },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
@@ -177,7 +188,7 @@ export class ArcLayer {
   set(arcs: ArcInput[]): void {
     const P = SEGMENTS + 1, V = P * 2, n = arcs.length;
     const pos = new Float32Array(n * V * 3), prev = new Float32Array(n * V * 3), next = new Float32Array(n * V * 3), col = new Float32Array(n * V * 3);
-    const side = new Float32Array(n * V), along = new Float32Array(n * V), width = new Float32Array(n * V), launch = new Float32Array(n * V), travel = new Float32Array(n * V), glow = new Float32Array(n * V);
+    const side = new Float32Array(n * V), along = new Float32Array(n * V), width = new Float32Array(n * V), launch = new Float32Array(n * V), travel = new Float32Array(n * V), glow = new Float32Array(n * V), death = new Float32Array(n * V);
     const index = new Uint32Array(n * SEGMENTS * 6);
     const pts = Array.from({ length: P }, () => new THREE.Vector3());
     const lens = new Float32Array(P);
@@ -204,6 +215,7 @@ export class ArcLayer {
           launch[v] = a.launch;
           travel[v] = a.travel;
           glow[v] = a.glow ?? 1;
+          death[v] = a.death ?? NEVER;
         }
       }
       for (let i = 0; i < SEGMENTS; i++) {
@@ -223,6 +235,7 @@ export class ArcLayer {
     g.setAttribute('aLaunch', new THREE.BufferAttribute(launch, 1));
     g.setAttribute('aTravel', new THREE.BufferAttribute(travel, 1));
     g.setAttribute('aGlow', new THREE.BufferAttribute(glow, 1));
+    g.setAttribute('aDeath', new THREE.BufferAttribute(death, 1));
     g.setIndex(new THREE.BufferAttribute(index, 1));
     this.mesh.geometry.dispose();
     this.mesh.geometry = g;

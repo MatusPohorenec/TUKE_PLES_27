@@ -1,6 +1,8 @@
 // node tools/api-smoke.mjs [baseUrl] [origin] [--venue vestibul]
 // Smoke test of every API route against a running local API (default http://localhost:8787/api, e.g. npm run dev):
-// globe, place detail, search, submit + undo, live/summary, feedback, admin login, moderation, scene, access code.
+// globe, place detail, search, the gate and the venue's status (before the ball: onboarding only, lights from the
+// admin only; the ball night; after the ball: read only), confirmation of attendance, submit + undo, live/summary,
+// feedback, admin login, moderation, scene, access code. It puts the venue's status back where it found it.
 // --venue vestibul tests the student lobby's routes (/api/vestibul/…, its own database) instead of the ball's, and
 // every run checks that its lights never show in the other venue. With an origin (e.g. http://localhost:4173, the
 // cross-origin setup in CLAUDE.md) every response must carry CORS headers. It writes test lights (undone again),
@@ -30,7 +32,7 @@ const EV = `/events/${venue.event}`;
 const others = Object.entries(VENUES).filter(([key]) => key !== venueKey);
 console.log(`venue ${venueKey}: ${base}`);
 const env = Object.fromEntries(readFileSync(fileURLToPath(new URL('../.env', import.meta.url)), 'utf8').split(/\r?\n/).filter(l => /^[A-Z_]+=/.test(l)).map(l => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]));
-const device = 'abcdef0123456789abcdef0123456789';
+const device = crypto.randomUUID().replace(/-/g, ''); // a new browser per run: the rate limits never trip
 let cookie = '';
 let failures = 0;
 
@@ -46,6 +48,12 @@ async function call(method, path, body, headers = {}) {
   let json; try { json = JSON.parse(text); } catch { json = text; }
   if (origin && res.headers.get('access-control-allow-origin') !== origin) { failures++; console.log('  ! missing CORS header on', method, path); }
   return { status: res.status, json, headers: res.headers };
+}
+/** Runs a request as a visitor, without the admin cookie. */
+async function anonymous(request) {
+  const saved = cookie;
+  cookie = '';
+  try { return await request(); } finally { cookie = saved; }
 }
 function check(label, ok, extra = '') {
   if (!ok) failures++;
@@ -95,15 +103,58 @@ for (const q of ['kosice', 'Košice', 'wien', 'mnich', 'praha', 'slov', 'sao pau
 const short = await call('GET', '/gazetteer/search?q=k');
 check('search too short 400', short.status === 400);
 
-const event = await call('GET', EV);
-check('event', event.status === 200 && event.json.slug === venue.event, JSON.stringify(event.json));
+// ---------------------------------------------------------------- admin login, the venue's status and the gate
+const noSession = await call('GET', '/admin/me');
+check('admin without session 401', noSession.status === 401);
+const wrong = await call('POST', '/admin/login', { password: 'definitely-wrong' });
+check('admin wrong password 401', wrong.status === 401);
+const gateVisitor = await call('GET', '/gate');
+const login = await call('POST', '/admin/login', { password: env.ADMIN_PASSWORD });
+check('admin login', login.status === 200 && cookie.startsWith('ples_admin='), `cookie ${cookie ? 'set' : 'missing'}; ${login.headers.get('set-cookie')?.replace(/ples_admin=[^;]+/, 'ples_admin=…')}`);
+const me = await call('GET', '/admin/me');
+check('admin me', me.status === 200);
+const ev = await call('GET', `/admin${EV}`);
+check('admin event', ev.status === 200, JSON.stringify(ev.json));
+const startStatus = ev.json.status;
+// gateOf in packages/shared/src/constants.ts
+const gateOf = s => (s === 'live' || s === 'closed' ? 'open' : s === 'open' ? 'onboarding' : 'off');
+check('gate for visitors follows the status', gateVisitor.status === 200 && gateVisitor.json.admin === false && gateVisitor.json.state === gateOf(startStatus), `${startStatus} -> ${JSON.stringify(gateVisitor.json)}`);
+const gateAdmin = await call('GET', '/gate');
+check('gate knows the admin', gateAdmin.status === 200 && gateAdmin.json.admin === true, JSON.stringify(gateAdmin.json));
+const setStatus = async status => (await call('PATCH', `/admin${EV}`, { status })).json?.status;
 
+// ---------------------------------------------------------------- before the ball: only the onboarding
+check('status open (before the ball)', (await setStatus('open')) === 'open');
+const gateOpen = await anonymous(() => call('GET', '/gate'));
+check('gate before the ball: onboarding', gateOpen.json.state === 'onboarding' && gateOpen.json.admin === false, JSON.stringify(gateOpen.json));
+const early = await anonymous(() => call('POST', `${EV}/pins`, { places: [{ countryCode: 'NP' }], visitKind: 'erasmus_study' }, { 'x-device-id': device }));
+check('light from a visitor before the ball 409', early.status === 409, `HTTP ${early.status}`);
+const rehearsal = await call('POST', `${EV}/pins`, { places: [{ countryCode: 'NP' }], visitKind: 'erasmus_study' }, { 'x-device-id': device });
+check('light from the admin before the ball (rehearsal)', rehearsal.status === 201, `HTTP ${rehearsal.status}`);
+if (rehearsal.json?.submissionId) await call('DELETE', `${EV}/submissions/${rehearsal.json.submissionId}`, undefined, { 'x-device-id': device });
+
+const attendee = await anonymous(() => call('POST', `${EV}/attendees`, { name: 'Skúšobný Hosť Ľščťžý', affiliation: 'FEI TUKE' }, { 'x-device-id': device }));
+check('attendance confirmed', attendee.status === 201 && typeof attendee.json.id === 'number' && attendee.json.name === 'Skúšobný Hosť Ľščťžý', `${attendee.status} ${JSON.stringify(attendee.json)}`);
+const badAttendee = await anonymous(() => call('POST', `${EV}/attendees`, { name: 'X', affiliation: '' }, { 'x-device-id': device }));
+check('attendance without name and affiliation 400', badAttendee.status === 400, `HTTP ${badAttendee.status}`);
+const attendees = await call('GET', '/admin/attendees');
+check('admin attendance list', attendees.status === 200 && attendees.json.attendees.some(a => a.id === attendee.json.id && a.affiliation === 'FEI TUKE'), `${attendees.json.attendees?.length} confirmed`);
+const attendeesVisitor = await anonymous(() => call('GET', '/admin/attendees'));
+check('attendance list needs the admin 401', attendeesVisitor.status === 401, `HTTP ${attendeesVisitor.status}`);
+
+// ---------------------------------------------------------------- the ball night: every page, lights from guests
+check('status live (the ball)', (await setStatus('live')) === 'live');
+const gateLive = await anonymous(() => call('GET', '/gate'));
+check('gate on the ball night: open', gateLive.json.state === 'open', JSON.stringify(gateLive.json));
+
+const event = await call('GET', EV);
+check('event', event.status === 200 && event.json.slug === venue.event && event.json.status === 'live', JSON.stringify(event.json));
 const before = await call('GET', `${EV}/summary`);
 check('summary', before.status === 200 && before.json.totals, JSON.stringify(before.json.totals));
 
 const kosice = (await call('GET', '/gazetteer/search?q=kosice')).json.hits.find(h => h.kind === 'city');
-const submit = await call('POST', `${EV}/pins`, { places: [{ geonameId: kosice.geonameId }, { countryCode: 'NP' }], visitKind: 'erasmus_study', role: 'student', faculty: 'FEI' }, { 'x-device-id': device });
-check('submit 2 lights', submit.status === 201 && submit.json.pins?.length === 2 && /^[0-9a-f-]{36}$/.test(submit.json.submissionId), `${submit.status} ${JSON.stringify(submit.json).slice(0, 200)}`);
+const submit = await anonymous(() => call('POST', `${EV}/pins`, { places: [{ geonameId: kosice.geonameId }, { countryCode: 'NP' }], visitKind: 'erasmus_study', role: 'student', faculty: 'FEI' }, { 'x-device-id': device }));
+check('submit 2 lights (a guest)', submit.status === 201 && submit.json.pins?.length === 2 && /^[0-9a-f-]{36}$/.test(submit.json.submissionId), `${submit.status} ${JSON.stringify(submit.json).slice(0, 200)}`);
 
 await new Promise(r => setTimeout(r, 2100)); // the live feed is shared for 2 s
 const live = await call('GET', `${EV}/live`);
@@ -131,19 +182,9 @@ check('unknown place 400', unknown.status === 400 && unknown.json.error.code ===
 const feedback = await call('POST', '/feedback', { page: '/test', message: 'Skúšobná pripomienka – ľščťžýáíé', author: 'test' });
 check('feedback', feedback.status === 201 && typeof feedback.json.id === 'number', JSON.stringify(feedback.json));
 
-const noSession = await call('GET', '/admin/me');
-check('admin without session 401', noSession.status === 401);
-const wrong = await call('POST', '/admin/login', { password: 'definitely-wrong' });
-check('admin wrong password 401', wrong.status === 401);
-const login = await call('POST', '/admin/login', { password: env.ADMIN_PASSWORD });
-check('admin login', login.status === 200 && cookie.startsWith('ples_admin='), `cookie ${cookie ? 'set' : 'missing'}; ${login.headers.get('set-cookie')?.replace(/ples_admin=[^;]+/, 'ples_admin=…')}`);
-const me = await call('GET', '/admin/me');
-check('admin me', me.status === 200);
-const ev = await call('GET', `/admin${EV}`);
-check('admin event', ev.status === 200, JSON.stringify(ev.json));
 const scene = await call('PATCH', `/admin${EV}`, { displayScene: 'live' });
 check('admin scene switch to live', scene.status === 200 && scene.json.displayScene === 'live');
-const sceneBack = await call('PATCH', `/admin${EV}`, { displayScene: 'cooperation', status: 'open' });
+const sceneBack = await call('PATCH', `/admin${EV}`, { displayScene: 'cooperation' });
 check('admin scene back to cooperation', sceneBack.status === 200 && sceneBack.json.displayScene === 'cooperation');
 const codeSet = await call('PATCH', `/admin${EV}`, { code: 'TEST' });
 check('admin access code set', codeSet.status === 200 && codeSet.json.requiresCode === true);
@@ -170,6 +211,20 @@ const show = await call('PATCH', `/admin/pins/${pinId}`, { status: 'visible' });
 check('admin show light', show.status === 200);
 const undo2 = await call('DELETE', `${EV}/submissions/${sub2.json.submissionId}`, undefined, { 'x-device-id': device });
 check('cleanup undo', undo2.status === 200);
+
+// ---------------------------------------------------------------- after the ball: read only
+check('status closed (after the ball)', (await setStatus('closed')) === 'closed');
+const late = await anonymous(() => call('POST', `${EV}/attendees`, { name: 'Neskorý Hosť', affiliation: 'Hosť' }, { 'x-device-id': device }));
+check('attendance after the ball 409', late.status === 409, `HTTP ${late.status}`);
+const lateLight = await anonymous(() => call('POST', `${EV}/pins`, { places: [{ countryCode: 'NP' }], visitKind: 'erasmus_study' }, { 'x-device-id': device }));
+check('light after the ball 409', lateLight.status === 409, `HTTP ${lateLight.status}`);
+
+// ---------------------------------------------------------------- cleanup: the test attendance, the starting status
+const del = await call('DELETE', `/admin/attendees/${attendee.json.id}`);
+check('admin delete attendance', del.status === 200);
+const delAgain = await call('DELETE', `/admin/attendees/${attendee.json.id}`);
+check('admin delete attendance twice 404', delAgain.status === 404);
+check(`status back to ${startStatus}`, (await setStatus(startStatus)) === startStatus);
 const logout = await call('POST', '/admin/logout');
 check('admin logout', logout.status === 200);
 

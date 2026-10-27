@@ -9,6 +9,7 @@ import { routeOf } from './lib/venue.ts';
 import { adminRoutes } from './routes/admin.ts';
 import { eventRoutes } from './routes/events.ts';
 import { feedbackRoutes } from './routes/feedback.ts';
+import { gateRoutes } from './routes/gate.ts';
 import { gazetteerRoutes } from './routes/gazetteer.ts';
 import { globe } from './routes/globe.ts';
 
@@ -32,7 +33,7 @@ if (webOrigins.length) {
 }
 
 app.use('*', async (c, next) => {
-  if (/^\/(events|feedback|admin)(\/|$)/.test(routeOf(c).route)) await ensureSecret();
+  if (/^\/(events|feedback|admin|gate)(\/|$)/.test(routeOf(c).route)) await ensureSecret();
   await next();
   c.header('X-Content-Type-Options', 'nosniff');
 });
@@ -57,6 +58,7 @@ for (const venue of Object.values(VENUES)) {
       driver: isDatabaseConfigured(venue.key) ? 'mssql' : null, commit: process.env.APP_COMMIT ?? null,
     });
   });
+  app.route(`${base}/gate`, gateRoutes);
   app.route(`${base}/globe`, globe);
   app.route(`${base}/gazetteer`, gazetteerRoutes);
   app.route(`${base}/events`, eventRoutes);

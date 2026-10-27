@@ -15,7 +15,12 @@ export interface StarInput {
   delay?: number;
   /** 0–1: dimmer stars in a dense cluster, so the cluster does not burn white (default 1) */
   dim?: number;
+  /** when the star goes out (fading over FADE_OUT), in seconds of performance.now(); default never */
+  death?: number;
 }
+
+const FADE_OUT = 1.6; // s a star takes to go out
+const NEVER = 1e9;
 
 export interface PlacedStar extends StarInput { pos: THREE.Vector3 }
 
@@ -34,15 +39,16 @@ export interface StarLayerOptions {
 }
 
 const VERTEX = /* glsl */ `
-  uniform float uTime, uPixelRatio, uRefDist, uMaxSize, uSizeScale;
-  attribute float aSize, aPhase, aSpeed, aBorn, aSeed, aDim;
+  uniform float uTime, uPixelRatio, uRefDist, uMaxSize, uSizeScale, uFadeOut;
+  attribute float aSize, aPhase, aSpeed, aBorn, aSeed, aDim, aDeath;
   attribute vec3 aColor;
   varying vec3 vColor;
   varying float vTwinkle, vGlint, vAppear, vAngle, vDim;
   void main() {
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     float age = uTime - aBorn;
-    vAppear = smoothstep(0.0, 1.2, age);
+    float alive = 1.0 - smoothstep(0.0, uFadeOut, uTime - aDeath); // going out: dimmer and smaller
+    vAppear = smoothstep(0.0, 1.2, age) * alive;
     float ignite = age > 0.0 ? exp(-age * 1.6) : 0.0;             // flare when the place lights up
     vTwinkle = 0.72 + 0.28 * sin(uTime * aSpeed + aPhase) * sin(uTime * aSpeed * 0.43 + aPhase * 1.7);
     float glint = pow(max(0.0, sin(uTime * aSpeed * 0.23 + aPhase * 3.1)), 70.0);   // rare sharp sparkle
@@ -51,7 +57,7 @@ const VERTEX = /* glsl */ `
     vColor = aColor;
     vDim = aDim;
     float zoom = pow(uRefDist / max(-mv.z, 1.0), 0.6);
-    gl_PointSize = min(aSize * uSizeScale * (0.8 + 0.25 * vTwinkle + 0.85 * vGlint) * zoom * uPixelRatio, uMaxSize);
+    gl_PointSize = alive <= 0.0 ? 0.0 : min(aSize * uSizeScale * (0.8 + 0.25 * vTwinkle + 0.85 * vGlint) * zoom * uPixelRatio * (0.35 + 0.65 * alive), uMaxSize);
     gl_Position = projectionMatrix * mv;
   }`;
 
@@ -113,6 +119,7 @@ export class StarLayer {
         uRays: { value: 1 },
         uDimAmount: { value: 1 },
         uWhite: { value: this.o.whiteCore },
+        uFadeOut: { value: FADE_OUT },
       },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
@@ -137,7 +144,7 @@ export class StarLayer {
     for (const id of this.born.keys()) if (!ids.has(id)) this.born.delete(id);
     const n = list.length;
     const f = (k: number) => new Float32Array(n * k);
-    const pos = f(3), col = f(3), size = f(1), phase = f(1), speed = f(1), birth = f(1), seed = f(1), dim = f(1);
+    const pos = f(3), col = f(3), size = f(1), phase = f(1), speed = f(1), birth = f(1), seed = f(1), dim = f(1), death = f(1);
     const color = new THREE.Color();
     this.stars = list.map((s, i) => {
       if (!this.born.has(s.id)) this.born.set(s.id, t + (s.delay ?? 0));
@@ -150,6 +157,7 @@ export class StarLayer {
       speed[i] = 0.8 + rand(s.id, 2) * 1.6;
       seed[i] = rand(s.id, 3);
       dim[i] = s.dim ?? 1;
+      death[i] = s.death ?? NEVER;
       birth[i] = this.born.get(s.id)!;
       return { ...s, pos: new THREE.Vector3(p.x, p.y, p.z) };
     });
@@ -162,6 +170,7 @@ export class StarLayer {
     g.setAttribute('aBorn', new THREE.BufferAttribute(birth, 1));
     g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
     g.setAttribute('aDim', new THREE.BufferAttribute(dim, 1));
+    g.setAttribute('aDeath', new THREE.BufferAttribute(death, 1));
     this.points.geometry.dispose();
     this.points.geometry = g;
   }
@@ -195,7 +204,7 @@ export class StarLayer {
     let best: PlacedStar | null = null, bestD = maxPx;
     const t = now();
     for (const s of this.stars) {
-      if ((this.born.get(s.id) ?? 0) > t) continue; // not lit yet
+      if ((this.born.get(s.id) ?? 0) > t || (s.death ?? NEVER) <= t) continue; // not lit yet, or gone out
       if (this.o.sphere && toCam.copy(cam.position).sub(s.pos).dot(s.pos) <= 0) continue;
       v.copy(s.pos).project(cam);
       const d = Math.hypot(((v.x + 1) / 2) * rect.width + rect.left - x, ((1 - v.y) / 2) * rect.height + rect.top - y);

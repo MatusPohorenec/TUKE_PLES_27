@@ -230,7 +230,7 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
     const loop = (t: number) => {
       const dt = Math.min(0.1, (t - (last || t)) / 1000);
       last = t;
-      if (phase === 'wait' && scene.revealing()) {
+      if (phase === 'wait' && scene.busy()) {
         until = Math.max(until, t + AFTER_REVEAL_MS); // no cards while the light spreads: they would hide the stars
       } else if (phase === 'wait' && t > until) {
         const next = pickSpot(scene, recent, obstaclesRef.current());
@@ -255,7 +255,7 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
         } else {
           until = t + 1500; // nothing in the middle (an ocean): try again soon, the globe turns faster meanwhile
         }
-      } else if (phase === 'load' && current && scene.revealing()) {
+      } else if (phase === 'load' && current && scene.busy()) {
         reset(t, AFTER_REVEAL_MS); // the reveal started again while this card was being prepared
       } else if (phase === 'load' && current) {
         if (t > until) want = keyOf(current); // partners took too long
@@ -302,7 +302,7 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
         const target = placement.mode === 'tag' ? pos
           : placement.mode === 'dock' ? dockAt(scene.cardDock(), w, h, obstacles)
           : follow(placement, p.x, p.y, w, h, obstacles);
-        const gone = p.facing < 0.15 || p.x < 0 || p.x > innerWidth || p.y < 0 || p.y > innerHeight || !target || scene.revealing(); // e.g. R replays the reveal
+        const gone = p.facing < 0.15 || p.x < 0 || p.x > innerWidth || p.y < 0 || p.y > innerHeight || !target || scene.busy(); // e.g. R replays the reveal
         if (phase === 'show' && (t > until || gone)) {
           phase = 'leave';
           until = t + LEAVE_MS;
