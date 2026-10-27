@@ -449,9 +449,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   ball `onboarding` for visitors, POST attendees `{}` → 400 (nothing stored), admin routes 401 without login; in the pane
   (which holds the user's admin login, so the gate lets it see every page) the admin console shows „Stav plesu: Pred
   plesom" and „Potvrdená účasť (0 osôb…)", and the production build with a visitor's gate sends / to /onboarding (form
-  with „Prídem s doprovodom") and shows the teaser on /mapa. Still open: the lobby's status is `closed` (the old label
-  „Uzavreté"), which now means „Len na pozeranie" with every lobby page open (gate `open`): set „Vypnutý" in
-  /vestibul/admin. After the upload
+  with „Prídem s doprovodom") and shows the teaser on /mapa. The lobby is „Vypnutý" (draft) since 2026-10-27: gate `off`,
+  its event 404 for visitors, /vestibul shows the lobby teaser without a button. After the upload
   production (status open) shows visitors only /onboarding and the teaser; the wall only to a logged-in admin until
   „Ples prebieha". Check: /app.js/api/gate (`onboarding`), srdcom.tuke.sk → /onboarding, /mapa → teaser, an attendance
   (then delete it in /admin), /admin card „Potvrdená účasť". The user sets the lobby to „Vypnutý" in /vestibul/admin.
