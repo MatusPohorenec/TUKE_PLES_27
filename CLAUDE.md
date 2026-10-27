@@ -261,7 +261,10 @@ and switches „Ples prebieha".
   videnia pod hviezdami". The lobby's variant has no button. Unknown addresses (no route) get it too (`lost`): before the
   ball they look like any closed page; while open: „Sem svetlo nedoletelo." + the hint + „Na stenu". The old NotFound page
   is gone. On IIS an unknown address only reaches the SPA through the site's 404 error document: Plesk → Virtual
-  Directories → Error Documents → 404 → Type URL → /index.html (the user's step; web.config untouched; README step 3). Backgrounds (stage light, Starfield) sit outside `<main>`:
+  Directories → Error Documents → 404 → Type URL → /index.html (set by the user 2026-10-27; web.config untouched; README
+  step 3). Plesk made it a 302 to https://srdcom.tuke.sk/index.html (also for /vestibul/…), and /index.html is no route,
+  so the SPA shows the lost teaser. Production CSS can load join.css after teaser.css: page rules need a second class
+  (`.join.teaser`) to beat `.join`. Backgrounds (stage light, Starfield) sit outside `<main>`:
   `.join > *` would make the fixed canvas a full-screen grid item.
 - api-smoke walks the states (open: visitor light 409, admin light 201, attendance; live; closed: 409s) and puts the
   starting status back; a random device per run keeps the rate limits clear.

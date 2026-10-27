@@ -1,5 +1,6 @@
-/* The closed page: one star breathing above the words, everything centred in the night. */
-.teaser { min-height: 100%; align-content: center; justify-items: center; text-align: center; }
+/* The closed page: one star breathing above the words, everything centred in the night. (.join.teaser: the production
+   build may put join.css after this file, and its .join { align-content: start } must not win) */
+.join.teaser { min-height: 100%; align-content: center; justify-items: center; text-align: center; }
 .teaser .join-head p { margin-inline: auto; }
 .teaser-star {
   width: 12px; height: 12px; border-radius: 50%; background: #fff;
