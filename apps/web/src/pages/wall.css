@@ -59,6 +59,8 @@
   position: fixed; top: calc(env(safe-area-inset-top, 0px) + 18px); right: var(--gutter);
   display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; max-width: 60vw;
 }
+/* the kiosk wall on a phone: the QR panel is hidden there, this button leads to the form */
+.wall-join-phone { display: none; }
 .wall-error { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 
 /* phone: title on top, globe in the middle, counters in one row above one row of buttons */
@@ -77,6 +79,11 @@
     display: flex; justify-content: space-between; align-items: flex-end; gap: 10px;
   }
   .wall.kiosk .wall-stats { bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
+  .wall-join-phone {
+    display: inline-flex; position: fixed; left: var(--gutter); right: var(--gutter);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); min-height: 46px; text-decoration: none;
+  }
+  .wall.kiosk.joinable .wall-stats { bottom: calc(env(safe-area-inset-bottom, 0px) + 14px + 46px + 18px); }
   .stat b, .stat.small b { font-size: clamp(24px, 7.4vw, 34px); }
   .stat span { font-size: 9px; letter-spacing: 0.16em; }
   .stat .stat-long { display: none; }

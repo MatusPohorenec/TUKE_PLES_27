@@ -193,7 +193,8 @@ function Console({ venue }: { venue: Venue }) {
             {event?.requiresCode && <button className="button ghost" type="button" onClick={() => patch({ code: '' })}>Zrušiť kód</button>}
           </div>
           <p className="muted small">
-            QR {venue.key === 'ples' ? 'na stoloch' : 'na stene'} potom vedie na {venue.prefix}/zapoj-sa?k=KÓD a stenu spustíš s {venue.prefix || '/'}?kiosk=1&amp;k=KÓD.
+            QR {venue.key === 'ples' ? 'na stoloch' : 'na stene'} potom vedie na {venue.prefix}/zapoj-sa?k=KÓD a stenu spustíš s {venue.prefix || '/'}?k=KÓD
+            (stena je vždy v režime kiosku, odkazy ukáže {venue.prefix || '/'}?kiosk=0).
           </p>
         </form>
       </section>

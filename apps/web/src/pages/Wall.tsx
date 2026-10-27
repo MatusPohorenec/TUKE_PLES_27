@@ -1,7 +1,8 @@
 /**
  * The wall: what the LED screen at the ball shows (/), or in the student lobby (/vestibul, its own database).
- * Open with ?kiosk=1 on the playback PC (no links, no comment button, cursor hidden). ?k=CODE puts the event
- * access code into the QR link.
+ * It runs as a kiosk (no links, no comment button, cursor hidden, screen awake); ?kiosk=0 shows the links for tests.
+ * On a phone, where the QR panel makes no sense, a button leads to the form instead. ?k=CODE puts the event access
+ * code into the QR link.
  *
  * By default the wall alternates the flat map and the globe (the cycle below); ?view=2d or ?view=3d keeps one.
  */
@@ -19,7 +20,8 @@ import { Starfield } from '../components/Starfield.tsx';
 import { useGlobeData } from '../lib/useGlobeData.ts';
 import { useGuests } from '../lib/useGuests.ts';
 import { plural } from '../lib/format.ts';
-import { Link, queryParam, useVenue } from '../lib/router.tsx';
+import { Link, kioskMode, queryParam, useVenue } from '../lib/router.tsx';
+import { pageOf } from '../lib/venue.ts';
 import './wall.css';
 
 /** Counter labels in the right Slovak form for the number (1 krajina, 3 krajiny, 86 krajín); short: on a phone. */
@@ -60,7 +62,7 @@ function boxesOf(selectors: string[]): Box[] {
 }
 
 export default function Wall() {
-  const kiosk = queryParam('kiosk') !== null;
+  const kiosk = kioskMode(pageOf(location.pathname));
   const venue = useVenue();
   const slug = queryParam('event') ?? venue.event;
   const code = queryParam('k');
@@ -248,8 +250,11 @@ export default function Wall() {
   const joinUrl = `${location.origin}${venue.prefix}/zapoj-sa${code ? `?k=${encodeURIComponent(code)}` : ''}`;
   const collecting = guests.available && (guests.event?.status === 'open' || guests.event?.status === 'live');
 
+  // a phone shows the wall without the QR panel: a button leads to the form (the links stay hidden in kiosk mode)
+  const phoneJoin = kiosk && collecting;
+
   return (
-    <div className={`wall mode-${mode} view-${view}${kiosk ? ' kiosk' : ''}${switching ? ' switching' : ''}`}>
+    <div className={`wall mode-${mode} view-${view}${kiosk ? ' kiosk' : ''}${phoneJoin ? ' joinable' : ''}${switching ? ' switching' : ''}`}>
       <div className="stage-light" />
       <Starfield />
       <div className="globe-host" ref={ref} />
@@ -298,6 +303,8 @@ export default function Wall() {
           </div>
         </aside>
       )}
+
+      {phoneJoin && <Link className="button wall-join-phone" href={`/zapoj-sa${code ? `?k=${encodeURIComponent(code)}` : ''}`}>Pridaj svoje svetlo</Link>}
 
       {!kiosk && (
         <nav className="wall-nav">

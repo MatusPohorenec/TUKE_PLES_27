@@ -321,9 +321,12 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   which read as "back" (the user lost lights that way, 2026-10-20).
 - Counters: the label's Slovak form follows the number on screen (CountUp `onShow`), e.g. 1 krajina, 3 krajiny, 86 krajín,
   1 svetlo hosťa.
-- Layout: title fitted above the globe and faded when the globe is zoomed into it; `?kiosk=1` hides links/cursor, keeps the
-  screen awake; `R` replays the opening. Phones (≤760 px): one row of buttons, counters in one row with short labels, globe
-  sized to end above the counters.
+- Layout: title fitted above the globe and faded when the globe is zoomed into it. The wall is a kiosk by default
+  (`kioskMode()` in router.tsx, since 2026-10-27 when the user saw the top bar on the live production wall): no links,
+  no comment button, no tooltips, cursor hides, screen stays awake; `?kiosk=0` shows the bar (other pages are kiosks only
+  with `?kiosk`). `R` replays the opening. Phones (≤760 px): counters in one row with short labels, globe sized to end
+  above them; in kiosk mode a full-width „Pridaj svoje svetlo" button (`.wall-join-phone`, while collecting) replaces the
+  hidden QR panel, with `?kiosk=0` one row of buttons. The comment button („Pripomienka") shows only to a logged-in admin.
 
 ## 2D view (`?view=2d`, added 2026-10-07 to compare readability; decision pending)
 
@@ -472,7 +475,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), what „kde si bol/a" means for guests, guest light
   colour (gold since 2026-10-20, one constant + `--warm`), milestones wording, confirmation of the Erasmus list by the
   international office (OZVaM).
-- On site: LED wall resolution and playback PC test (dedicated GPU, Chrome kiosk `/?kiosk=1&k=CODE`), rehearsal.
+- On site: LED wall resolution and playback PC test (dedicated GPU, Chrome fullscreen `/?k=CODE`, the wall is a kiosk
+  anyway), rehearsal.
 - Load test with ~500 simulated guests against the TUKE server (one iisnode process); English version of the guest form;
   polish of /mapa on phones.
 - Student lobby: wording of the lobby texts (name „Vestibul TUKE", status labels) and whether its QR needs an access code.

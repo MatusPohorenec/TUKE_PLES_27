@@ -43,3 +43,13 @@ export function Link({ href, onClick, ...rest }: AnchorHTMLAttributes<HTMLAnchor
 }
 
 export const queryParam = (name: string): string | null => new URLSearchParams(location.search).get(name);
+
+/**
+ * Kiosk mode: no links, no comment button, the cursor hides, the screen stays awake. The wall (/, /stena) runs as a
+ * kiosk unless ?kiosk=0 (the LED wall needs nothing in the address); other pages only with ?kiosk.
+ */
+export function kioskMode(page: string): boolean {
+  const k = queryParam('kiosk');
+  if (k !== null) return k !== '0';
+  return page === '/' || page === '/stena';
+}

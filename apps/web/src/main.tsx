@@ -2,7 +2,7 @@ import { StrictMode, Suspense, lazy, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { venueOfPath } from '@ples/shared/constants';
 import { pageAllowed, useGate } from './lib/gate.ts';
-import { Link, navigate, usePathname } from './lib/router.tsx';
+import { Link, kioskMode, navigate, usePathname } from './lib/router.tsx';
 import { pageOf, venueHref } from './lib/venue.ts';
 import { FeedbackButton } from './components/FeedbackButton.tsx';
 import './styles/base.css';
@@ -30,7 +30,10 @@ const ROUTES: Record<string, React.ComponentType> = {
   '/porovnanie': Compare, // 3D globe and 2D map side by side
 };
 
-/** Review build: the pages for reviewers offer a comment button (not the guests' onboarding, teaser or kiosk). */
+/**
+ * Review build: a logged-in admin gets a comment button on the pages (not on the onboarding, the teaser or a kiosk);
+ * guests never see it.
+ */
 const REVIEW = import.meta.env.VITE_REVIEW_MODE !== 'false';
 
 const Waiting = () => <div className="stage-light" />;
@@ -40,7 +43,7 @@ function App() {
   const page = pageOf(pathname); // the page inside its venue: /vestibul/mapa -> /mapa
   const venue = venueOfPath(pathname);
   const gate = useGate(venue);
-  const kiosk = new URLSearchParams(location.search).has('kiosk');
+  const kiosk = kioskMode(page);
   useEffect(() => { document.title = `Rozsvieťme mapu sveta · ${venue.name}`; }, [venue.name]);
 
   // Which pages are open depends on the operator's switch in /admin (the event status): before the ball only the
@@ -58,7 +61,7 @@ function App() {
           : gate === null || toOnboarding ? <Waiting />
           : <Teaser venue={venue} onboarding={venue.onboarding && gate.state !== 'off'} />}
       </Suspense>
-      {REVIEW && Page && !kiosk && page !== '/admin' && page !== '/onboarding' && <FeedbackButton page={pathname.replace(/\/+$/, '') || '/'} />}
+      {REVIEW && Page && gate?.admin && !kiosk && page !== '/admin' && page !== '/onboarding' && <FeedbackButton page={pathname.replace(/\/+$/, '') || '/'} />}
     </>
   );
 }

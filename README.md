@@ -4,7 +4,7 @@
 
 | Adresa | Čo ukazuje |
 |---|---|
-| `/` | Stena: obrazovka pre LED stenu. Na prehrávacom PC sa otvára s `?kiosk=1` (bez odkazov, kurzor sa skryje). Predvolene sa strieda 2D mapa a 3D zemeguľa (pozri [Stena: striedanie 2D a 3D](#stena-striedanie-2d-a-3d)); `?view=2d` ukazuje len mapu, `?view=3d` len zemeguľu. |
+| `/` | Stena: obrazovka pre LED stenu, vždy v režime kiosku (bez odkazov a tlačidiel, kurzor sa skryje, obrazovka nezhasne); lištu s odkazmi ukáže `?kiosk=0`. Na mobile namiesto QR panelu tlačidlo „Pridaj svoje svetlo". Predvolene sa strieda 2D mapa a 3D zemeguľa (pozri [Stena: striedanie 2D a 3D](#stena-striedanie-2d-a-3d)); `?view=2d` ukazuje len mapu, `?view=3d` len zemeguľu. |
 | `/onboarding` | Potvrdenie účasti: meno, príslušnosť a voliteľne doprovod. Cieľ QR kódu na pozvánkach; pred plesom jediná otvorená stránka. |
 | `/porovnanie` | 3D zemeguľa a 2D mapa vedľa seba v rozlíšení LED steny, spustené naraz. |
 | `/mapa` | Interaktívna mapa: filtre podľa typu spolupráce, detail miesta so zdrojmi. |
@@ -21,7 +21,7 @@
 | Po plese | všetky stránky len na pozeranie; svetlá ani potvrdenia sa už nepridávajú |
 | Vypnuté | len teaser |
 
-Prihlásený admin vidí všetky stránky v každom stave (napr. skúšku steny pred plesom). Mená, príslušnosť a mená doprovodu z onboardingu sú osobné údaje: vidia ich len organizátori v `/admin` (s počtom osôb, aj ako CSV) a po plese ich treba zmazať. Svetlá hostí sú naďalej anonymné a s menami nie sú prepojené.
+Prihlásený admin vidí všetky stránky v každom stave (napr. skúšku steny pred plesom) a ako jediný má na stránkach tlačidlo „Pripomienka". Mená, príslušnosť a mená doprovodu z onboardingu sú osobné údaje: vidia ich len organizátori v `/admin` (s počtom osôb, aj ako CSV) a po plese ich treba zmazať. Svetlá hostí sú naďalej anonymné a s menami nie sú prepojené.
 | `/vestibul` | Stena vo vestibule s **vlastnou databázou**: rovnaké stránky pod `/vestibul` (`/vestibul/zapoj-sa`, `/vestibul/mapa`, `/vestibul/admin` …). Svetlá, udalosť, kód v QR aj pripomienky sú oddelené od plesu. Zapína a vypína sa v `/vestibul/admin` (Stav vestibulu); vypnutý ukazuje len teaser. |
 
 Prevádzka: hosting TUKE (Plesk pre Windows, IIS) – web na https://srdcom.tuke.sk, API na https://api.srdcom.tuke.sk, databáza Microsoft SQL Server 2022 (pre ples a pre vestibul dve samostatné databázy, pozri [Vestibul](#vestibul-druhá-databáza)).
@@ -36,7 +36,7 @@ Bez `?view` beží stena v slučke:
 4. **3D zemeguľa**: to isté otvorenie, potom sa **3-krát otočí** (`?turns=<počet>`).
 5. Svetlá zhasnú, zemeguľa sa natočí na Košice a prelinie sa do mapy, ktorá sa priblíži na Košice. Znova od bodu 1.
 
-Prehrávacie PC: `https://srdcom.tuke.sk/?kiosk=1&k=KÓD`, časy sa dajú upraviť priamo v adrese, napr. `&hold=20&turns=2`. `?cycle=fast` slučku skráti na test (15 s, 0,3 otáčky). Okno prehliadača musí byť v popredí, inak prehliadač animácie brzdí. Klávesa R prehrá otvorenie znova.
+Prehrávacie PC: `https://srdcom.tuke.sk/?k=KÓD` (kiosk je predvolený; bez kódu stačí `https://srdcom.tuke.sk`), časy sa dajú upraviť priamo v adrese, napr. `?hold=20&turns=2`. `?cycle=fast` slučku skráti na test (15 s, 0,3 otáčky). Okno prehliadača musí byť v popredí, inak prehliadač animácie brzdí. Klávesa R prehrá otvorenie znova.
 
 ## Štruktúra
 
@@ -201,7 +201,7 @@ Oba príkazy najprv vypíšu, kam sa pripájajú. Seed sa dá spustiť opakovane
 
 ### Vestibul: druhá databáza
 
-Po plese ostane stena natrvalo vo vestibule a dáta plesu musia ostať oddelené. Preto má vestibul **vlastnú databázu** a vlastné adresy: web `https://srdcom.tuke.sk/vestibul` (formulár `/vestibul/zapoj-sa`, administrácia `/vestibul/admin`, na prehrávacom PC `/vestibul?kiosk=1&k=KÓD`), API `https://api.srdcom.tuke.sk/app.js/api/vestibul/…`. Ples ostáva na pôvodných adresách. Obe bežia naraz z toho istého nasadenia: API podľa adresy použije jednu alebo druhú databázu a nikdy nečíta ani nezapisuje do tej druhej. Kým databáza vestibulu nie je nastavená, `/vestibul` ukazuje spoluprácu z dátového balíka a svetlá nezbiera.
+Po plese ostane stena natrvalo vo vestibule a dáta plesu musia ostať oddelené. Preto má vestibul **vlastnú databázu** a vlastné adresy: web `https://srdcom.tuke.sk/vestibul` (formulár `/vestibul/zapoj-sa`, administrácia `/vestibul/admin`, na prehrávacom PC `/vestibul?k=KÓD`), API `https://api.srdcom.tuke.sk/app.js/api/vestibul/…`. Ples ostáva na pôvodných adresách. Obe bežia naraz z toho istého nasadenia: API podľa adresy použije jednu alebo druhú databázu a nikdy nečíta ani nezapisuje do tej druhej. Kým databáza vestibulu nie je nastavená, `/vestibul` ukazuje spoluprácu z dátového balíka a svetlá nezbiera.
 
 1. Druhá databáza na tom istom serveri (Plesk → *Databases* → *Add Database*, alebo cez správcov TUKE): collation `SQL_Latin1_General_CP1_CI_AI`, login s rolami `db_ddladmin`, `db_datareader`, `db_datawriter` (môže to byť ten istý login ako pri plese).
 2. Do `App_Data\.env` na `api.srdcom.tuke.sk` pridaj `MSSQL_VESTIBUL_DATABASE=<názov>` (a `MSSQL_VESTIBUL_USER` + `MSSQL_VESTIBUL_PASSWORD`, ak má vlastný login). Odporúčané je aj `SESSION_SECRET`. API sa reštartuje samo.
