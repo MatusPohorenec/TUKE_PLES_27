@@ -10,8 +10,9 @@
 | `/zapoj-sa` | Formulár pre hostí (cieľ QR kódu). |
 | `/admin` | Administrácia: scéna steny, zbieranie svetiel, kód v QR, moderovanie, pripomienky. |
 | `/o-projekte` | Zdroje dát a licencie. |
+| `/vestibul` | Stena vo vestibule s **vlastnou databázou**: rovnaké stránky pod `/vestibul` (`/vestibul/zapoj-sa`, `/vestibul/mapa`, `/vestibul/admin` …). Svetlá, udalosť, kód v QR aj pripomienky sú oddelené od plesu. |
 
-Prevádzka: hosting TUKE (Plesk pre Windows, IIS) – web na https://srdcom.tuke.sk, API na https://api.srdcom.tuke.sk, databáza Microsoft SQL Server 2022.
+Prevádzka: hosting TUKE (Plesk pre Windows, IIS) – web na https://srdcom.tuke.sk, API na https://api.srdcom.tuke.sk, databáza Microsoft SQL Server 2022 (pre ples a pre vestibul dve samostatné databázy, pozri [Vestibul](#vestibul-druhá-databáza)).
 
 ## Štruktúra
 
@@ -31,7 +32,9 @@ Architektúra, schéma databázy a otvorené otázky sú v dokumente „Architek
 
 Potrebné: Node.js 22.12 alebo novší (odporúčaný 24) na vývoj a build a lokálny Microsoft SQL Server, buď nainštalovaný vo Windows (variant A), alebo v Dockeri (variant B). Samotné API (`deploy/api`) beží aj na Node.js 18, ktorý má server TUKE. Nikdy nevyvíjaj proti databáze na serveri TUKE.
 
-Projekt sa vyvíja na dvoch počítačoch: jeden má variant A, druhý variant B. Oba majú rovnakú databázu `ples_dev`, takže `.env` aj príkazy v časti Spustenie sú rovnaké. Súbory mimo gitu (`.env`, `.env.tuke`, `deploy/`) má každý počítač vlastné. Keď `git pull` prinesie zmenený `package-lock.json`, spusti `npm ci`.
+Projekt sa vyvíja na dvoch počítačoch: jeden má variant A, druhý variant B. Oba majú rovnaké databázy `ples_dev` (ples) a `ples_vestibul_dev` (vestibul), takže `.env` aj príkazy v časti Spustenie sú rovnaké. Súbory mimo gitu (`.env`, `.env.tuke`, `deploy/`) má každý počítač vlastné. Keď `git pull` prinesie zmenený `package-lock.json`, spusti `npm ci`.
+
+Počítač, ktorý má len `ples_dev` (nastavený pred vestibulom): spusti znova `npm run db:dev-setup` a jeho `.sql` (krok 4 vo variante A alebo B). Pridá databázu `ples_vestibul_dev` a do `.env` riadok `MSSQL_VESTIBUL_DATABASE`; login `ples_dev` dostane nové heslo a `.env` sa zapíše s ním. Potom migrácie a seed pre vestibul (časť Spustenie).
 
 ### SQL Server, variant A: inštalácia vo Windows (raz)
 
@@ -43,7 +46,7 @@ Projekt sa vyvíja na dvoch počítačoch: jeden má variant A, druhý variant B
    npm run db:dev-setup
    ```
 
-4. V SSMS sa pripoj na `localhost` (Windows Authentication), otvor `.data/mssql-dev-setup.sql` a spusti ho. Zapne prihlasovanie heslom (Mixed Mode) a vytvorí databázu `ples_dev` s loginom `ples_dev`. Login má rovnaké práva ako login na TUKE: vlastnú predvolenú schému a roly `db_ddladmin`, `db_datareader`, `db_datawriter`. Databáza má rovnakú collation ako TUKE (`SQL_Latin1_General_CP1_CI_AI`) a úroveň kompatibility 160.
+4. V SSMS sa pripoj na `localhost` (Windows Authentication), otvor `.data/mssql-dev-setup.sql` a spusti ho. Zapne prihlasovanie heslom (Mixed Mode) a vytvorí databázy `ples_dev` (ples) a `ples_vestibul_dev` (vestibul) s loginom `ples_dev`. Login má v oboch rovnaké práva ako login na TUKE: vlastnú predvolenú schému a roly `db_ddladmin`, `db_datareader`, `db_datawriter`. Databázy majú rovnakú collation ako TUKE (`SQL_Latin1_General_CP1_CI_AI`) a úroveň kompatibility 160.
 5. V Configuration Manageri → *SQL Server Services* → **SQL Server (MSSQLSERVER)** → **Restart**.
 
 ### SQL Server, variant B: Docker (raz)
@@ -74,7 +77,7 @@ SQL Server 2022 (tá istá verzia ako na TUKE) beží v kontajneri `ples-mssql`.
    MSYS_NO_PATHCONV=1 docker exec -i ples-mssql bash -c 'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b' < .data/mssql-dev-setup.sql
    ```
 
-   Vypíše `ok: database and login ples_dev are ready…`. Databáza a login sú rovnaké ako vo variante A.
+   Vypíše `ok: databases ples_dev and ples_vestibul_dev with the login ples_dev are ready…`. Databázy a login sú rovnaké ako vo variante A.
 
 Bežne stačí mať spustený Docker Desktop, kontajner sa zapne sám. Ručne ho spustíš príkazom `docker start ples-mssql` a zastavíš príkazom `docker stop ples-mssql`. `docker rm -f ples-mssql` zmaže kontajner, ale dáta zostanú vo volume. `docker volume rm ples-mssql-data` zmaže aj dáta.
 
@@ -92,16 +95,27 @@ npm run db:migrate
 npm run db:seed
 ```
 
+Databáza vestibulu (`--venue vestibul` = premenné `MSSQL_VESTIBUL_*`):
+
+```bash
+npm run db:migrate -- --venue vestibul
+```
+
+```bash
+npm run db:seed -- --venue vestibul
+```
+
 ```bash
 npm run dev
 ```
 
-Web beží na http://localhost:5173, API na http://localhost:8787/api/health (Vite posiela `/api` na API, takže web a API sú pri vývoji na jednej adrese).
+Web beží na http://localhost:5173 (vestibul na http://localhost:5173/vestibul), API na http://localhost:8787/api/health (vestibul `/api/vestibul/health`). Vite posiela `/api` na API, takže web a API sú pri vývoji na jednej adrese.
 
 Ďalšie príkazy:
 
 - `npm run typecheck` – kontrola typov všetkých balíkov
 - `npm run db:seed -- --force` – znova naimportuje dátový balík aj keď sa nezmenil
+- `node tools/api-smoke.mjs` a `node tools/api-smoke.mjs --venue vestibul` – test všetkých adries API proti lokálnemu API, aj s kontrolou, že svetlá jedného miesta sa v druhom neukážu
 - `npm run build:tuke` – build na nasadenie na TUKE (pozri nižšie)
 
 Zmena schémy databázy: pridaj nový súbor `packages/db/migrations/NNNN_popis.sql` (T-SQL, dávky oddelené riadkom `GO` ako v SSMS) a uprav typy v `packages/db/src/schema.ts`. Aplikované migrácie sú v tabuľke `dbo.schema_migrations`, už aplikovaný súbor sa nemení.
@@ -113,6 +127,7 @@ Zmena schémy databázy: pridaj nový súbor `packages/db/migrations/NNNN_popis.
 | Web | https://srdcom.tuke.sk | statické súbory z `deploy/web`; každá stránka (`/mapa`, `/zapoj-sa`, `/admin` …) má vlastný priečinok s kópiou `index.html` |
 | API | https://api.srdcom.tuke.sk | Node.js cez iisnode: `app.js` (štartovací súbor), `api.mjs` (celé API v jednom súbore, bez `node_modules`), `tuke_cooperation.json`, `iisnode.yml` (nastavenia iisnode), `App_Data\.env` (nastavenia s heslami, len na serveri) |
 | Databáza | `portal.msweb.tuke.sk`, databáza a login z Plesku (*Databases*) | SQL Server 2022; login má roly `db_ddladmin`, `db_datareader`, `db_datawriter` a vlastnú predvolenú schému, tabuľky sú v schéme `dbo` |
+| Databáza vestibulu | ten istý server, druhá databáza | rovnaká schéma (rovnaké migrácie a seed s `--venue vestibul`), vlastné svetlá, udalosť a pripomienky |
 
 `web.config` oboch stránok spravuje Plesk a nasadenie ho nemení (pravidlo TUKE). Preto nič z aplikácie na ňom nestojí: stránky webu sú skutočné priečinky, nastavenia iisnode sú v `iisnode.yml` (iisnode ho číta popri `web.config`) a nastavenia API v `App_Data\.env`. `web.config` od Plesku posiela na iisnode len adresy začínajúce `/app.js`, preto je adresa API `https://api.srdcom.tuke.sk/app.js/api` (API predponu `/app.js` samo odstráni; keby správcovia doplnili pravidlo pre všetky adresy, funguje aj `/api`). Web volá API na inej adrese (`VITE_API_URL`), API to povolí cez CORS (`WEB_ORIGIN`). Prihlásenie do `/admin` funguje aj naprieč adresami: cookie patrí `api.srdcom.tuke.sk` a obe adresy sú pod tou istou doménou `tuke.sk`, takže `SameSite=Strict` platí. Kým sa API nespojí s databázou, zemeguľa beží z dátového balíka pribaleného k API a formulár hostí hlási, že zbieranie ešte nie je spustené.
 
@@ -128,8 +143,10 @@ Plesk pre Windows nemá pri Node.js políčko na premenné prostredia (to má le
 | `MSSQL_ENCRYPT` | `true` | šifrované spojenie (TLS) |
 | `MSSQL_TRUST_SERVER_CERTIFICATE` | `true` | server nemá certifikát od verejnej autority |
 | `MSSQL_PORT` | (nevypĺňať) | iný port ako 1433 |
-| `ADMIN_PASSWORD` | heslo do `/admin` | povinné, inak je administrácia vypnutá |
-| `SESSION_SECRET` | (voliteľné) | aspoň 16 znakov; bez neho si server vygeneruje kľúč a uloží ho do tabuľky `app_settings` |
+| `MSSQL_VESTIBUL_DATABASE` | názov druhej databázy | databáza vestibulu (`/vestibul`); nikdy nie tá istá ako `MSSQL_DATABASE`, API to odmietne. Prázdne = vestibul zatiaľ bez databázy |
+| `MSSQL_VESTIBUL_USER`, `MSSQL_VESTIBUL_PASSWORD` | (len ak má druhá databáza vlastný login) | inak sa použije login plesu; rovnako `MSSQL_VESTIBUL_SERVER`, `_PORT`, `_ENCRYPT`, `_TRUST_SERVER_CERTIFICATE` |
+| `ADMIN_PASSWORD` | heslo do `/admin` | povinné, inak je administrácia vypnutá; platí aj pre `/vestibul/admin` |
+| `SESSION_SECRET` | (odporúčané pri dvoch databázach) | aspoň 16 znakov; bez neho si server vygeneruje kľúč a uloží ho do tabuľky `app_settings` databázy plesu (vestibul potom od nej závisí) |
 | `NODE_ENV` | `production` | pod iisnode sa API aj tak správa produkčne (napr. cookie len cez HTTPS) |
 | `WEB_ORIGIN` | `https://srdcom.tuke.sk` | adresa webu pre CORS, viac adries oddeľ čiarkou |
 
@@ -156,7 +173,25 @@ npm run db:migrate -- --env .env.tuke
 npm run db:seed -- --env .env.tuke
 ```
 
-Oba príkazy najprv vypíšu, kam sa pripájajú. Seed sa dá spustiť opakovane: so `--if-needed` neurobí nič, keď je databáza aktuálna. Nový dátový balík (`data/tuke_cooperation.json`) sa do databázy dostane len týmto príkazom, nasadenie ho samo neimportuje. Nový balík treba zároveň nasadiť s API, lebo API z neho servíruje zemeguľu, keď databáza neodpovedá.
+Oba príkazy najprv vypíšu, kam sa pripájajú. Seed sa dá spustiť opakovane: so `--if-needed` neurobí nič, keď je databáza aktuálna. Nový dátový balík (`data/tuke_cooperation.json`) sa do databázy dostane len týmto príkazom, nasadenie ho samo neimportuje. Nový balík treba zároveň nasadiť s API, lebo API z neho servíruje zemeguľu, keď databáza neodpovedá. Databáza vestibulu má balík vlastný: rovnaké príkazy s `--venue vestibul` (pozri nižšie).
+
+### Vestibul: druhá databáza
+
+Po plese ostane stena natrvalo vo vestibule a dáta plesu musia ostať oddelené. Preto má vestibul **vlastnú databázu** a vlastné adresy: web `https://srdcom.tuke.sk/vestibul` (formulár `/vestibul/zapoj-sa`, administrácia `/vestibul/admin`, na prehrávacom PC `/vestibul?kiosk=1&k=KÓD`), API `https://api.srdcom.tuke.sk/app.js/api/vestibul/…`. Ples ostáva na pôvodných adresách. Obe bežia naraz z toho istého nasadenia: API podľa adresy použije jednu alebo druhú databázu a nikdy nečíta ani nezapisuje do tej druhej. Kým databáza vestibulu nie je nastavená, `/vestibul` ukazuje spoluprácu z dátového balíka a svetlá nezbiera.
+
+1. Druhá databáza na tom istom serveri (Plesk → *Databases* → *Add Database*, alebo cez správcov TUKE): collation `SQL_Latin1_General_CP1_CI_AI`, login s rolami `db_ddladmin`, `db_datareader`, `db_datawriter` (môže to byť ten istý login ako pri plese).
+2. Do `App_Data\.env` na `api.srdcom.tuke.sk` pridaj `MSSQL_VESTIBUL_DATABASE=<názov>` (a `MSSQL_VESTIBUL_USER` + `MSSQL_VESTIBUL_PASSWORD`, ak má vlastný login). Odporúčané je aj `SESSION_SECRET`. API sa reštartuje samo.
+3. Ten istý riadok (riadky) pridaj do `.env.tuke` na vývojovom počítači a spusti (zo siete TUKE alebo cez VPN TUKE):
+
+   ```bash
+   npm run db:migrate -- --env .env.tuke --venue vestibul
+   ```
+
+   ```bash
+   npm run db:seed -- --env .env.tuke --venue vestibul
+   ```
+
+4. Over https://api.srdcom.tuke.sk/app.js/api/vestibul/health: `"database":"up"` a v `databases` oba stavy `up`. Potom https://srdcom.tuke.sk/vestibul a prihlásenie na https://srdcom.tuke.sk/vestibul/admin (to isté heslo ako pri plese).
 
 ### Prvé nasadenie
 

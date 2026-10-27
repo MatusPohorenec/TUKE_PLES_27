@@ -1,6 +1,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { Context } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
+import { VENUE_KEYS } from '@ples/shared';
 import { getDb, isDatabaseConfigured, sql } from '@ples/db';
 import { fail } from './http.ts';
 
@@ -12,10 +13,13 @@ let storedSecret: string | undefined;
 /**
  * Without SESSION_SECRET the server creates a random secret once and keeps it in app_settings,
  * so nobody has to generate or paste one. Called before every route that signs or hashes.
+ * One secret serves every venue (one admin login opens both consoles); it lives in the ball's database, or in
+ * the lobby's when only that one is configured. With SESSION_SECRET set no venue depends on another's database.
  */
 export async function ensureSecret(): Promise<void> {
-  if (configuredSecret() || storedSecret || !isDatabaseConfigured()) return;
-  const db = await getDb();
+  const venue = VENUE_KEYS.find(v => isDatabaseConfigured(v));
+  if (configuredSecret() || storedSecret || !venue) return;
+  const db = await getDb(venue);
   const key = 'session_secret';
   // insert unless present; the range lock makes two first requests at once agree on one secret
   await sql`

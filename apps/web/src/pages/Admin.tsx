@@ -1,18 +1,23 @@
-/** Operator console: the wall scene, collecting on/off, the QR access code, moderation of lights, reviewer comments. */
+/**
+ * Operator console of a venue: the wall scene, collecting on/off, the QR access code, moderation of lights,
+ * reviewer comments. /admin manages the ball's database, /vestibul/admin the student lobby's; one login opens both.
+ */
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { DEFAULT_EVENT, DISPLAY_SCENES, FACULTIES, PERSON_ROLES, VISIT_KINDS, type EventStatus } from '@ples/shared/constants';
+import { DISPLAY_SCENES, FACULTIES, PERSON_ROLES, VENUES, VISIT_KINDS, type EventStatus, type Venue, type VenueKey } from '@ples/shared/constants';
 import type { AdminFeedback, AdminPin, EventInfo } from '@ples/shared';
 import { ApiError, api } from '../lib/api.ts';
-import { Link } from '../lib/router.tsx';
+import { Link, useVenue } from '../lib/router.tsx';
 import './admin.css';
 
-const STATUS_LABEL: Record<EventStatus, string> = {
-  draft: 'Koncept (skryté)', open: 'Otvorené pred plesom', live: 'Ples práve prebieha', closed: 'Uzavreté',
+const STATUS_LABEL: Record<VenueKey, Record<EventStatus, string>> = {
+  ples: { draft: 'Koncept (skryté)', open: 'Otvorené pred plesom', live: 'Ples práve prebieha', closed: 'Uzavreté' },
+  vestibul: { draft: 'Koncept (skryté)', open: 'Otvorené', live: 'Prebieha podujatie', closed: 'Uzavreté' },
 };
 const label = (list: readonly { code: string; label: string }[], code: string | null) => list.find(x => x.code === code)?.label ?? '–';
 const time = (iso: string) => new Date(iso).toLocaleString('sk', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 export default function Admin() {
+  const venue = useVenue();
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [notice, setNotice] = useState('');
   useEffect(() => {
@@ -25,13 +30,19 @@ export default function Admin() {
   return (
     <main className="admin">
       <header className="admin-head">
-        <Link href="/" className="join-brand">TUKE · Ples 2027</Link>
+        <Link href="/" className="join-brand">{venue.brand}</Link>
         <h1>Administrácia</h1>
+        {/* each venue has its own database: switching is a full page load to the other console */}
+        <nav className="admin-venues" aria-label="Stena">
+          {Object.values(VENUES).map(v => (
+            <a key={v.key} className={`chip${v.key === venue.key ? '' : ' off'}`} href={`${v.prefix}/admin`} aria-current={v.key === venue.key ? 'page' : undefined}>{v.name}</a>
+          ))}
+        </nav>
         {authed && <button type="button" className="chip" onClick={() => api.admin.logout().then(() => setAuthed(false))}>Odhlásiť</button>}
       </header>
       {notice && <p className="join-note">{notice}</p>}
       {authed === false && !notice && <Login onDone={() => setAuthed(true)} />}
-      {authed && <Console />}
+      {authed && <Console venue={venue} />}
     </main>
   );
 }
@@ -53,7 +64,7 @@ function Login({ onDone }: { onDone: () => void }) {
   );
 }
 
-function Console() {
+function Console({ venue }: { venue: Venue }) {
   const [event, setEvent] = useState<EventInfo | null>(null);
   const [pins, setPins] = useState<AdminPin[]>([]);
   const [feedback, setFeedback] = useState<AdminFeedback[]>([]);
@@ -61,14 +72,14 @@ function Console() {
   const [code, setCode] = useState('');
 
   const load = useCallback(() => {
-    Promise.all([api.admin.event(DEFAULT_EVENT), api.admin.pins(), api.admin.feedback()])
+    Promise.all([api.admin.event(venue.event), api.admin.pins(), api.admin.feedback()])
       .then(([e, p, f]) => { setEvent(e); setPins(p.pins); setFeedback(f.feedback); setError(''); })
       .catch(err => setError((err as Error).message));
-  }, []);
+  }, [venue.event]);
   useEffect(() => { load(); const t = window.setInterval(load, 10_000); return () => clearInterval(t); }, [load]);
 
   const patch = async (p: Parameters<typeof api.admin.patchEvent>[1]) => {
-    try { setEvent(await api.admin.patchEvent(DEFAULT_EVENT, p)); } catch (err) { setError((err as Error).message); }
+    try { setEvent(await api.admin.patchEvent(venue.event, p)); } catch (err) { setError((err as Error).message); }
   };
 
   return (
@@ -88,8 +99,8 @@ function Console() {
       <section className="admin-card">
         <h2>Zbieranie svetiel</h2>
         <div className="join-options">
-          {(Object.keys(STATUS_LABEL) as EventStatus[]).map(s => (
-            <button key={s} type="button" className={`join-option${event?.status === s ? ' on' : ''}`} onClick={() => patch({ status: s })}>{STATUS_LABEL[s]}</button>
+          {(Object.keys(STATUS_LABEL[venue.key]) as EventStatus[]).map(s => (
+            <button key={s} type="button" className={`join-option${event?.status === s ? ' on' : ''}`} onClick={() => patch({ status: s })}>{STATUS_LABEL[venue.key][s]}</button>
           ))}
         </div>
         <form className="admin-code" onSubmit={e => { e.preventDefault(); patch({ code }); setCode(''); }}>
@@ -99,7 +110,9 @@ function Console() {
             <button className="button" type="submit" disabled={!code}>Nastaviť</button>
             {event?.requiresCode && <button className="button ghost" type="button" onClick={() => patch({ code: '' })}>Zrušiť kód</button>}
           </div>
-          <p className="muted small">QR na stoloch potom vedie na /zapoj-sa?k=KÓD a stenu spustíš s ?kiosk=1&amp;k=KÓD.</p>
+          <p className="muted small">
+            QR {venue.key === 'ples' ? 'na stoloch' : 'na stene'} potom vedie na {venue.prefix}/zapoj-sa?k=KÓD a stenu spustíš s {venue.prefix || '/'}?kiosk=1&amp;k=KÓD.
+          </p>
         </form>
       </section>
 

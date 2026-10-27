@@ -1,31 +1,33 @@
 /**
- * npm run db:seed [-- --force | --if-needed] [--env .env.tuke]
+ * npm run db:seed [-- --force | --if-needed] [--env .env.tuke] [--venue vestibul]
  *  1. reference data: legend groups and categories (packages/shared)
  *  2. countries and the GeoNames gazetteer (downloaded once into data/cache/geonames)
  *  3. the cooperation dataset data/tuke_cooperation.json (skipped when this version is already current)
- *  4. the default event, so the guest form works right away
+ *  4. the venue's event (VENUES in packages/shared), so the guest form works right away
  * Safe to run again: every step upserts (MERGE).
  * --if-needed: does nothing when the gazetteer is loaded, the current dataset version matches
  * data/tuke_cooperation.json and the event exists. Run it after a deploy that changes the dataset.
  * --env <file>: the database to seed, e.g. .env.tuke (default: the repository .env, local SQL Server).
+ * --venue vestibul: the student lobby's database (MSSQL_VESTIBUL_*) instead of the ball's (MSSQL_*).
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { inflateRawSync } from 'node:zlib';
 import { sql } from 'kysely';
-import { CATEGORIES, CATEGORY_GROUPS, DEFAULT_EVENT, normalizeSearch } from '@ples/shared';
-import { REPO_ROOT, closeDb, describeDatabase, getDb, isDatabaseConfigured, loadEnv, type Db } from '../client.ts';
+import { CATEGORIES, CATEGORY_GROUPS, VENUES, normalizeSearch } from '@ples/shared';
+import { REPO_ROOT, closeDb, dbSwitch, describeDatabase, getDb, isDatabaseConfigured, loadEnv, venueArg, type Db } from '../client.ts';
 import { toJson, type Database } from '../schema.ts';
 
 const envFile = loadEnv();
+const venue = VENUES[venueArg()];
 const force = process.argv.includes('--force');
 const ifNeeded = process.argv.includes('--if-needed');
 const log = (...a: unknown[]) => console.log('[db:seed]', ...a);
-if (!isDatabaseConfigured()) {
-  console.error('[db:seed] MSSQL_SERVER is not set (copy .env.example to .env, or pass --env <file>)');
+if (!isDatabaseConfigured(venue.key)) {
+  console.error(`[db:seed] ${dbSwitch(venue.key)} is not set (copy .env.example to .env, or pass --env <file>)`);
   process.exit(1);
 }
-log(`${describeDatabase()}${envFile ? ` (from ${envFile})` : ''}`);
+log(`${venue.name}: ${describeDatabase(venue.key)}${envFile ? ` (from ${envFile})` : ''}`);
 const started = Date.now();
 
 /** SQL Server takes at most 2 100 parameters per statement: rows go in chunks of fewer than 2 000 values. */
@@ -116,7 +118,7 @@ async function seed(db: Db): Promise<void> {
   if (ifNeeded && !force) {
     const cities = await db.selectFrom('gazetteer').select(eb => eb.fn.countAll<number>().as('n')).executeTakeFirst();
     const current = await db.selectFrom('dataset_imports').select('version').where('is_current', '=', true).executeTakeFirst();
-    const event = await db.selectFrom('events').select('id').where('slug', '=', DEFAULT_EVENT).executeTakeFirst();
+    const event = await db.selectFrom('events').select('id').where('slug', '=', venue.event).executeTakeFirst();
     if ((cities?.n ?? 0) > 0 && current?.version === version && event) {
       log('database is up to date (dataset', version + '), nothing to seed');
       return;
@@ -226,15 +228,15 @@ async function seed(db: Db): Promise<void> {
     log(`dataset ${version}: ${placeIds.size} places, ${instIds.size} institutions, ${links.length} links`);
   }
 
-  // ------------------------------------------------------------ 4. default event
-  await upsert(db, 'events', ['slug'], [{ slug: DEFAULT_EVENT, name: 'Ples TUKE 2027', status: 'open' }], { update: false });
-  const ev = await db.selectFrom('events').select('status').where('slug', '=', DEFAULT_EVENT).executeTakeFirst();
-  log('event', DEFAULT_EVENT, ev?.status);
+  // ------------------------------------------------------------ 4. the venue's event
+  await upsert(db, 'events', ['slug'], [{ slug: venue.event, name: venue.name, status: 'open' }], { update: false });
+  const ev = await db.selectFrom('events').select('status').where('slug', '=', venue.event).executeTakeFirst();
+  log('event', venue.event, ev?.status);
 }
 
 try {
   // one connection for the whole run: no pool round trips between the many statements
-  await (await getDb()).connection().execute(seed);
+  await (await getDb(venue.key)).connection().execute(seed);
   log(`done in ${((Date.now() - started) / 1000).toFixed(1)} s`);
 } finally {
   await closeDb();

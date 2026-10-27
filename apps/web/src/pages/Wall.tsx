@@ -1,9 +1,9 @@
 /**
- * The wall: what the LED screen at the ball shows. Open with ?kiosk=1 on the playback PC
- * (no links, no comment button, cursor hidden). ?k=CODE puts the event access code into the QR link.
+ * The wall: what the LED screen at the ball shows (/), or in the student lobby (/vestibul, its own database).
+ * Open with ?kiosk=1 on the playback PC (no links, no comment button, cursor hidden). ?k=CODE puts the event
+ * access code into the QR link.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULT_EVENT } from '@ples/shared/constants';
 import type { GlobePlace } from '@ples/shared';
 import { useGlobeScene } from '../globe/useGlobeScene.ts';
 import { CountUp } from '../components/CountUp.tsx';
@@ -14,7 +14,7 @@ import { Starfield } from '../components/Starfield.tsx';
 import { useGlobeData } from '../lib/useGlobeData.ts';
 import { useGuests } from '../lib/useGuests.ts';
 import { plural } from '../lib/format.ts';
-import { Link, queryParam } from '../lib/router.tsx';
+import { Link, queryParam, useVenue } from '../lib/router.tsx';
 import './wall.css';
 
 /** Counter labels in the right Slovak form for the number (1 krajina, 3 krajiny, 86 krajín); short: on a phone. */
@@ -42,7 +42,8 @@ function boxesOf(selectors: string[]): Box[] {
 
 export default function Wall() {
   const kiosk = queryParam('kiosk') !== null;
-  const slug = queryParam('event') ?? DEFAULT_EVENT;
+  const venue = useVenue();
+  const slug = queryParam('event') ?? venue.event;
   const code = queryParam('k');
   // ?view=2d shows the same wall on a flat world map (to compare readability with the globe)
   const view = queryParam('view') === '2d' ? '2d' : '3d';
@@ -171,7 +172,8 @@ export default function Wall() {
     institutions: visible.reduce((s, p) => s + p.institutions, 0),
   }), [visible]);
 
-  const joinUrl = `${location.origin}/zapoj-sa${code ? `?k=${encodeURIComponent(code)}` : ''}`;
+  // the QR leads to the form of this wall's venue, so the lights land in its database
+  const joinUrl = `${location.origin}${venue.prefix}/zapoj-sa${code ? `?k=${encodeURIComponent(code)}` : ''}`;
   const collecting = guests.available && (guests.event?.status === 'open' || guests.event?.status === 'live');
 
   return (

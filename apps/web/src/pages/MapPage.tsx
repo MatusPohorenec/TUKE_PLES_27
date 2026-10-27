@@ -1,6 +1,6 @@
 /** Interactive map for the web and for reviewers: filters, hover cards, institutions of a place. */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CATEGORY_GROUPS, DEFAULT_EVENT, type GroupCode } from '@ples/shared/constants';
+import { CATEGORY_GROUPS, type GroupCode } from '@ples/shared/constants';
 import type { GlobePlace, PlaceDetail } from '@ples/shared';
 import { useGlobeScene } from '../globe/useGlobeScene.ts';
 import type { PickResult } from '../globe/scene.ts';
@@ -10,13 +10,14 @@ import { api } from '../lib/api.ts';
 import { plural } from '../lib/format.ts';
 import { useGlobeData } from '../lib/useGlobeData.ts';
 import { useGuests } from '../lib/useGuests.ts';
-import { Link } from '../lib/router.tsx';
+import { Link, useVenue } from '../lib/router.tsx';
 import './map.css';
 
 export default function MapPage() {
   const { ref, scene } = useGlobeScene({ autoRotateSpeed: 0.3 });
   const { data } = useGlobeData();
-  const guests = useGuests(scene, DEFAULT_EVENT, { intervalMs: 5000 });
+  const venue = useVenue();
+  const guests = useGuests(scene, venue.event, { intervalMs: 5000 });
   const [active, setActive] = useState<Set<GroupCode>>(new Set(CATEGORY_GROUPS.map(g => g.code)));
   const [detail, setDetail] = useState<{ place: GlobePlace; data?: PlaceDetail; error?: string } | null>(null);
 

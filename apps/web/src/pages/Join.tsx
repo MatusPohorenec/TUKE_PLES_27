@@ -1,31 +1,35 @@
 /**
- * Guest form (QR code at the ball -> /zapoj-sa?k=CODE): pick places, say what you did there, send.
- * Mobile first. No name, no e-mail.
+ * Guest form (QR code at the ball -> /zapoj-sa?k=CODE, in the student lobby -> /vestibul/zapoj-sa?k=CODE):
+ * pick places, say what you did there, send. The lights go to the venue's own database. Mobile first.
+ * No name, no e-mail.
  */
 import { useEffect, useState, type FormEvent } from 'react';
-import { DEFAULT_EVENT, FACULTIES, LIMITS, PERSON_ROLES, VISIT_KINDS, type FacultyCode, type PersonRole, type VisitKind } from '@ples/shared/constants';
+import { FACULTIES, LIMITS, PERSON_ROLES, VISIT_KINDS, type FacultyCode, type PersonRole, type VenueKey, type VisitKind } from '@ples/shared/constants';
 import type { EventInfo, GazetteerHit, SubmitResponse } from '@ples/shared';
 import { PlaceSearch, hitKey } from '../components/PlaceSearch.tsx';
 import { ApiError, api } from '../lib/api.ts';
-import { Link, queryParam } from '../lib/router.tsx';
+import { Link, queryParam, useVenue } from '../lib/router.tsx';
 import './join.css';
 
-function useEventCode(): [string, (v: string) => void] {
+/** The access code from the QR link, kept for the tab per venue (each venue's event has its own code). */
+function useEventCode(venue: VenueKey): [string, (v: string) => void] {
+  const key = venue === 'ples' ? 'ples-code' : `ples-code-${venue}`;
   const [code, setCode] = useState(() => {
     const fromUrl = queryParam('k');
     try {
-      if (fromUrl) sessionStorage.setItem('ples-code', fromUrl);
-      return fromUrl ?? sessionStorage.getItem('ples-code') ?? '';
+      if (fromUrl) sessionStorage.setItem(key, fromUrl);
+      return fromUrl ?? sessionStorage.getItem(key) ?? '';
     } catch { return fromUrl ?? ''; }
   });
   return [code, setCode];
 }
 
 export default function Join() {
-  const slug = queryParam('event') ?? DEFAULT_EVENT;
+  const venue = useVenue();
+  const slug = queryParam('event') ?? venue.event;
   const [event, setEvent] = useState<EventInfo | null>(null);
   const [eventError, setEventError] = useState('');
-  const [code, setCode] = useEventCode();
+  const [code, setCode] = useEventCode(venue.key);
   const [places, setPlaces] = useState<GazetteerHit[]>([]);
   const [visitKind, setVisitKind] = useState<VisitKind | ''>('');
   const [role, setRole] = useState<PersonRole | ''>('');
@@ -37,9 +41,9 @@ export default function Join() {
 
   useEffect(() => {
     api.event(slug).then(setEvent).catch((err: ApiError) => setEventError(err.status === 503 || err.status === 404
-      ? 'Zbieranie svetiel ešte nie je spustené. Skús to bližšie k plesu.'
+      ? `Zbieranie svetiel ešte nie je spustené. ${venue.key === 'ples' ? 'Skús to bližšie k plesu.' : 'Skús to neskôr.'}`
       : err.message));
-  }, [slug]);
+  }, [slug, venue.key]);
 
   const add = (h: GazetteerHit) => setPlaces(list => (list.some(p => hitKey(p) === hitKey(h)) || list.length >= LIMITS.placesPerSubmission ? list : [...list, h]));
   const remove = (h: GazetteerHit) => setPlaces(list => list.filter(p => hitKey(p) !== hitKey(h)));
@@ -86,7 +90,7 @@ export default function Join() {
     <main className="join">
       <div className="stage-light" />
       <header className="join-head">
-        <Link href="/" className="join-brand">TUKE · Ples 2027</Link>
+        <Link href="/" className="join-brand">{venue.brand}</Link>
         <h1>Rozsvieť svoje miesta</h1>
         <p>Kde všade ťa štúdium, práca alebo cesty zaviedli? Každé miesto sa ako svetlo rozletí z Košíc na zemeguľu na stene.</p>
       </header>
@@ -116,7 +120,7 @@ export default function Join() {
           {needsCode && (
             <div className="join-field">
               <label htmlFor="join-code">Kód z QR</label>
-              <input id="join-code" value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="Kód je na stoloch a pri vstupe" autoCapitalize="characters" />
+              <input id="join-code" value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder={venue.key === 'ples' ? 'Kód je na stoloch a pri vstupe' : 'Kód nájdeš pri stene'} autoCapitalize="characters" />
             </div>
           )}
 

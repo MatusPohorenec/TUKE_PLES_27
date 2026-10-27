@@ -3,14 +3,17 @@ import { useEffect, useState } from 'react';
 import type { GlobeResponse } from '@ples/shared';
 import { api } from './api.ts';
 import { store } from './device.ts';
+import { currentVenue } from './venue.ts';
 
-const KEY = 'ples-globe-cache';
+/** One copy per venue: each venue's API answers from its own database. */
+const cacheKey = () => (currentVenue().key === 'ples' ? 'ples-globe-cache' : `ples-globe-cache-${currentVenue().key}`);
 
 export function useGlobeData() {
   const [data, setData] = useState<GlobeResponse | null>(null);
   const [error, setError] = useState('');
   useEffect(() => {
     let alive = true;
+    const KEY = cacheKey();
     api.globe()
       .then(d => { if (alive) { setData(d); store.set(KEY, d); } })
       .catch(err => {

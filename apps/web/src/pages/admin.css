@@ -6,6 +6,7 @@
 }
 .admin-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 16px; }
 .admin-head h1 { font: italic 500 44px/1 var(--font-display); flex: 1; }
+.admin-venues { display: flex; flex-wrap: wrap; gap: 8px; }
 .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .admin-card { display: grid; gap: 12px; align-content: start; padding: 20px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); min-width: 0; }
 .admin-card h2 { font-size: 17px; font-weight: 700; }

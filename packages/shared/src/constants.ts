@@ -16,8 +16,27 @@ export const MILESTONES: readonly { year: number; text: string }[] = [
   { year: 2027, text: '75 rokov TUKE' },
 ];
 
-/** Event slug used by the wall and the guest form when no other event is given. */
-export const DEFAULT_EVENT = 'ples-2027';
+/**
+ * Where a wall runs. Each venue keeps its data in a database of its own (the ball: MSSQL_*, the student lobby:
+ * MSSQL_VESTIBUL_*, see packages/db/src/client.ts) and lives under its own path prefix, on the web (/vestibul,
+ * /vestibul/zapoj-sa …) and in the API (/api/vestibul/…). The ball keeps the plain paths. `event` is the event
+ * the seed creates in the venue's database and the pages of the venue use.
+ */
+export const VENUES = {
+  ples: { key: 'ples', prefix: '', event: 'ples-2027', name: 'Ples TUKE 2027', brand: 'TUKE · Ples 2027' },
+  vestibul: { key: 'vestibul', prefix: '/vestibul', event: 'vestibul', name: 'Vestibul TUKE', brand: 'TUKE · Vestibul' },
+} as const;
+export type VenueKey = keyof typeof VENUES;
+export type Venue = (typeof VENUES)[VenueKey];
+export const VENUE_KEYS = Object.keys(VENUES) as VenueKey[];
+
+/** The venue of a path (a web page, or an API route without /api): /vestibul and /vestibul/… are the lobby, the rest the ball. */
+export function venueOfPath(path: string): Venue {
+  for (const venue of Object.values(VENUES)) {
+    if (venue.prefix && (path === venue.prefix || path.startsWith(`${venue.prefix}/`))) return venue;
+  }
+  return VENUES.ples;
+}
 
 /** Legend groups of the cooperation dataset. Order = priority when a place belongs to several groups. */
 export const CATEGORY_GROUPS = [

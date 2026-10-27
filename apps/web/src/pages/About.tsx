@@ -1,5 +1,5 @@
 /** Where the data comes from. Credits that the licences of the sources require. */
-import { Link } from '../lib/router.tsx';
+import { Link, useVenue } from '../lib/router.tsx';
 import './join.css';
 
 const SOURCES: [string, string, string][] = [
@@ -15,15 +15,18 @@ const SOURCES: [string, string, string][] = [
 ];
 
 export default function About() {
+  const venue = useVenue();
   return (
     <main className="join">
       <div className="stage-light" />
       <header className="join-head">
-        <Link href="/" className="join-brand">TUKE · Ples 2027</Link>
+        <Link href="/" className="join-brand">{venue.brand}</Link>
         <h1>O projekte</h1>
         <p>
           Zemeguľa ukazuje miesta, kde má Technická univerzita v Košiciach doloženú spoluprácu: zmluvy, Erasmus+, spoločné projekty a publikácie.
-          Každá väzba má zdroj. Na plese pribúdajú svetlá hostí, ktorí označia, kde všade boli.
+          Každá väzba má zdroj. {venue.key === 'ples'
+            ? 'Na plese pribúdajú svetlá hostí, ktorí označia, kde všade boli.'
+            : 'Vo vestibule pribúdajú svetlá ľudí, ktorí označia, kde všade boli.'}
         </p>
       </header>
       <section className="join-card">

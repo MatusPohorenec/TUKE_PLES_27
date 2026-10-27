@@ -1,9 +1,11 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { VENUES, VENUE_KEYS, type VenueKey } from '@ples/shared';
 import { getDb, isDatabaseConfigured, sql } from '@ples/db';
 import { ApiFailure } from './lib/http.ts';
 import { ensureSecret } from './lib/security.ts';
+import { routeOf } from './lib/venue.ts';
 import { adminRoutes } from './routes/admin.ts';
 import { eventRoutes } from './routes/events.ts';
 import { feedbackRoutes } from './routes/feedback.ts';
@@ -30,25 +32,37 @@ if (webOrigins.length) {
 }
 
 app.use('*', async (c, next) => {
-  if (/^\/api\/(events|feedback|admin)(\/|$)/.test(c.req.path)) await ensureSecret();
+  if (/^\/(events|feedback|admin)(\/|$)/.test(routeOf(c).route)) await ensureSecret();
   await next();
   c.header('X-Content-Type-Options', 'nosniff');
 });
 
-app.get('/health', async c => {
-  let database: 'up' | 'down' | 'not_configured' = 'not_configured';
-  if (isDatabaseConfigured()) {
-    try { await sql`select 1`.execute(await getDb()); database = 'up'; } catch { database = 'down'; }
-  }
-  c.header('Cache-Control', 'no-store');
-  return c.json({ ok: true, database, driver: isDatabaseConfigured() ? 'mssql' : null, commit: process.env.APP_COMMIT ?? null });
-});
+async function databaseState(venue: VenueKey): Promise<'up' | 'down' | 'not_configured'> {
+  if (!isDatabaseConfigured(venue)) return 'not_configured';
+  try { await sql`select 1`.execute(await getDb(venue)); return 'up'; } catch { return 'down'; }
+}
 
-app.route('/globe', globe);
-app.route('/gazetteer', gazetteerRoutes);
-app.route('/events', eventRoutes);
-app.route('/feedback', feedbackRoutes);
-app.route('/admin', adminRoutes);
+/**
+ * The same routes for every venue, each on its own database: /api/… for the ball, /api/vestibul/… for the
+ * student lobby (VENUES in packages/shared). The handlers find their venue from the path (lib/venue.ts).
+ */
+for (const venue of Object.values(VENUES)) {
+  const base = venue.prefix;
+  app.get(`${base}/health`, async c => {
+    const states = await Promise.all(VENUE_KEYS.map(databaseState));
+    const databases = Object.fromEntries(VENUE_KEYS.map((key, i) => [key, states[i]!])) as Record<VenueKey, (typeof states)[number]>;
+    c.header('Cache-Control', 'no-store');
+    return c.json({
+      ok: true, venue: venue.key, database: databases[venue.key], databases,
+      driver: isDatabaseConfigured(venue.key) ? 'mssql' : null, commit: process.env.APP_COMMIT ?? null,
+    });
+  });
+  app.route(`${base}/globe`, globe);
+  app.route(`${base}/gazetteer`, gazetteerRoutes);
+  app.route(`${base}/events`, eventRoutes);
+  app.route(`${base}/feedback`, feedbackRoutes);
+  app.route(`${base}/admin`, adminRoutes);
+}
 
 app.notFound(c => c.json({ error: { code: 'not_found', message: 'Neznáma adresa API.' } }, 404));
 

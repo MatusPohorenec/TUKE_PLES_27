@@ -1,5 +1,5 @@
 /**
- * Guest lights.
+ * Guest lights of a venue (/api/… the ball, /api/vestibul/… the student lobby, each in its own database).
  *   GET    /api/events/:slug                    event info for the form and the wall
  *   POST   /api/events/:slug/pins               a guest adds places (one submission = up to 10 lights)
  *   DELETE /api/events/:slug/submissions/:id    undo from the same browser within LIMITS.undoMinutes
@@ -10,20 +10,28 @@
 import { Hono } from 'hono';
 import {
   LIMITS, PinSubmitSchema, type EventInfo, type LivePin, type LiveResponse, type LiveTotals, type SubmitResponse, type SummaryPlace, type SummaryResponse,
+  type VenueKey,
 } from '@ples/shared';
 import { getDb, isDatabaseConfigured, sql, type Db, type EventRow, type PinRow } from '@ples/db';
 import { CACHE, fail, readJson, shared } from '../lib/http.ts';
 import { clientIp, deviceHash, ipHash, safeEqual, sha256 } from '../lib/security.ts';
+import { venueOf } from '../lib/venue.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-async function db(): Promise<Db> {
-  if (!isDatabaseConfigured()) fail(503, 'database_missing', 'Zbieranie svetiel ešte nie je spustené (chýba databáza).');
-  return getDb();
+/** Where the QR code with the access code hangs, for the message when the code is missing or wrong. */
+const SCAN_HINT: Record<VenueKey, string> = {
+  ples: 'Na pridanie svetla naskenuj QR kód z plesu.',
+  vestibul: 'Na pridanie svetla naskenuj QR kód na stene vo vestibule.',
+};
+
+async function db(venue: VenueKey): Promise<Db> {
+  if (!isDatabaseConfigured(venue)) fail(503, 'database_missing', 'Zbieranie svetiel ešte nie je spustené (chýba databáza).');
+  return getDb(venue);
 }
 
-async function loadEvent(slug: string): Promise<EventRow> {
-  const ev = await (await db()).selectFrom('events').selectAll().where('slug', '=', slug).executeTakeFirst();
+async function loadEvent(venue: VenueKey, slug: string): Promise<EventRow> {
+  const ev = await (await db(venue)).selectFrom('events').selectAll().where('slug', '=', slug).executeTakeFirst();
   if (!ev || ev.status === 'draft') fail(404, 'event_not_found', 'Udalosť neexistuje.');
   return ev!;
 }
@@ -50,27 +58,29 @@ const toLivePin = (p: PinRow): LivePin => ({
   id: p.id, name: p.place_name, countryCode: p.country_code, lat: p.lat, lon: p.lon, visitKind: p.visit_kind, createdAt: p.created_at.toISOString(),
 });
 
-// identical for every viewer: computed once per interval, whatever the number of screens and phones polling
+// identical for every viewer: computed once per interval, whatever the number of screens and phones polling;
+// keyed by venue and event, the venues never see each other's lights
 const liveFeed = shared<LiveResponse>(2_000);
 const summaryFeed = shared<SummaryResponse>(5_000);
 
 export const eventRoutes = new Hono()
   .get('/:slug', async c => {
-    const ev = await loadEvent(c.req.param('slug'));
+    const ev = await loadEvent(venueOf(c), c.req.param('slug'));
     c.header('Cache-Control', CACHE.none);
     return c.json(eventInfo(ev));
   })
 
   .post('/:slug/pins', async c => {
-    const ev = await loadEvent(c.req.param('slug'));
+    const venue = venueOf(c);
+    const ev = await loadEvent(venue, c.req.param('slug'));
     if (ev.status !== 'open' && ev.status !== 'live') fail(409, 'event_closed', 'Pridávanie svetiel je momentálne zatvorené.');
     const input = await readJson(c, PinSubmitSchema);
     if (ev.code_hash && !(input.code && safeEqual(sha256(input.code.toUpperCase()), ev.code_hash))) {
-      fail(403, 'code_invalid', 'Na pridanie svetla naskenuj QR kód z plesu.');
+      fail(403, 'code_invalid', SCAN_HINT[venue]);
     }
     const device = deviceHash(c);
     const ip = ipHash(c);
-    const d = await db();
+    const d = await db(venue);
 
     // rate limits: per browser and per address (the venue Wi-Fi shares one address, so that limit is loose;
     // it is skipped when the address is unknown, otherwise every guest would share one budget)
@@ -117,10 +127,11 @@ export const eventRoutes = new Hono()
   })
 
   .delete('/:slug/submissions/:id', async c => {
-    const ev = await loadEvent(c.req.param('slug'));
+    const venue = venueOf(c);
+    const ev = await loadEvent(venue, c.req.param('slug'));
     const id = c.req.param('id');
     if (!UUID.test(id)) fail(400, 'invalid_id', 'Neplatné ID.');
-    const d = await db();
+    const d = await db(venue);
     // deleting the submission removes its lights (ON DELETE CASCADE)
     const deleted = await d.deleteFrom('submissions')
       .where('id', '=', id).where('event_id', '=', ev.id).where('device_hash', '=', deviceHash(c))
@@ -132,13 +143,14 @@ export const eventRoutes = new Hono()
   })
 
   .get('/:slug/live', async c => {
+    const venue = venueOf(c);
     const slug = c.req.param('slug');
     const afterParam = c.req.query('after');
     if (afterParam === undefined) {
       // the newest lights, identical for every viewer
-      const body = await liveFeed(slug, async () => {
-        const ev = await loadEvent(slug);
-        const d = await db();
+      const body = await liveFeed(`${venue}/${slug}`, async () => {
+        const ev = await loadEvent(venue, slug);
+        const d = await db(venue);
         const rows = await visiblePins(d, ev.id).selectAll('p').orderBy('p.id', 'desc').top(LIMITS.liveWindow).execute();
         const list = rows.map(toLivePin).reverse();
         return { event: eventInfo(ev), cursor: list.at(-1)?.id ?? 0, pins: list, totals: await totals(d, ev.id) };
@@ -146,8 +158,8 @@ export const eventRoutes = new Hono()
       c.header('Cache-Control', CACHE.live);
       return c.json(body);
     }
-    const ev = await loadEvent(slug);
-    const d = await db();
+    const ev = await loadEvent(venue, slug);
+    const d = await db(venue);
     const after = Math.max(0, Math.floor(Number(afterParam)) || 0);
     const rows = await visiblePins(d, ev.id).selectAll('p').where('p.id', '>', after).orderBy('p.id', 'asc').top(200).execute();
     const list = rows.map(toLivePin);
@@ -156,10 +168,11 @@ export const eventRoutes = new Hono()
   })
 
   .get('/:slug/summary', async c => {
+    const venue = venueOf(c);
     const slug = c.req.param('slug');
-    const body = await summaryFeed(slug, async () => {
-      const ev = await loadEvent(slug);
-      const d = await db();
+    const body = await summaryFeed(`${venue}/${slug}`, async () => {
+      const ev = await loadEvent(venue, slug);
+      const d = await db(venue);
       // the same expression in SELECT and GROUP BY: a city by its GeoNames id, a whole country by its code
       const key = sql<string>`coalesce(cast(p.geoname_id as nvarchar(20)), N'country:' + p.country_code)`;
       const places: SummaryPlace[] = await visiblePins(d, ev.id).select([

@@ -3,9 +3,11 @@
  * down, so the composition is the real one, and both openings start at the same moment.
  */
 import { useEffect, useState } from 'react';
+import { venueHref } from '../lib/venue.ts';
 import './compare.css';
 
 const WALL = { w: 1920, h: 1080 };
+// the wall of the venue that is open (/porovnanie: the ball, /vestibul/porovnanie: the student lobby)
 const VIEWS = [
   { label: '3D – zemeguľa', src: '/?kiosk=1' },
   { label: '2D – mapa sveta', src: '/?kiosk=1&view=2d' },
@@ -41,7 +43,7 @@ export default function Compare() {
           <figure key={v.src}>
             <figcaption>{v.label}</figcaption>
             <div className="compare-frame" style={{ width: WALL.w * scale, height: WALL.h * scale }}>
-              <iframe key={run} src={v.src} title={v.label} style={{ width: WALL.w, height: WALL.h, transform: `scale(${scale})` }} />
+              <iframe key={run} src={venueHref(v.src)} title={v.label} style={{ width: WALL.w, height: WALL.h, transform: `scale(${scale})` }} />
             </div>
           </figure>
         ))}

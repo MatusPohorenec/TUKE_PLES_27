@@ -1,12 +1,13 @@
-/** Hard facts for the globe: GET /api/globe, GET /api/globe/places/:id */
+/** Hard facts for the globe: GET /api/globe, GET /api/globe/places/:id (each venue from its own database) */
 import { Hono } from 'hono';
-import { CATEGORIES, type GlobeResponse, type PlaceDetail } from '@ples/shared';
+import { CATEGORIES, type GlobeResponse, type PlaceDetail, type VenueKey } from '@ples/shared';
 import { fromJson, getDb, isDatabaseConfigured, sql } from '@ples/db';
 import { CACHE, fail } from '../lib/http.ts';
+import { venueOf } from '../lib/venue.ts';
 import { snapshotGlobe, snapshotPlace, sortGroups } from '../snapshot.ts';
 
-async function globeFromDb(): Promise<GlobeResponse | null> {
-  const db = await getDb();
+async function globeFromDb(venue: VenueKey): Promise<GlobeResponse | null> {
+  const db = await getDb(venue);
   const current = await db.selectFrom('dataset_imports').select(['id', 'version']).where('is_current', '=', true).top(1).executeTakeFirst();
   if (!current) return null; // database connected but not seeded yet
   const rows = await db.selectFrom('coop_places as p')
@@ -41,20 +42,21 @@ async function globeFromDb(): Promise<GlobeResponse | null> {
   };
 }
 
-let memo: { at: number; value: GlobeResponse } | undefined;
-async function loadGlobe(): Promise<GlobeResponse> {
-  if (memo && Date.now() - memo.at < 60_000) return memo.value;
+const memo = new Map<VenueKey, { at: number; value: GlobeResponse }>();
+async function loadGlobe(venue: VenueKey): Promise<GlobeResponse> {
+  const hit = memo.get(venue);
+  if (hit && Date.now() - hit.at < 60_000) return hit.value;
   let value: GlobeResponse | null = null;
-  if (isDatabaseConfigured()) {
-    try { value = await globeFromDb(); } catch (err) { console.error('[globe] database unavailable, serving snapshot:', (err as Error).message); }
+  if (isDatabaseConfigured(venue)) {
+    try { value = await globeFromDb(venue); } catch (err) { console.error(`[globe] ${venue}: database unavailable, serving snapshot:`, (err as Error).message); }
   }
   value ??= snapshotGlobe();
-  memo = { at: Date.now(), value };
+  memo.set(venue, { at: Date.now(), value });
   return value;
 }
 
-async function placeFromDb(id: string): Promise<PlaceDetail | null> {
-  const db = await getDb();
+async function placeFromDb(venue: VenueKey, id: string): Promise<PlaceDetail | null> {
+  const db = await getDb(venue);
   const label = new Map<string, string>(CATEGORIES.map(c => [c.code, c.label]));
   const rows = await db.selectFrom('coop_places as p')
     .innerJoin('dataset_imports as d', join => join.onRef('d.id', '=', 'p.import_id').on('d.is_current', '=', true))
@@ -83,7 +85,7 @@ async function placeFromDb(id: string): Promise<PlaceDetail | null> {
 
 export const globe = new Hono()
   .get('/', async c => {
-    const data = await loadGlobe();
+    const data = await loadGlobe(venueOf(c));
     const etag = `"${data.version}"`;
     c.header('Cache-Control', CACHE.dataset);
     c.header('ETag', etag);
@@ -93,10 +95,11 @@ export const globe = new Hono()
   .get('/places/:id', async c => {
     const id = c.req.param('id');
     if (!/^c\d{1,6}$/.test(id)) fail(400, 'invalid_id', 'Neplatné ID miesta.');
-    const { source } = await loadGlobe();
+    const venue = venueOf(c);
+    const { source } = await loadGlobe(venue);
     let detail: PlaceDetail | null = null;
     if (source === 'database') {
-      try { detail = await placeFromDb(id); } catch (err) { console.error('[globe] place from database failed:', (err as Error).message); }
+      try { detail = await placeFromDb(venue, id); } catch (err) { console.error(`[globe] ${venue}: place from database failed:`, (err as Error).message); }
     }
     detail ??= snapshotPlace(id);
     if (!detail) fail(404, 'not_found', 'Miesto neexistuje.');

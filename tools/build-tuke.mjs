@@ -2,7 +2,8 @@
 // Builds the deployment for the TUKE Plesk server (Windows, IIS + iisnode) into deploy/. Plesk manages web.config
 // at TUKE and a deploy never changes it, so nothing here relies on one:
 //   deploy/web/  -> srdcom.tuke.sk      the static web app; every page route also gets a folder with a copy of
-//                                       index.html (/mapa -> mapa/index.html), so IIS serves it without a rewrite
+//                                       index.html (/mapa -> mapa/index.html), so IIS serves it without a rewrite,
+//                                       also under each venue prefix (/vestibul, /vestibul/mapa …)
 //   deploy/api/  -> api.srdcom.tuke.sk  app.js (iisnode startup file) + api.mjs (the whole API in one ES module,
 //                                       no node_modules on the server) + the dataset snapshot + iisnode.yml
 //                                       (iisnode settings) + App_Data/ (source map, .env.example; never served)
@@ -35,9 +36,13 @@ cpSync(join(root, 'apps/web/dist'), join(out, 'web'), { recursive: true });
 // the page routes of apps/web/src/main.tsx (ROUTES); the app ignores the trailing slash IIS adds for a folder
 const routes = [...readFileSync(join(root, 'apps/web/src/main.tsx'), 'utf8').matchAll(/^\s*'\/([a-z0-9-]+)':/gm)].map(m => m[1]);
 if (!routes.includes('mapa') || !routes.includes('zapoj-sa')) throw new Error(`page routes not found in main.tsx: ${routes.join(', ')}`);
-for (const route of routes) {
-  mkdirSync(join(out, 'web', route), { recursive: true });
-  cpSync(join(out, 'web/index.html'), join(out, 'web', route, 'index.html'));
+// the venues with a path prefix (VENUES in packages/shared): the student lobby has every page under /vestibul
+const venues = [...readFileSync(join(root, 'packages/shared/src/constants.ts'), 'utf8').matchAll(/\bprefix: '\/([a-z0-9-]+)'/g)].map(m => m[1]);
+if (!venues.includes('vestibul')) throw new Error(`venue prefixes not found in packages/shared/src/constants.ts: ${venues.join(', ')}`);
+const pageFolders = [...routes, ...venues.flatMap(venue => [venue, ...routes.map(route => `${venue}/${route}`)])];
+for (const folder of pageFolders) {
+  mkdirSync(join(out, 'web', folder), { recursive: true });
+  cpSync(join(out, 'web/index.html'), join(out, 'web', folder, 'index.html'));
 }
 
 // ------------------------------------------------------------ api

@@ -4,13 +4,15 @@ Live web app for the TUKE ball 2027, which celebrates **75 years of the Technica
 A dark, "switched-off" rotating globe is shown on the LED wall at the ball: light flies from Košice to every place where TUKE
 has documented cooperation, places light up as twinkling stars, and guests add the places they have been to via a QR code,
 live. Theme: midnight blue + silver, light / play of light (svetlohra). Visual polish and correct, sourced data both matter.
-After the ball the wall moves permanently to the student lobby (vestibul) with a second database.
+After the ball the wall moves permanently to the student lobby (vestibul): `/vestibul` is the same app on a database of its
+own, running beside the ball (built 2026-10-27, see „Venues").
 
 - **Production = TUKE hosting** (Plesk for Windows on msweb.tuke.sk, live since 2026-10-20):
   web https://srdcom.tuke.sk, API https://api.srdcom.tuke.sk/app.js/api (health with the deployed commit:
   https://api.srdcom.tuke.sk/app.js/api/health), database Microsoft SQL Server 2022 on portal.msweb.tuke.sk (same machine).
 - Git: `main` is the TUKE version (branch `mssql-tuke` merged 2026-10-20). Tags: `pred-mssql` = last Vercel/Postgres version,
-  `pred-node18` = the Node 22 dependency set, `pred-casovou-osou` = the wall before the timeline opening.
+  `pred-node18` = the Node 22 dependency set, `pred-casovou-osou` = the wall before the timeline opening,
+  `pred-vestibulom` = the last single-database version (ff62be7).
 - Vercel (https://tuke-ples-27.vercel.app, Neon Postgres) is being retired: the user deletes the project himself. Until it is
   gone `vercel.json` keeps Git deployments off (`git.deploymentEnabled: false`); after that `vercel.json` can be deleted.
 - Repo: https://github.com/MatusPohorenec/TUKE_PLES_27 (**public**: never commit secrets, personal data or the TUKE database
@@ -40,7 +42,8 @@ After the ball the wall moves permanently to the student lobby (vestibul) with a
 apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r186 with own shaders
   src/pages        Wall.tsx (/ – the LED wall, `?view=2d` = flat map), MapPage.tsx (/mapa), Join.tsx (/zapoj-sa),
                    Admin.tsx (/admin), About.tsx (/o-projekte), Compare.tsx (/porovnanie – 3D and 2D side by side);
-                   the routes are listed in src/main.tsx (ROUTES; build:tuke makes a folder per route)
+                   the routes are listed in src/main.tsx (ROUTES; build:tuke makes a folder per route, also under
+                   /vestibul); every page also runs under /vestibul for the student lobby (lib/venue.ts)
   src/globe        core.ts (abstract WallScene: timeline, cooperation/guest state, country colours, counters, year, picking),
                    scene.ts (GlobeScene: globe.gl, rotation, title fit), map2d.ts (MapScene: Natural Earth map in an
                    orthographic three.js scene, d3-geo, camera that widens with the light), arcs.ts (all cooperation arcs,
@@ -48,19 +51,23 @@ apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r18
                    borders.ts (globe outlines, one LineSegments), useGlobeScene.ts (creates the 3D or 2D scene)
   src/components   PlaceSpotlight.tsx (cards on the wall), CountUp.tsx (smooth counters), GlobeTooltip, QrCode, Starfield,
                    FeedbackButton („Pripomienka"), PlaceSearch
-  src/lib          api.ts (VITE_API_URL base, credentials, fallback error messages), useGuests.ts (summary + shared live
-                   feed), usePoll.ts (pauses in hidden tabs), useGlobeData.ts, router.tsx (tiny router, ignores a trailing
-                   slash), format.ts (Slovak plural, number format), device.ts
-apps/api         Hono 4 REST API under /api (routes: globe, events, gazetteer, admin, feedback); server.ts = the one entry
-                 (local port 8787, or the iisnode named pipe in PORT; loads App_Data/.env under iisnode; strips a leading
-                 /app.js); app.ts (CORS by WEB_ORIGIN, health); snapshot.ts = bundled dataset fallback when the DB is down;
+  src/lib          api.ts (VITE_API_URL base + the venue prefix, credentials, fallback error messages), useGuests.ts
+                   (summary + shared live feed), usePoll.ts (pauses in hidden tabs), useGlobeData.ts, router.tsx (tiny
+                   router, ignores a trailing slash; Link keeps paths inside the open venue; useVenue), venue.ts
+                   (currentVenue, pageOf, venueHref), format.ts (Slovak plural, number format), device.ts
+apps/api         Hono 4 REST API under /api (routes: globe, events, gazetteer, admin, feedback), the same routes again
+                 under /api/vestibul on the lobby's database; server.ts = the one entry (local port 8787, or the iisnode
+                 named pipe in PORT; loads App_Data/.env under iisnode; strips a leading /app.js); app.ts (CORS by
+                 WEB_ORIGIN, routes per venue, health); snapshot.ts = bundled dataset fallback when the DB is down;
                  lib/http.ts (CACHE headers, shared() = per-process cache of live 2 s / summary 5 s), lib/security.ts
-                 (HMACs, client IP = last X-Forwarded-For entry, admin cookie Path=/ SameSite=Strict)
+                 (HMACs, client IP = last X-Forwarded-For entry, admin cookie Path=/ SameSite=Strict), lib/venue.ts
+                 (venueOf(c) from the path)
 packages/db      MS SQL Server via Kysely 0.27 + tedious 19: migrations/*.sql (T-SQL, GO batches, applied by
                  src/migrations.ts, recorded in dbo.schema_migrations), schema.ts (Kysely types = SQL names), client.ts
-                 (MSSQL_* env, pool, withSchema('dbo'), loadEnv with --env, applyEnvFile), cli/migrate.ts, cli/seed.ts
-packages/shared  constants.ts (ORIGIN, TUKE_FOUNDED, MILESTONES, CATEGORY_GROUPS, CATEGORIES, LIMITS …), api.ts (zod schemas,
-                 response types); `@ples/shared/constants` has no zod, for the browser bundle
+                 (per venue: MSSQL_* / MSSQL_VESTIBUL_* env, one pool each, withSchema('dbo'); loadEnv with --env,
+                 venueArg for --venue, applyEnvFile), cli/migrate.ts, cli/seed.ts
+packages/shared  constants.ts (ORIGIN, TUKE_FOUNDED, MILESTONES, VENUES, CATEGORY_GROUPS, CATEGORIES, LIMITS …), api.ts (zod
+                 schemas, response types); `@ples/shared/constants` has no zod, for the browser bundle
 data/            tuke_cooperation.json (+ .csv) = the versioned dataset (source of truth for hard facts), raw/, evidence/
 scripts/         Python pipeline that builds the dataset (order in data/README.md)
 tools/           dev.mjs (web + api), build-tuke.mjs (deploy/ + zips), iis/iisnode.yml + iis/env.example (template of
@@ -75,23 +82,27 @@ npm run dev          # web http://localhost:5173 (proxies /api), api http://loca
 npm run typecheck
 npm run db:migrate   # local SQL Server; add -- --env .env.tuke for the TUKE database (only with the user's OK)
 npm run db:seed      # imports data/tuke_cooperation.json when it changed (--force re-imports, --if-needed, --env <file>)
+                     # both take --venue vestibul: the lobby's database (MSSQL_VESTIBUL_*) instead of the ball's
 npm run db:dev-setup # once per machine: .data/mssql-dev-setup.sql (SSMS, or sqlcmd in the Docker container) + MSSQL_* in .env
 npm run build:tuke   # deploy/web, deploy/api, deploy/srdcom-web.zip, deploy/srdcom-api.zip (-- --api-url <url>)
-node tools/api-smoke.mjs [api] [origin]   # every API route against a LOCAL API; with an origin also CORS everywhere
+node tools/api-smoke.mjs [api] [origin] [--venue vestibul]   # every API route against a LOCAL API (+ the lights stay in
+                                          # their venue); with an origin also CORS everywhere
 docker start ples-mssql                   # Docker PC only: the local SQL Server (Docker Desktop must be running)
 ```
 
 ## Local environment (two Windows PCs)
 
-The user works on two Windows PCs with the same repo path (`C:\Users\Matus\Desktop\Ples 2027`) and syncs them through GitHub
-(pull before work, push after). Git-ignored files (`.env`, `.env.tuke`, `db_pass.txt`, `deploy/`, `.data/`,
+The user works on two Windows PCs and syncs them through GitHub (pull before work, push after; on 2026-10-27 the native PC
+was 8 commits behind and on the stale branch `mssql-tuke`: switch to `main` and fast-forward first). Repo path: native PC
+`D:\Projects\TUKE_PLES_27`, Docker PC `C:\Users\Matus\Desktop\Ples 2027`. Git-ignored files (`.env`, `.env.tuke`, `db_pass.txt`, `deploy/`, `.data/`,
 `.claude/launch.json`) exist per PC. Check which PC this is before relying on the details below: `docker ps --filter
 name=ples-mssql` (Docker PC) or `Get-Service MSSQLSERVER` (native PC); `git reflog` shows whether the latest commits came by pull.
 
 - **Native PC** (the MS SQL port was made here; README variant A): Node 24.14.1 via nvm-windows (global), Node 18.20.6 (the
   server's version) in nvm for testing the API bundle: `/c/Users/matus/AppData/Local/nvm/v18.20.6/node.exe`. SQL Server 2025
   Developer (Microsoft retired the 2022 web installer; the winget package fails), default instance MSSQLSERVER (MSSQL17) on
-  localhost:1433, TCP/IP on, Mixed Mode; Windows auth over shared memory works for the account `matus` (sysadmin).
+  localhost:1433, TCP/IP on, Mixed Mode; Windows auth over shared memory works for the account `matus` (sysadmin), e.g.
+  `"C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\180\Tools\Binn\SQLCMD.EXE" -S localhost -E -C -b -i file.sql`.
 - **Docker PC** (set up 2026-10-20; README variant B): Node 24.14.0 in `C:\Program Files\nodejs` (no nvm, no Node 18 yet).
   Docker Desktop (WSL 2) runs the container `ples-mssql`: image mcr.microsoft.com/mssql/server:2022-latest (Developer
   16.0.4305), published on 127.0.0.1:1433 only, volume `ples-mssql-data`, `--restart unless-stopped` (starts with Docker
@@ -102,11 +113,16 @@ name=ples-mssql` (Docker PC) or `Get-Service MSSQLSERVER` (native PC); `git refl
 - Both PCs: database and login `ples_dev` mirror the TUKE login (own default schema, db_ddladmin + db_datareader +
   db_datawriter, not db_owner; collation SQL_Latin1_General_CP1_CI_AI, compatibility level 160 = 2022, RCSI off), created by
   `npm run db:dev-setup` and its .sql file. Self-signed certificate → `MSSQL_TRUST_SERVER_CERTIFICATE=true` (also at TUKE).
+  The lobby's database `ples_vestibul_dev` (same login and settings, `MSSQL_VESTIBUL_DATABASE` in .env): on the native PC
+  since 2026-10-27 (created with sqlcmd, migrated, seeded); the Docker PC does not have it yet: rerun `npm run db:dev-setup`
+  and its .sql in the container (both databases; ples_dev gets a new password, written into .env), then
+  `npm run db:migrate -- --venue vestibul` and `npm run db:seed -- --venue vestibul`.
   Git Bash and PowerShell; Python 3 with requests, beautifulsoup4, lxml. Temp scripts go to the session scratchpad.
 - After a pull that changes package-lock.json run `npm ci`: the Docker PC still had node_modules of the Postgres era
   (no kysely/tedious, @hono/node-server 2.x) until 2026-10-20.
-- Env files (all git-ignored, per PC): `.env` = local (MSSQL_* of ples_dev, ADMIN_PASSWORD, WEB_ORIGIN=http://localhost:4173);
-  `.env.tuke` = the TUKE database (MSSQL_* only), used only with `--env .env.tuke`; `db_pass.txt` = the TUKE DB password,
+- Env files (all git-ignored, per PC): `.env` = local (MSSQL_* of ples_dev, MSSQL_VESTIBUL_DATABASE=ples_vestibul_dev,
+  ADMIN_PASSWORD, WEB_ORIGIN=http://localhost:4173); `.env.tuke` = the TUKE database (MSSQL_* only; MSSQL_VESTIBUL_* once
+  the lobby's TUKE database exists), used only with `--env .env.tuke`; `db_pass.txt` = the TUKE DB password,
   listed in `.git/info/exclude` on each PC (that file is per PC too: check it, else `git add -A` would stage the password).
 - Browser pane launch configs (`.claude/launch.json`, git-ignored): `app` = `npm run dev` (5173) on both PCs; on the native
   PC also `web-cross-origin` = `npm run preview -w @ples/web -- --port 4173 --strictPort` for the two-host setup like TUKE
@@ -114,7 +130,7 @@ name=ples-mssql` (Docker PC) or `Get-Service MSSQLSERVER` (native PC); `git refl
   through WEB_ORIGIN in .env).
 - Local test lights: POST `/api/events/ples-2027/pins` with header `x-device-id: <16–64 hex chars>` and body
   `{"places":[{"countryCode":"NP"}],"visitKind":"erasmus_study"}`; undo with DELETE
-  `/api/events/ples-2027/submissions/<submissionId>` and the same header.
+  `/api/events/ples-2027/submissions/<submissionId>` and the same header. The lobby: `/api/vestibul/events/vestibul/…`.
 
 ## Production: TUKE hosting (Plesk for Windows)
 
@@ -122,7 +138,8 @@ name=ples-mssql` (Docker PC) or `Get-Service MSSQLSERVER` (native PC); `git refl
 Manager and extracts with overwrite: `deploy/srdcom-web.zip` → `httpdocs` of srdcom.tuke.sk, `deploy/srdcom-api.zip` →
 root of api.srdcom.tuke.sk (folder `/api.srdcom.tuke.sk`). iisnode restarts the API by itself when app.js, api.mjs,
 iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App). Check the commit on /app.js/api/health and
-/build.txt. Data changes: `npm run db:seed -- --env .env.tuke` (with OK), then also redeploy the API (it carries the snapshot).
+/build.txt. Data changes: `npm run db:seed -- --env .env.tuke` (with OK; once the lobby's database exists also with
+`--venue vestibul`, each venue has its own copy), then also redeploy the API (it carries the snapshot).
 
 **What is on the server**
 - srdcom.tuke.sk (`httpdocs`): static `deploy/web`; every page route has a folder with a copy of index.html (`/mapa` →
@@ -131,7 +148,8 @@ iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App
   node_modules), `tuke_cooperation.json` (snapshot), `iisnode.yml`, `package.json`, `build.txt`, and `App_Data\` with
   `api.mjs.map`, `.env.example`, the server-only **`.env`** (MSSQL_SERVER/DATABASE/USER/PASSWORD, MSSQL_ENCRYPT=true,
   MSSQL_TRUST_SERVER_CERTIFICATE=true, NODE_ENV=production, WEB_ORIGIN=https://srdcom.tuke.sk, ADMIN_PASSWORD, optional
-  SESSION_SECRET – else generated into `app_settings`) and the iisnode logs (`App_Data\iisnode`). IIS never serves App_Data.
+  SESSION_SECRET – else generated into `app_settings`; MSSQL_VESTIBUL_DATABASE (+ _USER/_PASSWORD) once the lobby's
+  database exists) and the iisnode logs (`App_Data\iisnode`). IIS never serves App_Data.
 - Plesk Node.js settings of api.srdcom.tuke.sk: Application Root = Document Root = /api.srdcom.tuke.sk, startup file app.js,
   mode production. Never click NPM install or Auto-configure.
 
@@ -168,8 +186,33 @@ iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App
   automation later. Plesk Git (build on the server) was rejected.
 - DNS: TUKE's resolver rs1.tuke.sk cached NXDOMAIN for srdcom.tuke.sk on 2026-10-20 (cleared the same day). Before the ball
   open the site from the TUKE network.
-- Second database (student lobby, later): same migrations + seed with another env file; the API uses one database at a time
-  (switch = new MSSQL_* values in App_Data\.env).
+- The student lobby's TUKE database does not exist yet (2026-10-27): until MSSQL_VESTIBUL_DATABASE is set, /vestibul shows
+  the cooperation from the snapshot and collects nothing (health: `databases.vestibul = not_configured`). Steps in README
+  „Vestibul: druhá databáza".
+
+## Venues: the ball and the student lobby (built 2026-10-27)
+
+The user wants the ball's data completely separate from the lobby's, both reachable at once: `/` = the ball, `/vestibul` =
+the lobby. `VENUES` in packages/shared/constants.ts: `ples` (prefix '', event `ples-2027`) and `vestibul` (prefix
+`/vestibul`, event `vestibul`, name „Vestibul TUKE", brand „TUKE · Vestibul").
+- Database per venue: the ball MSSQL_*, the lobby MSSQL_VESTIBUL_*; only MSSQL_VESTIBUL_DATABASE is required, server/port/
+  TLS/login fall back to the ball's (MSSQL_VESTIBUL_USER needs its own _PASSWORD). dbConfig refuses a lobby database equal
+  to the ball's (same server + name → error, health `down`). One pool per venue (`getDb(venue)`).
+- API: app.ts mounts every route twice, `/api/…` and `/api/vestibul/…`; handlers take the venue from the path
+  (`venueOf(c)`), so a venue never reads or writes the other's database. Caches are keyed per venue (/live and /summary
+  `${venue}/${slug}`, /globe memo, gazetteer countries). Health reports `venue`, `database` (that venue) and `databases`
+  (all). The session secret comes from SESSION_SECRET, else app_settings of the first configured venue (the ball), so one
+  admin login (cookie Path=/) opens both consoles; with SESSION_SECRET the lobby does not depend on the ball's database.
+- Web: the router strips the venue prefix (`pageOf`), so every page also exists under /vestibul; `Link` keeps hrefs inside
+  the open venue (`venueHref`); api.ts prefixes calls with the venue; the page is keyed by venue; document.title and the
+  brand follow the venue; the wall's QR leads to `${prefix}/zapoj-sa`; localStorage globe cache and the sessionStorage
+  access code are per venue; /admin and /vestibul/admin have a switch (plain links, full page load). Texts that say „ples"
+  have lobby variants (403 hint, „Skús to neskôr", status labels, About sentence).
+- build:tuke adds the folders `vestibul/` and `vestibul/<route>/` (prefixes parsed from constants.ts).
+- Verified 2026-10-27 on the native PC: api-smoke passes for both venues on the dev API and on the Node 18 bundle (also
+  `/app.js/api/vestibul/…`), incl. „the lights stay in this venue"; a light sent from /vestibul/zapoj-sa showed on /vestibul
+  only; without the lobby database the bundle serves the ball normally and /vestibul from the snapshot (events, search,
+  admin 503).
 
 ## The wall (/) – behaviour as built
 
@@ -317,14 +360,24 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   RU/BY, wall 3D + 2D running with API 200 and no console errors). The user then tested guest lights on production:
   the golden arc to Niger worked, but „Vrátiť späť" deleted the light and the wall kept showing undone lights until the
   5-minute resync; fixed (undo link + notice, resync on a count mismatch, counter grammar).
+- 2026-10-27 (native PC, after fast-forwarding main from 5a9dd1f to ff62be7): the user asked how the database stands and
+  decided the ball's data must stay completely separate from the lobby's, with the lobby at /vestibul. Tag `pred-vestibulom`,
+  then the venues (section above): second database per venue in the API, /vestibul pages, `--venue` for migrate/seed/smoke,
+  db:dev-setup with both databases, README „Vestibul: druhá databáza". Local ples_dev re-seeded (dataset 2026-10-20+aeb9797b),
+  ples_vestibul_dev created. Production still ran 00f355d (6abb1f4 had never been uploaded), so the next upload carries both.
 
 ## Open questions / next
 
-- Handover 2026-10-20 evening (the user continues on the other PC): main = 6abb1f4, everything pushed. Production runs
-  00f355d (API and web). Not deployed yet: 6abb1f4 (guest undo link + notice, wall resync on a count mismatch, counter
-  grammar), web only: `git pull`, `npm run build:tuke`, upload `deploy/srdcom-web.zip` (the API zip may stay), then check
-  /build.txt and a guest light from a phone (send, see the golden arc, „Zrušiť toto svetlo", the wall drops it within
-  seconds). On the native PC also run `npm run db:seed` once, so its local DB gets dataset 2026-10-20+aeb9797b.
+- Deploy pending (2026-10-27): production runs 00f355d (API and web); the venues commit needs **both zips** (API and web),
+  which also carry 6abb1f4 (guest undo link + notice, wall resync on a count mismatch, counter grammar). Then check health +
+  /build.txt, /vestibul (cooperation from the snapshot, no QR panel yet), and a guest light from a phone on the ball (send,
+  golden arc, „Zrušiť toto svetlo", the wall drops it within seconds).
+- The lobby's TUKE database: create it (Plesk → Databases, or TUKE IT; collation SQL_Latin1_General_CP1_CI_AI, roles
+  db_ddladmin + db_datareader + db_datawriter), the user adds MSSQL_VESTIBUL_DATABASE (+ _USER/_PASSWORD for its own login)
+  and ideally SESSION_SECRET to App_Data\.env, the same lines to .env.tuke; then with OK and the TUKE network/VPN
+  `npm run db:migrate -- --env .env.tuke --venue vestibul` and `npm run db:seed -- --env .env.tuke --venue vestibul`;
+  check /app.js/api/vestibul/health (`databases` both up) and /vestibul/admin.
+- Docker PC: create ples_vestibul_dev (see Local environment).
 - Vercel retirement (the user, in the Vercel dashboard): copy any reviewer comments from https://tuke-ples-27.vercel.app/admin
   (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the
   Vercel paragraph in README.md.
@@ -334,12 +387,13 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - TUKE IT (optional): Node.js 22/24 LTS instead of 18 (then restore the newer dependencies from tag `pred-node18`);
   `existingResponse="PassThrough"` on the API site; a rewrite of all URLs to app.js would allow plain /api.
 - The architecture document (v0.2) still says env.config / web.config, /api and Node 22: refresh it to App_Data\.env,
-  iisnode.yml, /app.js/api and Node 18 (Artifact read by its URL, edit the saved file, publish with `url` set).
+  iisnode.yml, /app.js/api, Node 18 and the two venues/databases (Artifact read by its URL, edit the saved file, publish
+  with `url` set).
 - Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), what „kde si bol/a" means for guests, guest light
   colour (gold since 2026-10-20, one constant + `--warm`), milestones wording, confirmation of the Erasmus list by the
   international office (OZVaM).
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome kiosk `/?kiosk=1&k=CODE`), rehearsal.
 - Load test with ~500 simulated guests against the TUKE server (one iisnode process); English version of the guest form;
   polish of /mapa on phones.
-- Student lobby after the ball: second database, switch App_Data\.env.
+- Student lobby: wording of the lobby texts (name „Vestibul TUKE", status labels) and whether its QR needs an access code.
 - Older cooperation (before 1980) would need archive sources; undated places (50) light up in the last year.

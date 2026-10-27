@@ -1,5 +1,7 @@
 /** Five routes do not need a router library: pathname state plus history.pushState. */
 import { useEffect, useState, type AnchorHTMLAttributes, type MouseEvent } from 'react';
+import { venueOfPath, type Venue } from '@ples/shared/constants';
+import { venueHref } from './venue.ts';
 
 const listeners = new Set<() => void>();
 window.addEventListener('popstate', () => listeners.forEach(l => l()));
@@ -21,14 +23,22 @@ export function usePathname(): string {
   return path;
 }
 
+/** The venue of the open page (the ball, or the student lobby under /vestibul). */
+export const useVenue = (): Venue => venueOfPath(usePathname());
+
+/**
+ * In-app link. A path stays inside the venue that is open: href="/mapa" leads to /vestibul/mapa in the lobby.
+ * A link to the other venue is a plain <a> (full page load).
+ */
 export function Link({ href, onClick, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) {
+  const to = venueHref(href);
   const handle = (e: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(e);
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || href.startsWith('http')) return;
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || to.startsWith('http')) return;
     e.preventDefault();
-    navigate(href);
+    navigate(to);
   };
-  return <a href={href} onClick={handle} {...rest} />;
+  return <a href={to} onClick={handle} {...rest} />;
 }
 
 export const queryParam = (name: string): string | null => new URLSearchParams(location.search).get(name);

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { Kysely, MssqlDialect } from 'kysely';
 import * as Tarn from 'tarn';
 import * as Tedious from 'tedious';
+import { VENUES, VENUE_KEYS, type VenueKey } from '@ples/shared/constants';
 import type { Database } from './schema.ts';
 
 export type Db = Kysely<Database>;
@@ -60,34 +61,66 @@ export interface DbConfig {
 
 const flag = (value: string | undefined, fallback: boolean) => (value === undefined || value === '' ? fallback : /^(1|true|yes)$/i.test(value));
 
+/** Environment names of a venue's database: MSSQL_* for the ball, MSSQL_VESTIBUL_* for the student lobby. */
+const ENV_PREFIX: Record<VenueKey, string> = { ples: 'MSSQL_', vestibul: 'MSSQL_VESTIBUL_' };
+
+/** The variable that switches a venue's database on: the server for the ball, the database for the lobby. */
+export const dbSwitch = (venue: VenueKey) => (venue === 'ples' ? 'MSSQL_SERVER' : `${ENV_PREFIX[venue]}DATABASE`);
+
 /**
- * Connection settings from the environment (SQL Server authentication):
- *   MSSQL_SERVER, MSSQL_DATABASE, MSSQL_USER, MSSQL_PASSWORD
- *   MSSQL_PORT (1433), MSSQL_ENCRYPT (true), MSSQL_TRUST_SERVER_CERTIFICATE (false)
+ * Connection settings of a venue's database from the environment (SQL Server authentication).
+ * The ball: MSSQL_SERVER, MSSQL_DATABASE, MSSQL_USER, MSSQL_PASSWORD, MSSQL_PORT (1433), MSSQL_ENCRYPT (true),
+ * MSSQL_TRUST_SERVER_CERTIFICATE (false).
+ * The student lobby: the same names with MSSQL_VESTIBUL_. Only MSSQL_VESTIBUL_DATABASE is required: the server,
+ * port and TLS settings default to the ball's, the login too (MSSQL_VESTIBUL_USER needs its own
+ * MSSQL_VESTIBUL_PASSWORD). The database must be another one than the ball's: the venues never share data.
  */
-export function dbConfig(env = process.env): DbConfig | null {
-  if (!env.MSSQL_SERVER) return null;
-  const missing = ['MSSQL_DATABASE', 'MSSQL_USER', 'MSSQL_PASSWORD'].filter(k => !env[k]);
-  if (missing.length) throw new Error(`MSSQL_SERVER is set but ${missing.join(', ')} ${missing.length > 1 ? 'are' : 'is'} missing`);
-  return {
-    server: env.MSSQL_SERVER,
-    port: Number(env.MSSQL_PORT) || 1433,
-    database: env.MSSQL_DATABASE!,
-    user: env.MSSQL_USER!,
-    password: env.MSSQL_PASSWORD!,
-    encrypt: flag(env.MSSQL_ENCRYPT, true),
-    trustServerCertificate: flag(env.MSSQL_TRUST_SERVER_CERTIFICATE, false),
+export function dbConfig(venue: VenueKey = 'ples', env = process.env): DbConfig | null {
+  const prefix = ENV_PREFIX[venue];
+  const own = (name: string) => env[prefix + name] || undefined;
+  const inherited = (name: string) => own(name) ?? (venue === 'ples' ? undefined : env[`MSSQL_${name}`] || undefined);
+  if (!env[dbSwitch(venue)]) return null;
+  const server = inherited('SERVER');
+  const database = own('DATABASE');
+  const user = inherited('USER');
+  const password = own('USER') ? own('PASSWORD') : inherited('PASSWORD');
+  const missing = Object.entries({ SERVER: server, DATABASE: database, USER: user, PASSWORD: password }).filter(([, v]) => !v).map(([k]) => prefix + k);
+  if (missing.length) throw new Error(`${dbSwitch(venue)} is set but ${missing.join(', ')} ${missing.length > 1 ? 'are' : 'is'} missing`);
+  const config: DbConfig = {
+    server: server!,
+    port: Number(inherited('PORT')) || 1433,
+    database: database!,
+    user: user!,
+    password: password!,
+    encrypt: flag(inherited('ENCRYPT'), true),
+    trustServerCertificate: flag(inherited('TRUST_SERVER_CERTIFICATE'), false),
   };
+  if (venue !== 'ples') {
+    const ball = dbConfig('ples', env);
+    if (ball && ball.server.toLowerCase() === config.server.toLowerCase() && ball.database.toLowerCase() === config.database.toLowerCase()) {
+      throw new Error(`${prefix}DATABASE names the database of the ball (MSSQL_DATABASE): ${VENUES[venue].name} needs a database of its own`);
+    }
+  }
+  return config;
 }
 
-export function isDatabaseConfigured(env = process.env): boolean {
-  return Boolean(env.MSSQL_SERVER);
+export function isDatabaseConfigured(venue: VenueKey = 'ples', env = process.env): boolean {
+  return Boolean(env[dbSwitch(venue)]);
 }
 
 /** "server/database" for logs; never includes the password. */
-export function describeDatabase(env = process.env): string {
-  const c = dbConfig(env);
+export function describeDatabase(venue: VenueKey = 'ples', env = process.env): string {
+  const c = dbConfig(venue, env);
   return c ? `${c.server}${c.server.includes('\\') ? '' : `:${c.port}`}/${c.database}` : 'no database';
+}
+
+/** The venue a command line names with --venue <key> (default: the ball), e.g. npm run db:seed -- --venue vestibul. */
+export function venueArg(argv = process.argv): VenueKey {
+  const flagAt = argv.indexOf('--venue');
+  if (flagAt < 0) return 'ples';
+  const key = argv[flagAt + 1];
+  if (!key || !(VENUE_KEYS as string[]).includes(key)) throw new Error(`--venue needs one of: ${VENUE_KEYS.join(', ')}`);
+  return key as VenueKey;
 }
 
 function createKysely(c: DbConfig): Kysely<Database> {
@@ -114,25 +147,25 @@ function createKysely(c: DbConfig): Kysely<Database> {
   return new Kysely<Database>({ dialect });
 }
 
-let base: Kysely<Database> | undefined;
-let db: Db | undefined;
+const pools = new Map<VenueKey, { base: Kysely<Database>; db: Db }>();
 
 /**
- * Shared lazily created connection pool. Every table lives in schema dbo; the TUKE login has a default
- * schema of its own, so all names are qualified (withSchema).
+ * Lazily created connection pool of a venue's database (one per venue, shared by all requests). Every table
+ * lives in schema dbo; the TUKE login has a default schema of its own, so all names are qualified (withSchema).
  */
-export async function getDb(): Promise<Db> {
-  if (db) return db;
-  const config = dbConfig();
-  if (!config) throw new Error('The database is not configured: set MSSQL_SERVER, MSSQL_DATABASE, MSSQL_USER and MSSQL_PASSWORD');
-  base = createKysely(config);
-  db = base.withSchema('dbo');
+export async function getDb(venue: VenueKey = 'ples'): Promise<Db> {
+  const pool = pools.get(venue);
+  if (pool) return pool.db;
+  const config = dbConfig(venue);
+  if (!config) throw new Error(`The database of ${VENUES[venue].name} is not configured: set ${dbSwitch(venue)} (see .env.example)`);
+  const base = createKysely(config);
+  const db = base.withSchema('dbo');
+  pools.set(venue, { base, db });
   return db;
 }
 
 export async function closeDb(): Promise<void> {
-  const b = base;
-  base = undefined;
-  db = undefined;
-  await b?.destroy();
+  const open = [...pools.values()];
+  pools.clear();
+  await Promise.all(open.map(p => p.base.destroy()));
 }

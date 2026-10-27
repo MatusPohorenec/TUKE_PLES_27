@@ -1,5 +1,6 @@
 import type { AdminFeedback, AdminPin, EventInfo, EventPatch, FeedbackInput, GazetteerHit, GlobeResponse, LiveResponse, PinSubmit, PlaceDetail, SubmitResponse, SummaryResponse } from '@ples/shared';
 import { deviceId } from './device.ts';
+import { currentVenue } from './venue.ts';
 
 export class ApiError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message); }
@@ -9,6 +10,7 @@ export class ApiError extends Error {
  * Where the API lives: the same origin (/api, the Vite proxy in development), or another host set at build
  * time, e.g. VITE_API_URL=https://api.srdcom.tuke.sk/api on the TUKE servers. Across hosts the admin cookie
  * needs credentials: 'include' and the API lists this origin in WEB_ORIGIN (CORS).
+ * The pages of the student lobby (/vestibul/…) call the lobby's API (/api/vestibul/…), which has its own database.
  */
 const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
 const credentials: RequestCredentials = API_URL.startsWith('/') ? 'same-origin' : 'include';
@@ -20,7 +22,7 @@ async function request<T>(path: string, init: RequestInit & { json?: unknown } =
   if (init.json !== undefined) headers.set('content-type', 'application/json');
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, { ...init, headers, body: init.json !== undefined ? JSON.stringify(init.json) : init.body, credentials });
+    res = await fetch(`${API_URL}${currentVenue().prefix}${path}`, { ...init, headers, body: init.json !== undefined ? JSON.stringify(init.json) : init.body, credentials });
   } catch {
     throw new ApiError(0, 'offline', 'Server je nedostupný. Skontroluj pripojenie a skús znova.');
   }
@@ -38,7 +40,7 @@ function fallbackMessage(status: number, path: string, method: string): string {
   switch (status) {
     case 400: return 'Neplatné údaje. Skús to znova.';
     case 401: return login ? 'Nesprávne heslo.' : 'Prihlás sa.';
-    case 403: return 'Na pridanie svetla naskenuj QR kód z plesu.';
+    case 403: return currentVenue().key === 'ples' ? 'Na pridanie svetla naskenuj QR kód z plesu.' : 'Na pridanie svetla naskenuj QR kód na stene vo vestibule.';
     case 404: return method === 'DELETE' ? 'Svetlá sa už nedajú vrátiť.' : 'Nenašlo sa.';
     case 409: return 'Pridávanie svetiel je momentálne zatvorené.';
     case 429: return login ? 'Priveľa pokusov. Skús to o 15 minút.' : 'Veľa požiadaviek naraz. Skús to o pár minút.';
