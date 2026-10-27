@@ -189,9 +189,15 @@ iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App
 - The student lobby's TUKE database (since 2026-10-27; names only in `.env.tuke` as MSSQL_VESTIBUL_DATABASE/USER/PASSWORD –
   the user first wrote them as *_LOBBY, renamed): same server, its own login (db_ddladmin + db_datareader + db_datawriter,
   own default schema, HAS_DBACCESS to the ball's database = 0), same collation/level 160/RCSI off. Migrated + seeded
-  2026-10-27 from the native PC (54.5 s): dataset 2026-10-20+aeb9797b, event `vestibul` open, no code, no lights. Until
-  App_Data\.env has the MSSQL_VESTIBUL_* lines, /vestibul shows the cooperation from the snapshot and collects nothing
-  (health: `databases.vestibul = not_configured`). Steps in README „Vestibul: druhá databáza".
+  2026-10-27 from the native PC (54.5 s): dataset 2026-10-20+aeb9797b, event `vestibul` open, no code, no lights.
+  App_Data\.env has the MSSQL_VESTIBUL_* lines and SESSION_SECRET since 2026-10-27, so /vestibul is live (without them it
+  would show the cooperation from the snapshot and collect nothing, health `databases.vestibul = not_configured`).
+  Steps in README „Vestibul: druhá databáza".
+- Editing App_Data\.env is risky: on 2026-10-27 the edit lost WEB_ORIGIN and ADMIN_PASSWORD. Without WEB_ORIGIN the API
+  registers no CORS middleware: no Access-Control-Allow-Origin on any response, preflights 404 (carrying `nosniff`, so
+  from Node), and the web shows no data in either venue. Without ADMIN_PASSWORD /admin/me returns 503 in both venues
+  („Administrácia nie je zapnutá"). After any edit check health, a GET with `Origin: https://srdcom.tuke.sk` (header
+  present), an OPTIONS preflight (204) and /app.js/api/admin/me (401).
 
 ## Venues: the ball and the student lobby (built 2026-10-27)
 
@@ -370,24 +376,22 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   ples_vestibul_dev created. Production still ran 00f355d (6abb1f4 had never been uploaded), so the next upload carries both.
   8c9a61e pushed, zips built. The user then created the lobby's TUKE database with its own login (keys in .env.tuke); a
   read-only check passed, the keys were renamed to MSSQL_VESTIBUL_*, and with the user's OK it was migrated and seeded.
+  The user uploaded both zips and added the lobby lines + SESSION_SECRET to App_Data\.env; that edit dropped WEB_ORIGIN
+  and ADMIN_PASSWORD (web without data, admin 503), both restored. Verified on production: health 8c9a61e with both
+  databases up; CORS and preflights (204) in both venues; /vestibul ran the whole timeline (86 countries, 832 places,
+  2 118 institutions; QR → /vestibul/zapoj-sa); /vestibul/zapoj-sa loads the event and searches places; the ball's wall and
+  form; /admin and /vestibul/admin show the login (401).
 
 ## Open questions / next
 
-- Deploy pending (2026-10-27): production runs 00f355d (API and web); the venues commit needs **both zips** (API and web),
-  which also carry 6abb1f4 (guest undo link + notice, wall resync on a count mismatch, counter grammar). Then check health +
-  /build.txt, /vestibul (cooperation from the snapshot, no QR panel yet), and a guest light from a phone on the ball (send,
-  golden arc, „Zrušiť toto svetlo", the wall drops it within seconds).
-- The lobby on production: the database is ready (above); the user still adds MSSQL_VESTIBUL_DATABASE, MSSQL_VESTIBUL_USER,
-  MSSQL_VESTIBUL_PASSWORD (exactly these names, not *_LOBBY) and ideally SESSION_SECRET to App_Data\.env with the upload of
-  both zips; then check /app.js/api/vestibul/health (`databases` both up), /vestibul (QR panel), /vestibul/zapoj-sa (event
-  loads) and /vestibul/admin (the user logs in).
+- Production runs 8c9a61e (API + web, verified 2026-10-27). Checks only the user can do: log in at /admin and
+  /vestibul/admin (one password); a guest light from a phone on the ball (golden arc, „Zrušiť toto svetlo", the wall drops
+  it within seconds: the 6abb1f4 fix, first time on production) and one in the lobby; hide/show a light; scene switch.
 - Docker PC: create ples_vestibul_dev (see Local environment).
 - Vercel retirement (the user, in the Vercel dashboard): copy any reviewer comments from https://tuke-ples-27.vercel.app/admin
   (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the
   Vercel paragraph in README.md.
 - Docker PC: install Node 18.20.6 (nvm-windows or the portable zip) before the next API change, to test the bundle.
-- Production checks only the user can do: a guest light from a phone (/zapoj-sa → wall → undo), /admin login with the
-  production password, hide/show a light, scene switch.
 - TUKE IT (optional): Node.js 22/24 LTS instead of 18 (then restore the newer dependencies from tag `pred-node18`);
   `existingResponse="PassThrough"` on the API site; a rewrite of all URLs to app.js would allow plain /api.
 - The architecture document (v0.2) still says env.config / web.config, /api and Node 22: refresh it to App_Data\.env,
