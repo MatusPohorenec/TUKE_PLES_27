@@ -238,7 +238,8 @@ Vznikne `deploy/srdcom-web.zip` a `deploy/srdcom-api.zip` (a tie isté súbory r
 
 1. Node.js na tejto stránke **nezapínaj**, je statická.
 2. *File Manager* → koreňový priečinok (`httpdocs`): zmaž predvolené súbory Plesku okrem `web.config`, **Upload** `srdcom-web.zip` → **Extract Files**.
-3. Over https://srdcom.tuke.sk, https://srdcom.tuke.sk/mapa a prihlásenie na https://srdcom.tuke.sk/admin.
+3. Neznáme adresy (preklep, `srdcom.tuke.sk/blabla`) majú namiesto chybovej stránky Plesku ukázať naš teaser s indíciou: Plesk → *Websites & Domains* → `srdcom.tuke.sk` → **Virtual Directories** → záložka **Error Documents** → **404** (zoznam môže mať viac strán) → *Type* **URL**, *Location* `/index.html` (ak Plesk chce celú adresu, `https://srdcom.tuke.sk/index.html`) → **OK**. Musí byť zapnuté *Hosting Settings* → **Custom error documents**. Ak to Plesk nedovolí, požiadaj správcov TUKE o rovnaké nastavenie. `web.config` sa ručne nemení.
+4. Over https://srdcom.tuke.sk, https://srdcom.tuke.sk/mapa, https://srdcom.tuke.sk/blabla a prihlásenie na https://srdcom.tuke.sk/admin.
 
 ### Ďalšie nasadenia
 

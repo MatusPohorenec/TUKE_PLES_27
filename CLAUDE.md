@@ -258,7 +258,10 @@ and switches „Ples prebieha".
   delete (audit without the name).
 - Teaser (Teaser.tsx): breathing star, „Pst… ešte je zhasnuté.", the hint (remember every place you have been to, at the
   ball they become stars that accompany you through the night), button „Potvrdiť účasť na plese", „75 rokov TUKE · Do
-  videnia pod hviezdami". The lobby's variant has no button. Backgrounds (stage light, Starfield) sit outside `<main>`:
+  videnia pod hviezdami". The lobby's variant has no button. Unknown addresses (no route) get it too (`lost`): before the
+  ball they look like any closed page; while open: „Sem svetlo nedoletelo." + the hint + „Na stenu". The old NotFound page
+  is gone. On IIS an unknown address only reaches the SPA through the site's 404 error document: Plesk → Virtual
+  Directories → Error Documents → 404 → Type URL → /index.html (the user's step; web.config untouched; README step 3). Backgrounds (stage light, Starfield) sit outside `<main>`:
   `.join > *` would make the fixed canvas a full-screen grid item.
 - api-smoke walks the states (open: visitor light 409, admin light 201, attendance; live; closed: 409s) and puts the
   starting status back; a random device per run keeps the rate limits clear.

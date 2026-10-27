@@ -2,7 +2,7 @@ import { StrictMode, Suspense, lazy, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { venueOfPath } from '@ples/shared/constants';
 import { pageAllowed, useGate } from './lib/gate.ts';
-import { Link, kioskMode, navigate, usePathname } from './lib/router.tsx';
+import { kioskMode, navigate, usePathname } from './lib/router.tsx';
 import { pageOf, venueHref } from './lib/venue.ts';
 import { FeedbackButton } from './components/FeedbackButton.tsx';
 import './styles/base.css';
@@ -52,26 +52,19 @@ function App() {
   const toOnboarding = gate !== null && !allowed && page === '/' && gate.state === 'onboarding' && venue.onboarding;
   useEffect(() => { if (toOnboarding) navigate(venueHref('/onboarding'), { replace: true }); }, [toOnboarding]);
 
-  const Page = allowed ? ROUTES[page] ?? NotFound : null;
+  // an address that is no page (a typo, a guess) gets the teaser with its hint too, never a bare error
+  const known = Boolean(ROUTES[page]);
+  const Page = allowed && known ? ROUTES[page]! : null;
   return (
     <>
       <Suspense fallback={<Waiting />}>
         {/* keyed by venue: a page never carries one venue's data over to the other */}
         {Page ? <Page key={venue.key} />
           : gate === null || toOnboarding ? <Waiting />
-          : <Teaser venue={venue} onboarding={venue.onboarding && gate.state !== 'off'} />}
+          : <Teaser venue={venue} state={gate.state} lost={!known} />}
       </Suspense>
       {REVIEW && Page && gate?.admin && !kiosk && page !== '/admin' && page !== '/onboarding' && <FeedbackButton page={pathname.replace(/\/+$/, '') || '/'} />}
     </>
-  );
-}
-
-function NotFound() {
-  return (
-    <main style={{ padding: 'var(--gutter)', maxWidth: 640, margin: '10vh auto' }}>
-      <h1 style={{ font: 'italic 500 48px var(--font-display)' }}>Táto stránka nesvieti</h1>
-      <p className="muted">Adresa neexistuje. Pokračuj na <Link href="/">zemeguľu</Link>.</p>
-    </main>
   );
 }
 
