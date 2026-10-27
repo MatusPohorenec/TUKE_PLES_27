@@ -16,12 +16,12 @@
 
 | Stav | Čo vidia návštevníci |
 |---|---|
-| Pred plesom | len `/onboarding`; `srdcom.tuke.sk` naň presmeruje, ostatné stránky ukazujú teaser („Pst… ešte je zhasnuté.") s odkazom na potvrdenie účasti. Svetlá pridáva len prihlásený admin (skúška na stene). |
+| Pred plesom | len `/onboarding`; `srdcom.tuke.sk` naň presmeruje, ostatné stránky ukazujú teaser („Pst… ešte je zhasnuté.") s odkazom na potvrdenie účasti. Svetlá pridáva len prihlásený admin v náhľade (skúška na stene). |
 | Ples prebieha | všetky stránky; hostia pridávajú svetlá cez QR na stene, onboarding funguje ďalej |
 | Po plese | všetky stránky len na pozeranie; svetlá ani potvrdenia sa už nepridávajú |
 | Vypnuté | len teaser |
 
-Prihlásený admin vidí všetky stránky v každom stave (napr. skúšku steny pred plesom) a ako jediný má na stránkach tlačidlo „Pripomienka". Mená, príslušnosť a mená doprovodu z onboardingu sú osobné údaje: vidia ich len organizátori v `/admin` (s počtom osôb, aj ako CSV) a po plese ich treba zmazať. Svetlá hostí sú naďalej anonymné a s menami nie sú prepojené.
+Prihlásený admin vidí to isté čo hostia, takže po prepnutí stavu hneď vidí, čo dostanú všetci. Všetky stránky (napr. skúšku steny pred plesom) uvidí v **náhľade**: tlačidlo „Náhľad stránky" v `/admin` otvorí novú kartu s `/?kiosk=0&nahlad=1`. Náhľad platí len v tej karte, dole ho pripomína pás „Náhľad pre admina … Ukončiť náhľad" (na stene v režime kiosku nie). Skúška na PC LED steny: prihlásiť sa v `/admin` a otvoriť `/?nahlad=1`. Admin ako jediný má na stránkach tlačidlo „Pripomienka". Mená, príslušnosť a mená doprovodu z onboardingu sú osobné údaje: vidia ich len organizátori v `/admin` (s počtom osôb, aj ako CSV) a po plese ich treba zmazať. Svetlá hostí sú naďalej anonymné a s menami nie sú prepojené.
 | `/vestibul` | Stena vo vestibule s **vlastnou databázou**: rovnaké stránky pod `/vestibul` (`/vestibul/zapoj-sa`, `/vestibul/mapa`, `/vestibul/admin` …). Svetlá, udalosť, kód v QR aj pripomienky sú oddelené od plesu. Zapína a vypína sa v `/vestibul/admin` (Stav vestibulu); vypnutý ukazuje len teaser. |
 
 Prevádzka: hosting TUKE (Plesk pre Windows, IIS) – web na https://srdcom.tuke.sk, API na https://api.srdcom.tuke.sk, databáza Microsoft SQL Server 2022 (pre ples a pre vestibul dve samostatné databázy, pozri [Vestibul](#vestibul-druhá-databáza)).

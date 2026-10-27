@@ -1,0 +1,12 @@
+/* The admin's preview of closed pages (PreviewBadge): a quiet golden pill at the bottom of the screen. */
+.preview-badge {
+  position: fixed; z-index: 40; left: 50%; transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 12px;
+  width: max-content; max-width: calc(100vw - 2 * var(--gutter));
+  padding: 8px 8px 8px 16px; border-radius: 99px;
+  background: rgba(6, 16, 58, 0.9); border: 1px solid rgba(255, 181, 46, 0.5);
+  box-shadow: 0 10px 34px rgba(2, 6, 23, 0.6); backdrop-filter: blur(6px);
+  font: 500 13px/1.35 var(--font-ui); color: var(--silver); text-align: center;
+}
+.preview-badge b { color: var(--warm); font-weight: 600; }

@@ -4,25 +4,26 @@
  * /admin manages the ball's database, /vestibul/admin the student lobby's; one login opens both.
  */
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { DISPLAY_SCENES, FACULTIES, PERSON_ROLES, VENUES, VISIT_KINDS, type EventStatus, type Venue, type VenueKey } from '@ples/shared/constants';
+import { DISPLAY_SCENES, FACULTIES, PERSON_ROLES, VENUES, VISIT_KINDS, gateOf, type EventStatus, type Venue, type VenueKey } from '@ples/shared/constants';
 import type { AdminAttendee, AdminFeedback, AdminPin, EventInfo } from '@ples/shared';
 import { ApiError, api } from '../lib/api.ts';
 import { plural } from '../lib/format.ts';
-import { refreshGate } from '../lib/gate.ts';
+import { previewHref, refreshGate } from '../lib/gate.ts';
 import { Link, useVenue } from '../lib/router.tsx';
+import { venueHref } from '../lib/venue.ts';
 import './admin.css';
 
 /** The event status as the operator's switch (gateOf in packages/shared decides what visitors see). */
 const STATUS: Record<VenueKey, Record<EventStatus, { label: string; hint: string }>> = {
   ples: {
-    open: { label: 'Pred plesom', hint: 'Hostia vidia len potvrdenie účasti (/onboarding), ostatné stránky ukazujú teaser. Ty ako admin vidíš všetko.' },
+    open: { label: 'Pred plesom', hint: 'Hostia vidia len potvrdenie účasti (/onboarding), ostatné stránky ukazujú teaser. Rovnako to vidíš aj ty; stenu a ostatné stránky si pozrieš v náhľade.' },
     live: { label: 'Ples prebieha', hint: 'Všetky stránky sú otvorené, hostia pridávajú svetlá cez QR na stene.' },
     closed: { label: 'Po plese', hint: 'Stránky sú otvorené len na pozeranie, svetlá ani potvrdenia sa už nepridávajú.' },
     draft: { label: 'Vypnuté', hint: 'Hostia vidia len teaser, nič sa nedá poslať.' },
   },
   vestibul: {
     draft: { label: 'Vypnutý', hint: 'Všetky stránky vestibulu ukazujú teaser.' },
-    open: { label: 'Pripravený', hint: 'Stránky sú stále skryté (teaser), ty ako admin ich vidíš a môžeš skúšať svetlá.' },
+    open: { label: 'Pripravený', hint: 'Stránky sú stále skryté (teaser); v náhľade ich vidíš a môžeš skúšať svetlá.' },
     live: { label: 'Zapnutý', hint: 'Stena vestibulu a formulár sú otvorené pre všetkých.' },
     closed: { label: 'Len na pozeranie', hint: 'Stránky sú otvorené, svetlá sa už nepridávajú.' },
   },
@@ -139,6 +140,16 @@ function Console({ venue }: { venue: Venue }) {
           ))}
         </div>
         {event && <p className="muted">{statuses[event.status].hint}</p>}
+        {event && gateOf(event.status) !== 'open' && (
+          <p className="admin-preview muted small">
+            <a className="chip" href={previewHref(venueHref('/'))} target="_blank" rel="noopener">Náhľad stránky</a>
+            <span>
+              Otvorí v novej karte stenu a všetky stránky ako {venue.key === 'ples' ? 'počas plesu' : 'po zapnutí'}. Vidíš to len ty
+              a len v tej karte, hostia stále vidia stav nastavený vyššie. Skúška na LED stene: prihlás sa na jej PC
+              a otvor {venue.prefix || ''}/?nahlad=1.
+            </span>
+          </p>
+        )}
       </section>
 
       {venue.onboarding && (

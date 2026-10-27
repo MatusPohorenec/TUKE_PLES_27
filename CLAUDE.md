@@ -244,9 +244,14 @@ and switches „Ples prebieha".
   (teaser only), open → `onboarding` (only /onboarding), live/closed → `open` (every page). GET `/api/gate` (per venue,
   no-store) returns `{ state, admin }` (admin = valid session cookie). The web asks once per venue (`useGate`, last answer
   kept in localStorage for an API hiccup at the ball), `pageAllowed()` decides, main.tsx shows the page, the Teaser, or
-  replaces `/` with `/onboarding`; /admin is always open; `refreshGate()` after login/logout. A logged-in admin sees every
-  page in every state (rehearsal on the LED wall: log in on the playback PC). The gate is a client-side curtain: the API's
-  read endpoints stay public; lights are refused server-side unless live (or open + admin), attendance unless open/live.
+  replaces `/` with `/onboarding`; /admin is always open; `refreshGate()` after login/logout. A logged-in admin sees what
+  the guests see (until 2026-10-27 the admin saw every page, and the user, still logged in after switching „Pred
+  plesom", took the map for a bug); every page only in the admin's **preview** (`usePreview` in gate.ts): „Náhľad
+  stránky" in /admin opens `/?kiosk=0&nahlad=1` in a new tab, the flag lives in sessionStorage per venue (this tab only;
+  „Ukončiť náhľad" or `?nahlad=0` ends it), and outside kiosk mode a golden pill (`PreviewBadge`) says „Náhľad pre
+  admina. Hostia teraz vidia …". LED rehearsal before the ball: log in on the playback PC, open `/?nahlad=1` (kiosk, no
+  pill). The gate is a client-side curtain: the API's read endpoints stay public; lights are refused server-side unless
+  live (or open + admin), attendance unless open/live.
 - Admin labels (Admin.tsx `STATUS`): ball open „Pred plesom", live „Ples prebieha", closed „Po plese", draft „Vypnuté";
   lobby draft „Vypnutý", open „Pripravený", live „Zapnutý", closed „Len na pozeranie". The seed creates a new ball as open
   and a new lobby as draft. The lobby has no onboarding (`VENUES[…].onboarding`), so it shows the teaser unless live.
@@ -474,9 +479,14 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   resync with a summary up to 30 s old (`stale-while-revalidate`): during the burst the counter fell from 484 to 261 and
   lights left the wall for a while. Fixed (no SWR on the feeds, `cache: 'no-store'`, summary shared 2 s instead of 5 s,
   counters follow /live), the light limit per address 300 → 2 000, and a country's lights now add up with its capital's.
+  b643def deployed and verified. The user then switched „Pred plesom" and still saw the map on srdcom.tuke.sk until
+  deleting cookies: the admin session opened every page. Since then the admin sees what the guests see, every page only
+  in the opt-in preview from /admin (section „Before the ball").
 
 ## Open questions / next
 
+- Deploy pending: the admin preview (commit after db516c3) needs **only the web zip**; then check /build.txt, that
+  srdcom.tuke.sk sends a logged-in admin to /onboarding while „Pred plesom", and „Náhľad stránky" in /admin.
 - Production: web + API b643def (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
   databases up, /build.txt b643def, /live and /summary `public, max-age=0, s-maxage=2` with CORS, preflight 204,
   /admin/me 401, the web bundle fetches both feeds with `no-store`; the 3D wall in the pane: counter 362 lights /
@@ -519,7 +529,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - Organisers: 3D globe or 2D map for the wall (compare on /porovnanie), what „kde si bol/a" means for guests, guest light
   colour (gold since 2026-10-20, one constant + `--warm`), milestones wording, confirmation of the Erasmus list by the
   international office (OZVaM).
-- On site: LED wall resolution and playback PC test (dedicated GPU, Chrome fullscreen `/?k=CODE`, the wall is a kiosk
+- On site: LED wall resolution and playback PC test (dedicated GPU, Chrome fullscreen `/?k=CODE`, before „Ples
+  prebieha" `/?nahlad=1&k=CODE` after logging in, the wall is a kiosk
   anyway), rehearsal.
 - English version of the guest form; polish of /mapa on phones. For the ball night: an access code (`?k=CODE` on the
   wall's QR) keeps strangers from sending lights now that the per-address limit is loose.

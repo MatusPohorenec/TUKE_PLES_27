@@ -33,3 +33,6 @@
 .admin-feedback li { display: grid; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .admin-feedback p { white-space: pre-wrap; }
 .fb-done, .fb-rejected { opacity: 0.6; }
+/* the preview link under the status switch: chip beside its explanation */
+.admin-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; }
+.admin-preview span { flex: 1 1 260px; }

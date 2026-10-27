@@ -1,10 +1,11 @@
 import { StrictMode, Suspense, lazy, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { venueOfPath } from '@ples/shared/constants';
-import { pageAllowed, useGate } from './lib/gate.ts';
+import { pageAllowed, useGate, usePreview } from './lib/gate.ts';
 import { kioskMode, navigate, usePathname } from './lib/router.tsx';
 import { pageOf, venueHref } from './lib/venue.ts';
 import { FeedbackButton } from './components/FeedbackButton.tsx';
+import { PreviewBadge } from './components/PreviewBadge.tsx';
 import './styles/base.css';
 
 // the globe pages pull in three.js + globe.gl; the guest form loads without them
@@ -43,18 +44,22 @@ function App() {
   const page = pageOf(pathname); // the page inside its venue: /vestibul/mapa -> /mapa
   const venue = venueOfPath(pathname);
   const gate = useGate(venue);
+  const preview = usePreview(venue);
   const kiosk = kioskMode(page);
   useEffect(() => { document.title = `Rozsvieťme mapu sveta · ${venue.name}`; }, [venue.name]);
 
   // Which pages are open depends on the operator's switch in /admin (the event status): before the ball only the
   // onboarding (the QR code on the invitations leads there, and so does the bare address), the rest shows a teaser.
-  const allowed = page === '/admin' || (gate !== null && pageAllowed(gate, page, venue));
+  // The admin sees the same, unless this tab runs the admin's preview (from /admin).
+  const allowed = page === '/admin' || (gate !== null && pageAllowed(gate, page, venue, preview));
   const toOnboarding = gate !== null && !allowed && page === '/' && gate.state === 'onboarding' && venue.onboarding;
   useEffect(() => { if (toOnboarding) navigate(venueHref('/onboarding'), { replace: true }); }, [toOnboarding]);
 
   // an address that is no page (a typo, a guess) gets the teaser with its hint too, never a bare error
   const known = Boolean(ROUTES[page]);
   const Page = allowed && known ? ROUTES[page]! : null;
+  // a page the guests cannot open yet, shown by the preview: say so (not on the kiosk wall, the LED screen stays clean)
+  const previewing = Boolean(Page && gate?.admin && preview && gate.state !== 'open' && page !== '/admin' && !kiosk);
   return (
     <>
       <Suspense fallback={<Waiting />}>
@@ -64,6 +69,7 @@ function App() {
           : <Teaser venue={venue} state={gate.state} lost={!known} />}
       </Suspense>
       {REVIEW && Page && gate?.admin && !kiosk && page !== '/admin' && page !== '/onboarding' && <FeedbackButton page={pathname.replace(/\/+$/, '') || '/'} />}
+      {previewing && <PreviewBadge venue={venue} state={gate!.state} />}
     </>
   );
 }
