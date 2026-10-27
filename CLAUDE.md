@@ -186,9 +186,12 @@ iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App
   automation later. Plesk Git (build on the server) was rejected.
 - DNS: TUKE's resolver rs1.tuke.sk cached NXDOMAIN for srdcom.tuke.sk on 2026-10-20 (cleared the same day). Before the ball
   open the site from the TUKE network.
-- The student lobby's TUKE database does not exist yet (2026-10-27): until MSSQL_VESTIBUL_DATABASE is set, /vestibul shows
-  the cooperation from the snapshot and collects nothing (health: `databases.vestibul = not_configured`). Steps in README
-  „Vestibul: druhá databáza".
+- The student lobby's TUKE database (since 2026-10-27; names only in `.env.tuke` as MSSQL_VESTIBUL_DATABASE/USER/PASSWORD –
+  the user first wrote them as *_LOBBY, renamed): same server, its own login (db_ddladmin + db_datareader + db_datawriter,
+  own default schema, HAS_DBACCESS to the ball's database = 0), same collation/level 160/RCSI off. Migrated + seeded
+  2026-10-27 from the native PC (54.5 s): dataset 2026-10-20+aeb9797b, event `vestibul` open, no code, no lights. Until
+  App_Data\.env has the MSSQL_VESTIBUL_* lines, /vestibul shows the cooperation from the snapshot and collects nothing
+  (health: `databases.vestibul = not_configured`). Steps in README „Vestibul: druhá databáza".
 
 ## Venues: the ball and the student lobby (built 2026-10-27)
 
@@ -365,6 +368,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   then the venues (section above): second database per venue in the API, /vestibul pages, `--venue` for migrate/seed/smoke,
   db:dev-setup with both databases, README „Vestibul: druhá databáza". Local ples_dev re-seeded (dataset 2026-10-20+aeb9797b),
   ples_vestibul_dev created. Production still ran 00f355d (6abb1f4 had never been uploaded), so the next upload carries both.
+  8c9a61e pushed, zips built. The user then created the lobby's TUKE database with its own login (keys in .env.tuke); a
+  read-only check passed, the keys were renamed to MSSQL_VESTIBUL_*, and with the user's OK it was migrated and seeded.
 
 ## Open questions / next
 
@@ -372,11 +377,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   which also carry 6abb1f4 (guest undo link + notice, wall resync on a count mismatch, counter grammar). Then check health +
   /build.txt, /vestibul (cooperation from the snapshot, no QR panel yet), and a guest light from a phone on the ball (send,
   golden arc, „Zrušiť toto svetlo", the wall drops it within seconds).
-- The lobby's TUKE database: create it (Plesk → Databases, or TUKE IT; collation SQL_Latin1_General_CP1_CI_AI, roles
-  db_ddladmin + db_datareader + db_datawriter), the user adds MSSQL_VESTIBUL_DATABASE (+ _USER/_PASSWORD for its own login)
-  and ideally SESSION_SECRET to App_Data\.env, the same lines to .env.tuke; then with OK and the TUKE network/VPN
-  `npm run db:migrate -- --env .env.tuke --venue vestibul` and `npm run db:seed -- --env .env.tuke --venue vestibul`;
-  check /app.js/api/vestibul/health (`databases` both up) and /vestibul/admin.
+- The lobby on production: the database is ready (above); the user still adds MSSQL_VESTIBUL_DATABASE, MSSQL_VESTIBUL_USER,
+  MSSQL_VESTIBUL_PASSWORD (exactly these names, not *_LOBBY) and ideally SESSION_SECRET to App_Data\.env with the upload of
+  both zips; then check /app.js/api/vestibul/health (`databases` both up), /vestibul (QR panel), /vestibul/zapoj-sa (event
+  loads) and /vestibul/admin (the user logs in).
 - Docker PC: create ples_vestibul_dev (see Local environment).
 - Vercel retirement (the user, in the Vercel dashboard): copy any reviewer comments from https://tuke-ples-27.vercel.app/admin
   (Pripomienky) first, then delete the project tuke-ples-27 and its Neon database. Afterwards delete `vercel.json` and the
