@@ -6,18 +6,21 @@
  *   GET   /api/admin/pins?limit=100          PATCH /api/admin/pins/:id   hide or show a light
  *   GET   /api/admin/feedback                PATCH /api/admin/feedback/:id
  *   GET   /api/admin/attendees               DELETE /api/admin/attendees/:id   confirmed attendance (personal data)
+ *   GET   /api/admin/photos                  PATCH /api/admin/photos/:id   approve, hide or put back a guest's photo
+ *   DELETE /api/admin/photos/:id             DELETE /api/admin/photos   every photo of the venue (after the ball)
  */
 import { Hono, type Context } from 'hono';
 import {
-  EventPatchSchema, FeedbackPatchSchema, LoginSchema, PinPatchSchema, type AdminAttendee, type AdminFeedback, type AdminPin,
+  EventPatchSchema, FeedbackPatchSchema, LoginSchema, PhotoPatchSchema, PinPatchSchema, type AdminAttendee, type AdminFeedback, type AdminPin,
 } from '@ples/shared';
 import { getDb, isDatabaseConfigured, sql, toJson } from '@ples/db';
 import { CACHE, fail, positiveInt, readJson } from '../lib/http.ts';
 import {
   adminPasswordConfigured, checkAdminPassword, endSession, hasSession, ipHash, sha256, startSession,
 } from '../lib/security.ts';
+import { photoMeta, toAdminPhoto } from '../lib/photos.ts';
 import { venueOf } from '../lib/venue.ts';
-import { eventInfo } from './events.ts';
+import { UUID, eventInfo } from './events.ts';
 
 /** The database of the venue the request belongs to. */
 const dbOf = (c: Context) => getDb(venueOf(c));
@@ -27,6 +30,7 @@ async function audit(c: Context, action: string, target: string | null, payload:
 }
 
 const idParam = (value: string) => positiveInt(value) ?? fail(400, 'invalid_id', 'Neplatné ID.');
+const uuidParam = (value: string) => (UUID.test(value) ? value : fail(400, 'invalid_id', 'Neplatné ID.'));
 
 export const adminRoutes = new Hono()
   .use('*', async (c, next) => {
@@ -73,6 +77,7 @@ export const adminRoutes = new Hono()
         ...(input.status ? { status: input.status } : {}),
         ...(input.displayScene ? { display_scene: input.displayScene } : {}),
         ...(input.code !== undefined ? { code_hash: input.code ? sha256(input.code.toUpperCase()) : null } : {}),
+        ...(input.photos ? { photo_mode: input.photos } : {}),
       })
       .where('slug', '=', c.req.param('slug'))
       .outputAll('inserted')
@@ -120,6 +125,39 @@ export const adminRoutes = new Hono()
     if (!row) fail(404, 'not_found', 'Záznam neexistuje.');
     await audit(c, 'attendee_delete', String(id), null); // the name stays out of the audit log
     return c.json({ ok: true });
+  })
+
+  // guests' photos, newest first; the pictures themselves come from GET /events/:slug/photos/:id (the admin sees all)
+  .get('/photos', async c => {
+    const rows = await photoMeta(await dbOf(c)).orderBy('f.created_at', 'desc').top(500).execute();
+    return c.json({ photos: rows.map(r => toAdminPhoto(r, venueOf(c))) });
+  })
+
+  .patch('/photos/:id', async c => {
+    const { status } = await readJson(c, PhotoPatchSchema);
+    const id = uuidParam(c.req.param('id'));
+    // approving stamps the time: the wall shows new approvals first
+    const row = await (await dbOf(c)).updateTable('photos')
+      .set({ status, reviewed_at: status === 'pending' ? null : sql<Date>`sysutcdatetime()` })
+      .where('id', '=', id).output('inserted.id').executeTakeFirst();
+    if (!row) fail(404, 'not_found', 'Fotka neexistuje.');
+    await audit(c, 'photo_status', id, { status });
+    return c.json({ ok: true });
+  })
+
+  .delete('/photos/:id', async c => {
+    const id = uuidParam(c.req.param('id'));
+    const row = await (await dbOf(c)).deleteFrom('photos').where('id', '=', id).output('deleted.id').executeTakeFirst();
+    if (!row) fail(404, 'not_found', 'Fotka neexistuje.');
+    await audit(c, 'photo_delete', id, null);
+    return c.json({ ok: true });
+  })
+
+  // personal data: after the ball the organisers delete every photo of the venue at once
+  .delete('/photos', async c => {
+    const rows = await (await dbOf(c)).deleteFrom('photos').output('deleted.id').execute();
+    await audit(c, 'photos_delete_all', null, { count: rows.length });
+    return c.json({ ok: true, deleted: rows.length });
   })
 
   .get('/feedback', async c => {

@@ -10,7 +10,7 @@
  * UNIQUEIDENTIFIER -> string, JSON in NVARCHAR(MAX) -> string (see toJson / fromJson).
  */
 import type { ColumnType, Generated, Insertable, Selectable } from 'kysely';
-import type { DisplayScene, EventStatus, FacultyCode, PersonRole, VisitKind } from '@ples/shared';
+import type { DisplayScene, EventStatus, FacultyCode, PersonRole, PhotoKind, PhotoMode, PhotoStatus, VisitKind } from '@ples/shared';
 
 /** Column filled by a DEFAULT constraint (SYSUTCDATETIME()): optional on insert. */
 type CreatedAt = ColumnType<Date, Date | undefined, Date>;
@@ -126,6 +126,8 @@ export interface EventsTable {
   starts_at: Date | null;
   ends_at: Date | null;
   updated_at: CreatedAt;
+  /** off: no photos · review: on the wall once an admin approved them · auto: at once */
+  photo_mode: ColumnType<PhotoMode, PhotoMode | undefined, PhotoMode>;
 }
 
 /** One sent form. Holds the optional facts about the person; no name, no e-mail. */
@@ -169,6 +171,33 @@ export interface AttendeesTable {
   created_at: CreatedAt;
 }
 
+/**
+ * A guest's photo for the wall (personal data, deleted after the ball): in one of their lit places (place_* copied
+ * from that light) or at the ball. JPEG bytes, stripped of metadata by the API.
+ */
+export interface PhotosTable {
+  id: Generated<string>;
+  event_id: number;
+  kind: PhotoKind;
+  /** the guest's own light (no foreign key; undoing the light deletes its photos in the API) */
+  pin_id: number | null;
+  place_name: string | null;
+  country_code: string | null;
+  lat: number | null;
+  lon: number | null;
+  visit_kind: VisitKind | null;
+  status: ColumnType<PhotoStatus, PhotoStatus | undefined, PhotoStatus>;
+  width: number;
+  height: number;
+  image: Buffer;
+  thumb: Buffer;
+  device_hash: string;
+  ip_hash: string | null;
+  created_at: CreatedAt;
+  /** when it was approved (the wall shows new approvals first) or hidden */
+  reviewed_at: Date | null;
+}
+
 /** Comments from reviewers (pripomienky) sent from the prototype. */
 export interface FeedbackTable {
   id: Generated<number>;
@@ -183,7 +212,7 @@ export type FeedbackStatus = 'new' | 'accepted' | 'rejected' | 'done';
 
 export interface AdminAuditTable {
   id: Generated<number>;
-  /** login_ok, login_fail, event_update, pin_status, feedback_status, attendee_delete */
+  /** login_ok, login_fail, event_update, pin_status, feedback_status, attendee_delete, photo_status, photo_delete, photos_delete_all */
   action: string;
   target: string | null;
   payload: JsonText | null;
@@ -217,6 +246,7 @@ export interface Database {
   submissions: SubmissionsTable;
   pins: PinsTable;
   attendees: AttendeesTable;
+  photos: PhotosTable;
   feedback: FeedbackTable;
   admin_audit: AdminAuditTable;
   app_settings: AppSettingsTable;
@@ -225,6 +255,7 @@ export interface Database {
 
 export type EventRow = Selectable<EventsTable>;
 export type PinRow = Selectable<PinsTable>;
+export type PhotoRow = Selectable<PhotosTable>;
 export type NewPin = Insertable<PinsTable>;
 
 /** JSON columns are NVARCHAR(MAX) text. */

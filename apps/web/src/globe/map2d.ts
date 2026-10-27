@@ -357,6 +357,8 @@ export class MapScene extends WallScene {
   /** Cards never cover the map: where no dock fits, the place only gets a name tag. */
   override cardsFloat(): boolean { return false; }
 
+  override flat(): boolean { return true; }
+
   protected guestArcWidth(): number { return 2.2; }
 
   screenPoint(lat: number, lon: number): { x: number; y: number; facing: number } {

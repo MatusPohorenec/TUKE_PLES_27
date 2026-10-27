@@ -2,7 +2,8 @@
 // Smoke test of every API route against a running local API (default http://localhost:8787/api, e.g. npm run dev):
 // globe, place detail, search, the gate and the venue's status (before the ball: onboarding only, lights from the
 // admin only; the ball night; after the ball: read only), confirmation of attendance, submit + undo, live/summary,
-// feedback, admin login, moderation, scene, access code. It puts the venue's status back where it found it.
+// guests' photos (upload, metadata stripped, moderation, the wall's feed, undo, the photo modes), feedback, admin login,
+// moderation, scene, access code. It puts the venue's status and photo mode back where it found them.
 // --venue vestibul tests the student lobby's routes (/api/vestibul/…, its own database) instead of the ball's, and
 // every run checks that its lights never show in the other venue. With an origin (e.g. http://localhost:4173, the
 // cross-origin setup in CLAUDE.md) every response must carry CORS headers. It writes test lights (undone again),
@@ -33,6 +34,8 @@ const others = Object.entries(VENUES).filter(([key]) => key !== venueKey);
 console.log(`venue ${venueKey}: ${base}`);
 const env = Object.fromEntries(readFileSync(fileURLToPath(new URL('../.env', import.meta.url)), 'utf8').split(/\r?\n/).filter(l => /^[A-Z_]+=/.test(l)).map(l => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]));
 const device = crypto.randomUUID().replace(/-/g, ''); // a new browser per run: the rate limits never trip
+// a 48 × 32 JPEG with an EXIF block holding a GPS position: the API must keep the picture and drop the EXIF
+const TINY_JPEG = Buffer.from('/9j/4AAQSkZJRgABAQAAAQABAAD/4QCwRXhpZgAATU0AKgAAAAgAAwEPAAIAAAAIAAAAMgEQAAIAAAAIAAAAOoglAAQAAAABAAAAQgAAAABUZXN0Q2FtAE1vZGVsIFgAAAQAAQACAAAAAk4AAAAAAgAFAAAAAwAAAHgAAwACAAAAAkUAAAAABAAFAAAAAwAAAJAAAAAAAAAAMAAAAAEAAAArAAAAAQAAADEAAAABAAAAFQAAAAEAAAAOAAAAAQAAACwAAAAB/9sAQwAKBwcIBwYKCAgICwoKCw4YEA4NDQ4dFRYRGCMfJSQiHyIhJis3LyYpNCkhIjBBMTQ5Oz4+PiUuRElDPEg3PT47/9sAQwEKCwsODQ4cEBAcOygiKDs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7/8AAEQgAIAAwAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A5L7N7UfZvaryzWbSLGtzCzN0AcHP+c1Q1LVFtZfJtwsjqfnJ6D2+teqq7Zi6SWpoWHhnU9Ut5riysnmih++y4HOM4GfvH2GTyPUVQ+ze1W9C+Imr6FZzWkMdu8cvzAsuGRsY3A9Ow4II4+uasWs2Lxln3xsBnaVzk+gI/ripVarzPm26B7ODWgn2b2o+ze1VItccTEywqYyeAvVR/WtW9vLWyiDM4dnXcirzuHrn096p15IFSizn0tN0RLHDHoaYYAOCSCKv0VfIiTMWP/TI4WJwyk9P8+lJHG0k0qLyEbHStIxoZBIVG8DANCxojMyqAXOWI71Ps9R3KgtCR0NNe2KgHp9av0113KRVciC5/9k=', 'base64');
 let cookie = '';
 let failures = 0;
 
@@ -49,6 +52,28 @@ async function call(method, path, body, headers = {}) {
   if (origin && res.headers.get('access-control-allow-origin') !== origin) { failures++; console.log('  ! missing CORS header on', method, path); }
   return { status: res.status, json, headers: res.headers };
 }
+/** A multipart photo upload (the guest form's FormData): the fields as JSON, the picture and its small copy. */
+async function sendPhoto(meta, { photo = TINY_JPEG, thumb = TINY_JPEG, dev = device } = {}) {
+  const form = new FormData();
+  if (meta !== undefined) form.append('meta', JSON.stringify(meta));
+  form.append('photo', new Blob([photo], { type: 'image/jpeg' }), 'photo.jpg');
+  form.append('thumb', new Blob([thumb], { type: 'image/jpeg' }), 'thumb.jpg');
+  const h = { 'x-device-id': dev };
+  if (origin) h.origin = origin;
+  if (cookie) h.cookie = cookie;
+  const res = await fetch(`${base}${EV}/photos`, { method: 'POST', headers: h, body: form });
+  const text = await res.text();
+  let json; try { json = JSON.parse(text); } catch { json = text; }
+  if (origin && res.headers.get('access-control-allow-origin') !== origin) { failures++; console.log('  ! missing CORS header on POST photos'); }
+  return { status: res.status, json };
+}
+/** The bytes of a photo as a visitor (or the admin) gets them. */
+async function photoBytes(id, size) {
+  const h = cookie ? { cookie } : {};
+  const res = await fetch(`${base}${EV}/photos/${id}${size ? `?size=${size}` : ''}`, { headers: h });
+  return { status: res.status, type: res.headers.get('content-type'), cache: res.headers.get('cache-control'), bytes: Buffer.from(await res.arrayBuffer()) };
+}
+
 /** Runs a request as a visitor, without the admin cookie. */
 async function anonymous(request) {
   const saved = cookie;
@@ -182,6 +207,94 @@ check('undo twice 404', undoAgain.status === 404);
 
 const unknown = await call('POST', `${EV}/pins`, { places: [{ geonameId: 999999999 }], visitKind: 'erasmus_study' }, { 'x-device-id': device });
 check('unknown place 400', unknown.status === 400 && unknown.json.error.code === 'unknown_place');
+
+// ---------------------------------------------------------------- guests' photos (the ball night)
+const startPhotos = ev.json.photos;
+const photosBefore = (await call('GET', '/admin/photos')).json.photos?.length ?? 0;
+const setPhotos = async photos => (await call('PATCH', `/admin${EV}`, { photos })).json?.photos;
+const wait = () => new Promise(r => setTimeout(r, 2100)); // the live feed and the photo list are shared for 2 s
+check('photos mode review', (await setPhotos('review')) === 'review' && (await call('GET', EV)).json.photos === 'review');
+
+const ballPhoto = await anonymous(() => sendPhoto({ kind: 'ball' }));
+check('photo from the ball waits for review', ballPhoto.status === 201 && ballPhoto.json.status === 'pending' && /^[0-9a-f-]{36}$/.test(ballPhoto.json.id), `${ballPhoto.status} ${JSON.stringify(ballPhoto.json)}`);
+const ballId = ballPhoto.json.id;
+const hiddenFromVisitors = await anonymous(() => photoBytes(ballId));
+check('a waiting photo is hidden from visitors 404', hiddenFromVisitors.status === 404, `HTTP ${hiddenFromVisitors.status}`);
+const adminView = await photoBytes(ballId);
+check('the admin sees the waiting photo, EXIF and GPS stripped', adminView.status === 200 && adminView.type === 'image/jpeg' && adminView.bytes[0] === 0xff && adminView.bytes[1] === 0xd8
+  && !adminView.bytes.includes(Buffer.from('Exif')) && TINY_JPEG.includes(Buffer.from('Exif')) && adminView.bytes.length < TINY_JPEG.length, `${adminView.bytes.length} of ${TINY_JPEG.length} bytes, ${adminView.cache}`);
+const thumbView = await photoBytes(ballId, 'thumb');
+check('the admin sees its small copy', thumbView.status === 200 && thumbView.bytes.length > 100, `${thumbView.bytes.length} bytes`);
+const adminList = await call('GET', '/admin/photos');
+check('admin photo list', adminList.status === 200 && adminList.json.photos.some(p => p.id === ballId && p.status === 'pending' && p.kind === 'ball' && p.width === 48 && p.height === 32), JSON.stringify(adminList.json.photos?.[0]));
+await wait();
+const liveWaiting = await call('GET', `${EV}/live`);
+check('the wall does not get a waiting photo', Array.isArray(liveWaiting.json.photos?.latest) && !liveWaiting.json.photos.latest.some(p => p.id === ballId), `${liveWaiting.json.photos?.total} on the wall`);
+check('admin approves the photo', (await call('PATCH', `/admin/photos/${ballId}`, { status: 'approved' })).status === 200);
+await wait();
+const liveApproved = await call('GET', `${EV}/live`);
+const onWall = liveApproved.json.photos?.latest.find(p => p.id === ballId);
+check('the wall gets the approved photo', Boolean(onWall) && onWall.kind === 'ball' && onWall.countryCode === 'SK' && liveApproved.json.photos.total >= 1, JSON.stringify(onWall));
+const gallery = await call('GET', `${EV}/photos`);
+check('photo list of the wall', gallery.status === 200 && gallery.json.photos.some(p => p.id === ballId), `${gallery.json.photos?.length} photos`);
+const publicView = await anonymous(() => photoBytes(ballId));
+check('visitors see the approved photo, cached', publicView.status === 200 && /immutable/.test(publicView.cache ?? ''), publicView.cache);
+
+const placeLight = await call('POST', `${EV}/pins`, { places: [{ countryCode: 'NP' }], visitKind: 'travel' }, { 'x-device-id': device });
+const placePin = placeLight.json.pins?.[0]?.id;
+const placePhoto = await anonymous(() => sendPhoto({ kind: 'place', pinId: placePin }));
+check('photo to one of my lights', placePhoto.status === 201, `${placePhoto.status} ${JSON.stringify(placePhoto.json)}`);
+const strangerPhoto = await anonymous(() => sendPhoto({ kind: 'place', pinId: placePin }, { dev: 'fedcba9876543210fedcba9876543210' }));
+check("photo to somebody else's light 404", strangerPhoto.status === 404, `HTTP ${strangerPhoto.status}`);
+const placeRow = (await call('GET', '/admin/photos')).json.photos.find(p => p.id === placePhoto.json.id);
+check('the place of the photo comes from the light', placeRow?.kind === 'place' && placeRow.countryCode === 'NP' && placeRow.visitKind === 'travel' && placeRow.name === placeLight.json.pins[0].name, JSON.stringify(placeRow));
+await call('DELETE', `${EV}/submissions/${placeLight.json.submissionId}`, undefined, { 'x-device-id': device });
+const afterUndo = (await call('GET', '/admin/photos')).json.photos;
+check('undoing the light deletes its photo', !afterUndo.some(p => p.id === placePhoto.json.id), `${afterUndo.length} photos`);
+
+const notJpeg = await anonymous(() => sendPhoto({ kind: 'ball' }, { photo: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>') }));
+check('not a JPEG 400', notJpeg.status === 400, `HTTP ${notJpeg.status}`);
+const cut = await anonymous(() => sendPhoto({ kind: 'ball' }, { photo: TINY_JPEG.subarray(0, TINY_JPEG.length - 200) }));
+check('a cut-off JPEG 400', cut.status === 400, `HTTP ${cut.status}`);
+const noMeta = await anonymous(() => sendPhoto(undefined));
+check('photo without its fields 400', noMeta.status === 400, `HTTP ${noMeta.status}`);
+const noPin = await anonymous(() => sendPhoto({ kind: 'place' }));
+check('place photo without a light 400', noPin.status === 400, `HTTP ${noPin.status}`);
+let huge;
+try { huge = await anonymous(() => sendPhoto({ kind: 'ball' }, { photo: Buffer.concat([TINY_JPEG, Buffer.alloc(2_000_000)]) })); } catch (err) { huge = { status: `error ${err.cause?.code ?? err.message}` }; }
+check('a photo over the size limit 413', huge.status === 413, `HTTP ${huge.status}`);
+
+check('photos mode auto', (await setPhotos('auto')) === 'auto');
+const autoPhoto = await anonymous(() => sendPhoto({ kind: 'ball' }));
+check('photo goes on the wall at once', autoPhoto.status === 201 && autoPhoto.json.status === 'approved', JSON.stringify(autoPhoto.json));
+const otherUndo = await call('DELETE', `${EV}/photos/${autoPhoto.json.id}`, undefined, { 'x-device-id': 'fedcba9876543210fedcba9876543210' });
+check('photo undo from another device 404', otherUndo.status === 404, `HTTP ${otherUndo.status}`);
+const ownUndo = await call('DELETE', `${EV}/photos/${autoPhoto.json.id}`, undefined, { 'x-device-id': device });
+check('photo undo', ownUndo.status === 200, `HTTP ${ownUndo.status}`);
+const undoAgainPhoto = await call('DELETE', `${EV}/photos/${autoPhoto.json.id}`, undefined, { 'x-device-id': device });
+check('photo undo twice 404', undoAgainPhoto.status === 404, `HTTP ${undoAgainPhoto.status}`);
+
+check('admin hides the photo', (await call('PATCH', `/admin/photos/${ballId}`, { status: 'hidden' })).status === 200);
+const hiddenView = await anonymous(() => photoBytes(ballId));
+check('a hidden photo is gone for visitors 404', hiddenView.status === 404, `HTTP ${hiddenView.status}`);
+check('admin shows it again', (await call('PATCH', `/admin/photos/${ballId}`, { status: 'approved' })).status === 200);
+check('photos mode off', (await setPhotos('off')) === 'off');
+const offPhoto = await anonymous(() => sendPhoto({ kind: 'ball' }));
+check('no photos while switched off 409', offPhoto.status === 409, `HTTP ${offPhoto.status}`);
+await wait();
+const liveOff = await call('GET', `${EV}/live`);
+const galleryOff = await call('GET', `${EV}/photos`);
+const offView = await anonymous(() => photoBytes(ballId));
+check('switched off: the wall shows no photos', liveOff.json.photos?.total === 0 && galleryOff.json.photos?.length === 0 && offView.status === 404, `${JSON.stringify(liveOff.json.photos)}, list ${galleryOff.json.photos?.length}, picture ${offView.status}`);
+check('bad photo id 400', (await call('PATCH', '/admin/photos/abc', { status: 'hidden' })).status === 400);
+check('missing photo 404', (await call('DELETE', '/admin/photos/00000000-0000-0000-0000-000000000000')).status === 404);
+if (photosBefore === 0) {
+  const all = await call('DELETE', '/admin/photos'); // nothing but this run's photos: the button "Zmazať všetky fotky"
+  check('admin deletes every photo', all.status === 200 && all.json.deleted === 1 && (await call('GET', '/admin/photos')).json.photos.length === 0, JSON.stringify(all.json));
+} else {
+  check('admin deletes the test photo', (await call('DELETE', `/admin/photos/${ballId}`)).status === 200);
+}
+check(`photos mode back to ${startPhotos}`, (await setPhotos(startPhotos)) === startPhotos);
 
 const feedback = await call('POST', '/feedback', { page: '/test', message: 'Skúšobná pripomienka – ľščťžýáíé', author: 'test' });
 check('feedback', feedback.status === 201 && typeof feedback.json.id === 'number', JSON.stringify(feedback.json));

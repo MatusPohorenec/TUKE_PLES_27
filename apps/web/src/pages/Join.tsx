@@ -1,15 +1,31 @@
 /**
  * Guest form (QR code at the ball -> /zapoj-sa?k=CODE, in the student lobby -> /vestibul/zapoj-sa?k=CODE):
  * pick places, say what you did there, send. The lights go to the venue's own database. Mobile first.
- * No name, no e-mail.
+ * No name, no e-mail. Below the form a guest may add a photo to one of their lights, or one from the ball
+ * (PhotoPanel), unless the admin switched photos off.
  */
 import { useEffect, useState, type FormEvent } from 'react';
 import { FACULTIES, LIMITS, PERSON_ROLES, VISIT_KINDS, type FacultyCode, type PersonRole, type VenueKey, type VisitKind } from '@ples/shared/constants';
-import type { EventInfo, GazetteerHit, SubmitResponse } from '@ples/shared';
+import type { EventInfo, GazetteerHit, LivePin, SubmitResponse } from '@ples/shared';
+import { PhotoPanel, type LitPlace } from '../components/PhotoPanel.tsx';
 import { PlaceSearch, hitKey } from '../components/PlaceSearch.tsx';
 import { ApiError, api } from '../lib/api.ts';
+import { store } from '../lib/device.ts';
 import { Link, queryParam, useVenue } from '../lib/router.tsx';
 import './join.css';
+
+/** The lights sent from this browser, newest first: a photo can go with each (the API checks they are this browser's). */
+function useLitPlaces(venue: VenueKey): [LitPlace[], (add: LivePin[]) => void, (remove: LivePin[]) => void] {
+  const key = `ples-lit-${venue}`;
+  const [lit, setLit] = useState<LitPlace[]>(() => store.get<LitPlace[]>(key) ?? []);
+  const save = (list: LitPlace[]) => { store.set(key, list); return list; };
+  const add = (pins: LivePin[]) => setLit(list => save([
+    ...pins.map(p => ({ pinId: p.id, name: p.name, countryCode: p.countryCode })),
+    ...list.filter(l => !pins.some(p => p.name === l.name && p.countryCode === l.countryCode)), // one button per place
+  ].slice(0, 12)));
+  const remove = (pins: LivePin[]) => setLit(list => save(list.filter(l => !pins.some(p => p.id === l.pinId))));
+  return [lit, add, remove];
+}
 
 /** The access code from the QR link, kept for the tab per venue (each venue's event has its own code). */
 function useEventCode(venue: VenueKey): [string, (v: string) => void] {
@@ -38,6 +54,7 @@ export default function Join() {
   const [error, setError] = useState('');
   const [done, setDone] = useState<SubmitResponse | null>(null);
   const [notice, setNotice] = useState(''); // after an undo: what happened to the lights
+  const [lit, addLit, removeLit] = useLitPlaces(venue.key);
 
   useEffect(() => {
     api.event(slug).then(setEvent).catch((err: ApiError) => setEventError(err.status === 503 || err.status === 404
@@ -64,6 +81,7 @@ export default function Join() {
         faculty: faculty || undefined,
       });
       setDone(res);
+      addLit(res.pins);
       setPlaces([]);
     } catch (err) {
       setError((err as Error).message);
@@ -78,6 +96,7 @@ export default function Join() {
     const one = done.pins.length === 1;
     try {
       await api.undo(slug, done.submissionId);
+      removeLit(done.pins); // their photos are gone with them
       setDone(null);
       setNotice(one ? 'Svetlo sme zrušili, zo steny zmizne o pár sekúnd.' : 'Svetlá sme zrušili, zo steny zmiznú o pár sekúnd.');
     } catch (err) { setError((err as Error).message); }
@@ -85,6 +104,7 @@ export default function Join() {
 
   const closed = event && (event.status === 'closed' || event.status === 'draft');
   const needsCode = event?.requiresCode && !code;
+  const photos = event && !closed && event.photos !== 'off';
 
   return (
     <main className="join">
@@ -102,7 +122,10 @@ export default function Join() {
         <section className="join-card join-done" aria-live="polite">
           <h2>{done.pins.length === 1 ? 'Tvoje svetlo letí na stenu' : 'Tvoje svetlá letia na stenu'}</h2>
           <ul className="join-chips">{done.pins.map(p => <li key={p.id} className="join-chip lit">{p.name}</li>)}</ul>
-          <p className="muted">Pozri sa na zemeguľu, o pár sekúnd sa {done.pins.length === 1 ? 'rozsvieti' : 'rozsvietia'}.</p>
+          <p className="muted">
+            Pozri sa na zemeguľu, o pár sekúnd sa {done.pins.length === 1 ? 'rozsvieti' : 'rozsvietia'}.
+            {photos && ' Máš odtiaľ fotku? Pridaj ju nižšie, ukáže sa na stene pri svojom svetle.'}
+          </p>
           <div className="join-actions">
             <button type="button" className="button" onClick={() => setDone(null)}>Pridať ďalšie miesta</button>
           </div>
@@ -177,6 +200,8 @@ export default function Join() {
           <p className="muted small">Neukladáme meno ani e-mail. Na mapu idú len vybrané miesta a voliteľné údaje vyššie, anonymne.</p>
         </form>
       )}
+
+      {photos && <PhotoPanel slug={slug} code={code} mode={event.photos} venue={venue} places={lit} />}
 
       <footer className="join-foot">
         <Link href="/mapa">Kde všade spolupracuje TUKE →</Link>

@@ -2,11 +2,12 @@
  * Guest lights of an event for a globe page: one summary request, then the shared live feed every 2 s.
  * The feed is the same for every viewer (the API computes it once per 2 s), each page keeps its own cursor and takes only
  * pins newer than it. Hidden tabs do not poll (usePoll). Every few minutes the summary is loaded again,
- * so lights an admin hid or a guest took back disappear from the wall too.
+ * so lights an admin hid or a guest took back disappear from the wall too. The feed also carries the newest guests'
+ * photos (`photos`, for PhotoMoments on the wall).
  */
 import { useEffect, useRef, useState } from 'react';
 import { LIMITS } from '@ples/shared/constants';
-import type { EventInfo, LivePin, LiveTotals } from '@ples/shared';
+import type { EventInfo, LivePin, LiveTotals, PhotoFeed } from '@ples/shared';
 import type { WallScene } from '../globe/core.ts';
 import { api } from './api.ts';
 import { usePoll } from './usePoll.ts';
@@ -23,6 +24,7 @@ export function useGuests(scene: WallScene | null, slug: string, { intervalMs = 
   const [totals, setTotals] = useState<LiveTotals>({ pins: 0, places: 0, countries: 0 });
   const [recent, setRecent] = useState<LivePin[]>([]);
   const [available, setAvailable] = useState(true);
+  const [photos, setPhotos] = useState<PhotoFeed | null>(null);
   const cursor = useRef<number | null>(null);
   const synced = useRef(0); // when the summary was loaded
   const seen = useRef(0); // newest pin this page has shown, so a resync does not fly the same light in twice
@@ -76,6 +78,9 @@ export function useGuests(scene: WallScene | null, slug: string, { intervalMs = 
         }
         setEvent(live.event);
         setTotals(live.totals);
+        // a new object only when something changed (an API older than the photos sends none)
+        const next = live.photos ?? null;
+        setPhotos(prev => (prev && next && prev.total === next.total && prev.latest.map(p => p.id).join() === next.latest.map(p => p.id).join() ? prev : next));
       }
       setAvailable(true);
     } catch (err) {
@@ -85,5 +90,5 @@ export function useGuests(scene: WallScene | null, slug: string, { intervalMs = 
     }
   }, intervalMs, Boolean(scene));
 
-  return { event, totals, recent, available };
+  return { event, totals, recent, available, photos };
 }

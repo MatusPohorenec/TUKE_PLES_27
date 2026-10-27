@@ -12,6 +12,7 @@ import { feedbackRoutes } from './routes/feedback.ts';
 import { gateRoutes } from './routes/gate.ts';
 import { gazetteerRoutes } from './routes/gazetteer.ts';
 import { globe } from './routes/globe.ts';
+import { photoRoutes } from './routes/photos.ts';
 
 export const app = new Hono().basePath('/api');
 
@@ -62,6 +63,7 @@ for (const venue of Object.values(VENUES)) {
   app.route(`${base}/globe`, globe);
   app.route(`${base}/gazetteer`, gazetteerRoutes);
   app.route(`${base}/events`, eventRoutes);
+  app.route(`${base}/events`, photoRoutes);
   app.route(`${base}/feedback`, feedbackRoutes);
   app.route(`${base}/admin`, adminRoutes);
 }

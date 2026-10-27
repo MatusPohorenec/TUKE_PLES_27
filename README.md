@@ -4,12 +4,12 @@
 
 | Adresa | Čo ukazuje |
 |---|---|
-| `/` | Stena: obrazovka pre LED stenu, vždy v režime kiosku (bez odkazov a tlačidiel, kurzor sa skryje, obrazovka nezhasne); lištu s odkazmi ukáže `?kiosk=0`. Na mobile namiesto QR panelu tlačidlo „Pridaj svoje svetlo". Predvolene sa strieda 2D mapa a 3D zemeguľa (pozri [Stena: striedanie 2D a 3D](#stena-striedanie-2d-a-3d)); `?view=2d` ukazuje len mapu, `?view=3d` len zemeguľu. |
+| `/` | Stena: obrazovka pre LED stenu, vždy v režime kiosku (bez odkazov a tlačidiel, kurzor sa skryje, obrazovka nezhasne); lištu s odkazmi ukáže `?kiosk=0`. Na mobile namiesto QR panelu tlačidlo „Pridaj svoje svetlo". Predvolene sa strieda 2D mapa a 3D zemeguľa (pozri [Stena: striedanie 2D a 3D](#stena-striedanie-2d-a-3d)); `?view=2d` ukazuje len mapu, `?view=3d` len zemeguľu. Fotky hostí sa na nej ukazujú ako pohľadnice (pozri [Fotky hostí](#fotky-hostí)). |
 | `/onboarding` | Potvrdenie účasti: meno, príslušnosť a voliteľne doprovod. Cieľ QR kódu na pozvánkach; pred plesom jediná otvorená stránka. |
 | `/porovnanie` | 3D zemeguľa a 2D mapa vedľa seba v rozlíšení LED steny, spustené naraz. |
 | `/mapa` | Interaktívna mapa: filtre podľa typu spolupráce, detail miesta so zdrojmi. |
-| `/zapoj-sa` | Formulár pre hostí na plese (cieľ QR kódu na stene). |
-| `/admin` | Administrácia: stav plesu, potvrdená účasť (CSV), scéna steny, kód v QR, moderovanie, pripomienky. Vždy dostupná. |
+| `/zapoj-sa` | Formulár pre hostí na plese (cieľ QR kódu na stene): miesta, kde boli, a fotka k svetlu alebo z plesu. |
+| `/admin` | Administrácia: stav plesu, fotky hostí (schvaľovanie), potvrdená účasť (CSV), scéna steny, kód v QR, moderovanie, pripomienky. Vždy dostupná. |
 | `/o-projekte` | Zdroje dát a licencie. |
 
 **Pred plesom, na plese, po plese.** Čo vidia návštevníci, prepína admin v `/admin` (Stav plesu):
@@ -37,6 +37,22 @@ Bez `?view` beží stena v slučke:
 5. Svetlá zhasnú, zemeguľa sa natočí na Košice a prelinie sa do mapy, ktorá sa priblíži na Košice. Znova od bodu 1.
 
 Prehrávacie PC: `https://srdcom.tuke.sk/?k=KÓD` (kiosk je predvolený; bez kódu stačí `https://srdcom.tuke.sk`), časy sa dajú upraviť priamo v adrese, napr. `?hold=20&turns=2`. `?cycle=fast` slučku skráti na test (15 s, 0,3 otáčky). Okno prehliadača musí byť v popredí, inak prehliadač animácie brzdí. Klávesa R prehrá otvorenie znova.
+
+### Fotky hostí
+
+Hosť vo formulári `/zapoj-sa` (pod rozsvietením miest, karta „Pridaj fotku na stenu") pošle fotku k jednému zo svojich svetiel (seba v danej krajine) alebo „Práve na plese". Telefón fotku sám zmenší (1 280 px na dlhšej strane, JPEG asi 150–300 kB) a zahodí z nej údaje fotoaparátu aj GPS polohu; API fotku skontroluje a tieto údaje pre istotu zahodí znova. Pred odoslaním ju hosť ešte raz vidí ako pohľadnicu a potvrdí, že ľudia na nej súhlasia so zobrazením na stene. Do 15 minút ju môže zmazať („Zlá fotka? Zmazať ju"); zrušenie svetla zmaže aj jeho fotky. Fotka k svetlu musí byť k svetlu z toho istého telefónu, miesto si API vezme zo svetla.
+
+Na stene fotka vyletí ako pohľadnica z hviezdy svojho miesta (fotka z plesu z Košíc), asi 9 s ostane a vráti sa do nej. Zemeguľa sa pri tom zastaví a natočí na dané miesto, pohľadnica je vedľa nej so zlatou čiarou k svetlu. Na 2D mape ide tam, kde zakryje najmenej svetiel, čo najbližšie k svojmu svetlu, nikdy cez titulok, počítadlá ani QR. Nové fotky idú hneď za sebou a karty miest medzitým počkajú; keď nové nie sú, raz za 40 s sa vráti niektorá staršia. `?photos=0` fotky na stene vypne.
+
+V `/admin` je karta **Fotky hostí** (obnovuje sa sama každé 4 s, dá sa moderovať aj z mobilu):
+
+| Režim | Čo sa deje |
+|---|---|
+| Vypnuté | hostia fotky neposielajú a stena žiadne neukazuje |
+| Po schválení (predvolené) | fotka čaká v záložke „Čakajú", na stenu ide až po kliknutí na Schváliť |
+| Hneď na stenu | fotka ide na stenu hneď; nevhodnú skryje tlačidlo Skryť, zo steny zmizne do pár sekúnd |
+
+Fotky sú osobné údaje: sú len v databáze plesu (vestibul má vlastné), vidia ich hostia na stene a organizátori, po plese ich treba zmazať tlačidlom „Zmazať všetky fotky". Jedna fotka zaberie v databáze asi 150–300 kB (+ malý náhľad), na udalosť je limit 1 000 fotiek. Pred prvým nasadením tejto verzie treba na oboch databázach TUKE migráciu `0004_photos.sql` (`npm run db:migrate -- --env .env.tuke`, a to isté s `--venue vestibul`); bez nej API beží ďalej, len fotky neprijíma.
 
 ## Štruktúra
 
@@ -261,6 +277,7 @@ Odporúčanie: na ples **ručné nasadenie zo zipu**. Build sa robí lokálne a 
 - **HTTP 500 na `/app.js/...`**: Node sa nespustil. Log je v `App_Data\iisnode` (File Manager). Najčastejšie príčiny sú verzia Node.js staršia ako 18.17 alebo chyba v `App_Data\.env`.
 - **CORS chyba v prehliadači**: `WEB_ORIGIN` sa musí presne zhodovať s adresou webu (`https://srdcom.tuke.sk`, bez lomky na konci).
 - **`"database":"down"`** alebo **`"not_configured"`**: zlé údaje v `App_Data\.env`, súbor chýba, alebo firewall databázy. Stena aj tak beží z pribaleného dátového balíka.
+- **Fotky**: hláška „Fotka je príliš veľká" (HTTP 413) znamená fotku nad 1,2 MB po zmenšení v telefóne (nemalo by nastať). Riadok `ExperimentalWarning: buffer.File` v logu iisnode je od Node.js 18 pri čítaní fotky a nevadí. Karta Fotky hostí v `/admin` hlási chybu, kým nie je spustená migrácia `0004_photos.sql`.
 
 ### Vercel (pôvodné nasadenie, ruší sa)
 

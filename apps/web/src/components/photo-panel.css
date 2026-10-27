@@ -1,0 +1,31 @@
+/* "Pridaj fotku na stenu" on the guest form (PhotoPanel.tsx), in the look of the form (join.css). */
+.join-photo { gap: 16px; border-color: rgba(255, 181, 46, 0.32); }
+.join-photo-head { display: grid; gap: 6px; }
+.join-photo-head h2 { display: flex; align-items: center; gap: 10px; font: italic 500 30px/1.05 var(--font-display); color: var(--warm); }
+.join-photo-head p { margin: 0; }
+.photo-icon { width: 1.05em; height: 1.05em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+.join-photo-head .photo-icon { width: 0.8em; height: 0.8em; }
+.photo-option { gap: 8px; cursor: pointer; background: transparent; color: var(--silver); }
+.photo-option:hover:not(:disabled) { border-color: var(--warm); color: var(--warm); }
+.photo-option:disabled { opacity: 0.5; cursor: default; }
+
+/* the photo as the wall will show it: a small postcard */
+.photo-proof {
+  margin: 0; justify-self: center; width: min(100%, 340px); padding: 10px 10px 0; border-radius: 6px;
+  background: linear-gradient(180deg, #eef2ff, #d9e1f7); color: var(--ink);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45), 0 0 34px rgba(255, 181, 46, 0.22); transform: rotate(-1.2deg);
+}
+.photo-proof img { display: block; width: 100%; height: auto; max-height: 52vh; object-fit: contain; border-radius: 2px; background: #0b1640; }
+.photo-proof figcaption { padding: 8px 2px 10px; font: italic 600 22px/1.15 var(--font-display); color: #0b1640; }
+.photo-proof.sent { width: min(70%, 220px); transform: rotate(1.4deg); }
+.photo-proof.sent figcaption { font-size: 17px; }
+
+.join-consent {
+  display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 12px;
+  border: 1px solid var(--line-strong); cursor: pointer; line-height: 1.4;
+}
+.join-consent input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: var(--warm); }
+.join-consent.on { border-color: rgba(255, 181, 46, 0.55); }
+.photo-sent { display: grid; gap: 10px; }
+.photo-sent h3 { font: italic 500 28px/1.1 var(--font-display); color: var(--warm); }
+.photo-sent p { margin: 0; }

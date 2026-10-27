@@ -36,3 +36,15 @@
 /* the preview link under the status switch: chip beside its explanation */
 .admin-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; }
 .admin-preview span { flex: 1 1 260px; }
+
+/* guests' photos: tabs, then a grid of thumbnails with big buttons (moderation from a phone at the ball) */
+.admin-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-photos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.admin-photos li { display: grid; gap: 8px; align-content: start; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: rgba(2, 6, 23, 0.4); }
+.admin-photos a { display: block; border-radius: 8px; overflow: hidden; background: #0b1640; }
+.admin-photos img { display: block; width: 100%; height: 190px; object-fit: contain; }
+.admin-photo-text { display: grid; gap: 2px; min-width: 0; }
+.admin-photo-text b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-photo-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.admin-photo-actions .button { min-height: 40px; padding: 0 1em; }
+.admin-photos-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }

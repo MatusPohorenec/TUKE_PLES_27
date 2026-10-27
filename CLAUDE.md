@@ -3,7 +3,7 @@
 Live web app for the TUKE ball 2027, which celebrates **75 years of the Technical University of Košice (founded 8 July 1952)**.
 A dark, "switched-off" rotating globe is shown on the LED wall at the ball: light flies from Košice to every place where TUKE
 has documented cooperation, places light up as twinkling stars, and guests add the places they have been to via a QR code,
-live. Theme: midnight blue + silver, light / play of light (svetlohra). Visual polish and correct, sourced data both matter.
+live, with a photo if they like (in a place they lit, or at the ball), which flies onto the wall as a postcard. Theme: midnight blue + silver, light / play of light (svetlohra). Visual polish and correct, sourced data both matter.
 After the ball the wall moves permanently to the student lobby (vestibul): `/vestibul` is the same app on a database of its
 own, running beside the ball (built 2026-10-27, see „Venues"; switched off for now). Before the ball the site shows only
 /onboarding (guests confirm their attendance; the QR on the invitations) and a teaser elsewhere; the admin switches the
@@ -14,7 +14,7 @@ ball on in /admin. The wall alternates the 2D map and the 3D globe (see „Befor
   https://api.srdcom.tuke.sk/app.js/api/health), database Microsoft SQL Server 2022 on portal.msweb.tuke.sk (same machine).
 - Git: `main` is the TUKE version (branch `mssql-tuke` merged 2026-10-20). Tags: `pred-mssql` = last Vercel/Postgres version,
   `pred-node18` = the Node 22 dependency set, `pred-casovou-osou` = the wall before the timeline opening,
-  `pred-vestibulom` = the last single-database version (ff62be7).
+  `pred-vestibulom` = the last single-database version (ff62be7), `pred-fotkami` = before the guests' photos (0ba788c).
 - Vercel (https://tuke-ples-27.vercel.app, Neon Postgres) is being retired: the user deletes the project himself. Until it is
   gone `vercel.json` keeps Git deployments off (`git.deploymentEnabled: false`); after that `vercel.json` can be deleted.
 - Repo: https://github.com/MatusPohorenec/TUKE_PLES_27 (**public**: never commit secrets, personal data or the TUKE database
@@ -39,13 +39,15 @@ ball on in /admin. The wall alternates the 2D map and the 3D globe (see „Befor
 - Guest lights stay anonymous (device/IP only as HMAC hashes). The onboarding stores a name and an affiliation (personal
   data, the user's decision 2026-10-27): only in the ball's database, shown only in /admin (and its CSV), deleted after the
   ball, never linked to lights, never in the repo or in logs. Nomination PDFs contain names/e-mails: store aggregates only.
+  Guests' photos (faces) are personal data too: only in the venue's database, shown on the wall once approved (or at
+  once in mode auto) and in /admin, metadata (EXIF/GPS) stripped, deleted after the ball („Zmazať všetky fotky").
 
 ## Layout
 
 ```
 apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r186 with own shaders
   src/pages        Wall.tsx (/ – the LED wall: the 2D/3D cycle, `?view=2d`/`?view=3d` keeps one), MapPage.tsx (/mapa),
-                   Join.tsx (/zapoj-sa), Onboarding.tsx (/onboarding), Teaser.tsx (closed pages), Admin.tsx (/admin),
+                   Join.tsx (/zapoj-sa, + PhotoPanel), Onboarding.tsx (/onboarding), Teaser.tsx (closed pages), Admin.tsx (/admin),
                    About.tsx (/o-projekte), Compare.tsx (/porovnanie – 3D and 2D side by side);
                    the routes are listed in src/main.tsx (ROUTES; build:tuke makes a folder per route, also under
                    /vestibul); every page also runs under /vestibul for the student lobby (lib/venue.ts)
@@ -54,20 +56,22 @@ apps/web         Vite + React 19 + TypeScript; globe = globe.gl 2.46 + three r18
                    orthographic three.js scene, d3-geo, camera that widens with the light), arcs.ts (all cooperation arcs,
                    one mesh, time-driven shader; path function per view), stars.ts (StarLayer, GPU-timed births),
                    borders.ts (globe outlines, one LineSegments), useGlobeScene.ts (creates the 3D or 2D scene)
-  src/components   PlaceSpotlight.tsx (cards on the wall), CountUp.tsx (smooth counters), GlobeTooltip, QrCode, Starfield,
-                   FeedbackButton („Pripomienka"), PlaceSearch
+  src/components   PlaceSpotlight.tsx (cards on the wall; `Stage` shared with the photos), PhotoMoments.tsx (guests' photos
+                   on the wall), PhotoPanel.tsx (photo upload on /zapoj-sa), AdminPhotos.tsx (photo moderation in /admin),
+                   CountUp.tsx (smooth counters), GlobeTooltip, QrCode, Starfield, FeedbackButton („Pripomienka"), PlaceSearch
   src/lib          api.ts (VITE_API_URL base + the venue prefix, credentials, fallback error messages), useGuests.ts
                    (summary + shared live feed), usePoll.ts (pauses in hidden tabs), useGlobeData.ts, router.tsx (tiny
                    router, ignores a trailing slash; Link keeps paths inside the open venue; useVenue), venue.ts
                    (currentVenue, pageOf, venueHref), gate.ts (useGate, pageAllowed, refreshGate), format.ts (Slovak
-                   plural, number format), device.ts
-apps/api         Hono 4 REST API under /api (routes: gate, globe, events, gazetteer, admin, feedback), the same routes again
+                   plural, number format), device.ts, photo.ts (resize + re-encode a guest's photo in the browser)
+apps/api         Hono 4 REST API under /api (routes: gate, globe, events, photos, gazetteer, admin, feedback), the same routes again
                  under /api/vestibul on the lobby's database; server.ts = the one entry (local port 8787, or the iisnode
                  named pipe in PORT; loads App_Data/.env under iisnode; strips a leading /app.js); app.ts (CORS by
                  WEB_ORIGIN, routes per venue, health); snapshot.ts = bundled dataset fallback when the DB is down;
                  lib/http.ts (CACHE headers, shared() = per-process cache of live and summary, 2 s), lib/security.ts
                  (HMACs, client IP = last X-Forwarded-For entry, admin cookie Path=/ SameSite=Strict), lib/venue.ts
-                 (venueOf(c) from the path)
+                 (venueOf(c) from the path), lib/jpeg.ts (cleanJpeg: check a JPEG, drop its metadata), lib/photos.ts
+                 (photo metadata for the wall, the live feed and the admin)
 packages/db      MS SQL Server via Kysely 0.27 + tedious 19: migrations/*.sql (T-SQL, GO batches, applied by
                  src/migrations.ts, recorded in dbo.schema_migrations), schema.ts (Kysely types = SQL names), client.ts
                  (per venue: MSSQL_* / MSSQL_VESTIBUL_* env, one pool each, withSchema('dbo'); loadEnv with --env,
@@ -278,6 +282,57 @@ and switches „Ples prebieha".
 - api-smoke walks the states (open: visitor light 409, admin light 201, attendance; live; closed: 409s) and puts the
   starting status back; a random device per run keeps the rate limits clear.
 
+## Guests' photos (built 2026-10-27, tag `pred-fotkami` = before)
+
+The user: guests who scan the QR may add a photo of themselves in a place they lit, or at the ball right now, and the
+photos show live on the wall in popups.
+- Form (PhotoPanel.tsx, a card „Pridaj fotku na stenu" under the lights on /zapoj-sa; the done card points to it):
+  buttons „Práve na plese" (lobby: „Práve tu na TUKE") and one per light sent from this browser (localStorage
+  `ples-lit-<venue>`, newest first, max 12; an undone light leaves). lib/photo.ts prepares the photo: `<img>.decode()`
+  applies the EXIF orientation, a canvas scales it in two steps to 1280 px (+ a 360 px thumb), JPEG 0.82/0.72; the
+  re-encode drops EXIF/GPS. The guest sees it as a postcard, ticks „Ľudia na fotke súhlasia…", sends; „Zlá fotka?
+  Zmazať ju" within 15 min. The file input is hidden; an option button calls `input.click()` inside the tap.
+- API (routes/photos.ts, mounted under /events beside events.ts): POST `/events/:slug/photos`, multipart: `meta` =
+  JSON of PhotoUploadSchema (kind place + pinId | ball, code), `photo` + `thumb` JPEG files. Accepted like lights (live,
+  or open + admin), photo_mode not off, access code, 6 per device / 300 per IP per 10 min, 1 000 per event; hono/body-limit
+  → 413. A place photo must name a light of the same browser (pins ⨝ submissions.device_hash), the place is copied
+  from the pin. `cleanJpeg` walks the markers (progressive scans too), drops APP1–15 except APP14, COM and anything after
+  EOI, and gives the size (≤ 2048 px, thumb ≤ 720). Status pending (review) or approved (auto). GET `/photos` = the
+  wall's gallery (approved, shared 2 s); GET `/photos/:id[?size=thumb]` = the JPEG (approved and mode not off: public,
+  `max-age=604800, immutable`; else only with the admin session, `private, no-store`); DELETE `/photos/:id` = the guest's
+  undo. Undoing a submission deletes its pins' photos (photos.pin_id has no FK: one cascade path). /live carries
+  `photos: { latest (newest 12 approvals), total }`. Without migration 0004 the API runs on: eventInfo says photos 'off',
+  the feed is empty (photoFeed catches), the admin card shows an error.
+- DB (migration 0004): events.photo_mode (off | review | auto, default review); dbo.photos: GUID id, kind, pin_id, place
+  copy, status pending/approved/hidden, width/height, image + thumb VARBINARY(MAX), device/IP HMACs, created_at,
+  reviewed_at (= approval time, the wall's order). About 150–300 kB per photo.
+- Admin (AdminPhotos.tsx, right under the status card, polls every 4 s): modes Vypnuté / Po schválení / Hneď na stenu,
+  tabs Čakajú / Na stene / Skryté with thumbnails (click = the full JPEG), Schváliť / Skryť / Zmazať, „Zmazať všetky
+  fotky". API GET `/admin/photos`, PATCH/DELETE `/admin/photos/:id`, DELETE `/admin/photos` (the whole venue), EventPatch
+  `photos`; audit photo_status, photo_delete, photos_delete_all.
+- Wall (PhotoMoments.tsx + photo-moments.css): a silver postcard (kicker „Fotka hosťa", the place, country · visit kind;
+  a ball photo: the venue's name and „Košice · HH:MM"), own slight tilt, gold glow. It flies out of its star (Web
+  Animations, 1.2 s), a glint sweeps over it, it stays 9 s (a returning one 7 s) and flies back (0.8 s); the star flares
+  (guest star by pinKey, a ball photo: 'origin'). The globe holds still and first turns to the place (`showPlace`: 2.2 s,
+  lat clamped to 8–45°, no turn when facing > 0.8; `endShowPlace` restarts the rotation from 0; turns() counts only while
+  auto-rotating, so photos lengthen the 3D phase). `placeCard` tries every position (16 px grid, scales 1–0.6), never over
+  obstacles (title text, counters, QR, nav) or the light's ring; cost = 1000 × (1 − scale) + 15 per lit place covered
+  (summed-area table, 24 px cells) + in the globe's disc 220 + 2.5/px + 0.1/px from its light. Globe: a gold line to the
+  light; flat map: the ring only. Measured 2026-10-27: 2D 1920×1080 and 960×540 top left at scale 0.8 (the title text
+  limits it; picture 576×384 unscaled at 1920), 3D 960×540 right of the globe with the line to Nepal; no long tasks.
+- Order: the wall loads `/photos` once (approved in the last 3 min = new), new ids from /live queue up in approval order,
+  a total that differs from the gallery reloads it (hidden/deleted photos leave, even while shown). With an empty queue
+  an older photo returns every 40 s (least recently shown, the first 20 s after the page opens); nothing while busy()
+  and 5 s after an opening. Mode off empties the gallery; switching back on shows every photo once more as new. `Stage`:
+  while a photo comes or shows no place card starts and a shown card leaves after 2.5 s; a photo waits for a card to
+  leave. `?photos=0` keeps photos off the wall.
+- Verified 2026-10-27 (native PC): api-smoke (+31 photo checks: review/approve/hide/off/auto, EXIF and GPS stripped,
+  someone else's light 404, undone light → photo gone, 413, cut JPEG 400) passes for both venues on the dev API and on
+  the Node 18 bundle (multipart via undici; Node 18 logs `ExperimentalWarning: buffer.File`, harmless); a 540 kB photo
+  uploads in 64 ms locally. In the pane: the form on a phone (1500×2000 → 960×1280, preview, consent, sent, pending),
+  the admin card, the wall in 2D and 3D and in the fast cycle. Not tested: an upload through IIS/iisnode at TUKE, real
+  phone photos (iOS converts HEIC to JPEG in the picker; a browser that cannot decode a format shows an error).
+
 ## The wall (/) – behaviour as built
 
 **The cycle** (default without `?view`; Wall.tsx `CYCLE`, on site `?hold=<min>`, `?turns=<n>`, test `?cycle=fast` = 15 s
@@ -482,8 +537,17 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   b643def deployed and verified. The user then switched „Pred plesom" and still saw the map on srdcom.tuke.sk until
   deleting cookies: the admin session opened every page. Since then the admin sees what the guests see, every page only
   in the opt-in preview from /admin (section „Before the ball").
+  Then the user asked for guests' photos on the form and as popups on the wall (section „Guests' photos"): tag
+  `pred-fotkami`, migration 0004 on ples_dev and ples_vestibul_dev, built and verified locally (not deployed yet).
 
 ## Open questions / next
+
+- Guests' photos (section above) are built and committed but not deployed: first migration 0004 on both TUKE databases
+  (only with the user's OK: `npm run db:migrate -- --env .env.tuke` and the same with `--venue vestibul`), then the user
+  uploads both zips; check health/build.txt, /admin „Fotky hostí", a photo from a phone (it needs „Ples prebieha" or an
+  admin preview) and the postcard on the wall. Organisers: who moderates during the ball (review is the default), the
+  consent and privacy wording, deleting the photos after the ball, whether the lobby wants photos (mode off there?),
+  the size limit of the TUKE database (~300 kB per photo, max 1 000 per event).
 
 - Web 8e73e5e deployed and verified 2026-10-27 (the admin preview; API stays b643def): /build.txt 8e73e5e; with a
   valid admin session (pane) and „Pred plesom" srdcom.tuke.sk → /onboarding, /mapa → teaser; /admin shows „Náhľad

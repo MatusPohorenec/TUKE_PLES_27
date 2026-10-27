@@ -1,11 +1,13 @@
 /**
  * Operator console of a venue: what the venue shows (before the ball only the onboarding, the ball night, after the
- * ball, off), the wall scene, the QR access code, confirmed attendance, moderation of lights, reviewer comments.
- * /admin manages the ball's database, /vestibul/admin the student lobby's; one login opens both.
+ * ball, off), the guests' photos (moderation), the wall scene, the QR access code, confirmed attendance, moderation of
+ * lights, reviewer comments. /admin manages the ball's database, /vestibul/admin the student lobby's; one login opens
+ * both.
  */
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { DISPLAY_SCENES, FACULTIES, PERSON_ROLES, VENUES, VISIT_KINDS, gateOf, type EventStatus, type Venue, type VenueKey } from '@ples/shared/constants';
 import type { AdminAttendee, AdminFeedback, AdminPin, EventInfo } from '@ples/shared';
+import { AdminPhotos } from '../components/AdminPhotos.tsx';
 import { ApiError, api } from '../lib/api.ts';
 import { plural } from '../lib/format.ts';
 import { previewHref, refreshGate } from '../lib/gate.ts';
@@ -151,6 +153,8 @@ function Console({ venue }: { venue: Venue }) {
           </p>
         )}
       </section>
+
+      <AdminPhotos venue={venue} event={event} onMode={photos => patch({ photos })} />
 
       {venue.onboarding && (
         <section className="admin-card admin-wide">

@@ -1,6 +1,7 @@
 import type {
-  AdminAttendee, AdminFeedback, AdminPin, AttendeeInput, AttendeeResponse, EventInfo, EventPatch, FeedbackInput, GateResponse, GazetteerHit,
-  GlobeResponse, LiveResponse, PinSubmit, PlaceDetail, SubmitResponse, SummaryResponse,
+  AdminAttendee, AdminFeedback, AdminPhoto, AdminPin, AttendeeInput, AttendeeResponse, EventInfo, EventPatch, FeedbackInput, GateResponse,
+  GazetteerHit, GlobeResponse, LiveResponse, PhotoStatus, PhotoUpload, PhotoUploadResponse, PinSubmit, PlaceDetail, SubmitResponse,
+  SummaryResponse, WallPhoto,
 } from '@ples/shared';
 import { deviceId } from './device.ts';
 import { currentVenue } from './venue.ts';
@@ -41,16 +42,35 @@ async function request<T>(path: string, init: RequestInit & { json?: unknown } =
 function fallbackMessage(status: number, path: string, method: string): string {
   const login = path === '/admin/login';
   const attendance = path.endsWith('/attendees') && method === 'POST';
+  const photo = /\/events\/[^/]+\/photos(\/|$)/.test(path);
   switch (status) {
-    case 400: return 'Neplatné údaje. Skús to znova.';
+    case 400: return photo && method === 'POST' ? 'Fotku sa nepodarilo spracovať. Skús inú.' : 'Neplatné údaje. Skús to znova.';
     case 401: return login ? 'Nesprávne heslo.' : 'Prihlás sa.';
     case 403: return currentVenue().key === 'ples' ? 'Na pridanie svetla naskenuj QR kód z plesu.' : 'Na pridanie svetla naskenuj QR kód na stene vo vestibule.';
-    case 404: return path.startsWith('/admin/attendees') ? 'Záznam už neexistuje.' : method === 'DELETE' ? 'Svetlá sa už nedajú vrátiť.' : 'Nenašlo sa.';
-    case 409: return attendance ? 'Potvrdzovanie účasti je uzavreté.' : 'Pridávanie svetiel je momentálne zatvorené.';
-    case 429: return login ? 'Priveľa pokusov. Skús to o 15 minút.' : attendance ? 'Veľa potvrdení naraz. Skús to o pár minút.' : 'Veľa požiadaviek naraz. Skús to o pár minút.';
+    case 404:
+      if (path.startsWith('/admin/attendees')) return 'Záznam už neexistuje.';
+      if (path.startsWith('/admin/photos')) return 'Fotka už neexistuje.';
+      if (photo) return method === 'DELETE' ? 'Fotka sa už nedá zmazať.' : 'Toto svetlo nepoznáme. Rozsvieť miesto znova a pridaj k nemu fotku.';
+      return method === 'DELETE' ? 'Svetlá sa už nedajú vrátiť.' : 'Nenašlo sa.';
+    case 409: return attendance ? 'Potvrdzovanie účasti je uzavreté.' : photo ? 'Posielanie fotiek je momentálne zatvorené.' : 'Pridávanie svetiel je momentálne zatvorené.';
+    case 413: return 'Fotka je príliš veľká.';
+    case 429: return login ? 'Priveľa pokusov. Skús to o 15 minút.' : attendance ? 'Veľa potvrdení naraz. Skús to o pár minút.' : photo ? 'Veľa fotiek naraz. Skús to o pár minút.' : 'Veľa požiadaviek naraz. Skús to o pár minút.';
     case 503: return path.startsWith('/admin') ? 'Administrácia nie je zapnutá.' : 'Služba je dočasne nedostupná. Skús to o chvíľu.';
     default: return status >= 500 ? 'Na serveri sa niečo pokazilo. Skús to znova.' : `Chyba ${status}`;
   }
+}
+
+/** A photo of the venue's event as an image address (<img src>): the wall's JPEG, or ?size=thumb for the admin's list. */
+export const photoUrl = (slug: string, id: string, size?: 'thumb') =>
+  `${API_URL}${currentVenue().prefix}/events/${slug}/photos/${id}${size ? `?size=${size}` : ''}`;
+
+/** The photo as multipart form data: the fields as JSON, the picture and its small copy as JPEG files. */
+function photoForm(meta: PhotoUpload, photo: Blob, thumb: Blob): FormData {
+  const form = new FormData();
+  form.append('meta', JSON.stringify(meta));
+  form.append('photo', photo, 'photo.jpg');
+  form.append('thumb', thumb, 'thumb.jpg');
+  return form;
 }
 
 export const api = {
@@ -65,6 +85,11 @@ export const api = {
   // polled by the wall and the map: always from the server, never an older copy from the browser cache
   live: (slug: string) => request<LiveResponse>(`/events/${slug}/live`, { cache: 'no-store' }),
   summary: (slug: string) => request<SummaryResponse>(`/events/${slug}/summary`, { cache: 'no-store' }),
+  // the browser sets the multipart content type (with its boundary) itself
+  sendPhoto: (slug: string, meta: PhotoUpload, photo: Blob, thumb: Blob) =>
+    request<PhotoUploadResponse>(`/events/${slug}/photos`, { method: 'POST', body: photoForm(meta, photo, thumb) }),
+  deletePhoto: (slug: string, id: string) => request<{ ok: true }>(`/events/${slug}/photos/${id}`, { method: 'DELETE' }),
+  photos: (slug: string) => request<{ photos: WallPhoto[] }>(`/events/${slug}/photos`, { cache: 'no-store' }),
   feedback: (body: FeedbackInput) => request<{ id: number }>('/feedback', { method: 'POST', json: body }),
   admin: {
     login: (password: string) => request<{ ok: true }>('/admin/login', { method: 'POST', json: { password } }),
@@ -76,6 +101,10 @@ export const api = {
     patchPin: (id: number, status: 'visible' | 'hidden') => request<{ ok: true }>(`/admin/pins/${id}`, { method: 'PATCH', json: { status } }),
     attendees: () => request<{ attendees: AdminAttendee[] }>('/admin/attendees'),
     deleteAttendee: (id: number) => request<{ ok: true }>(`/admin/attendees/${id}`, { method: 'DELETE' }),
+    photos: () => request<{ photos: AdminPhoto[] }>('/admin/photos'),
+    patchPhoto: (id: string, status: PhotoStatus) => request<{ ok: true }>(`/admin/photos/${id}`, { method: 'PATCH', json: { status } }),
+    deletePhoto: (id: string) => request<{ ok: true }>(`/admin/photos/${id}`, { method: 'DELETE' }),
+    deleteAllPhotos: () => request<{ ok: true; deleted: number }>('/admin/photos', { method: 'DELETE' }),
     feedback: () => request<{ feedback: AdminFeedback[] }>('/admin/feedback'),
     patchFeedback: (id: number, status: string) => request<{ ok: true }>(`/admin/feedback/${id}`, { method: 'PATCH', json: { status } }),
   },

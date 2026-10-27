@@ -129,6 +129,19 @@ export const DISPLAY_SCENES = [
 ] as const;
 export type DisplayScene = (typeof DISPLAY_SCENES)[number]['code'];
 
+/**
+ * Guests' photos on the wall (the operator switches it in /admin): off: none are sent and the wall shows none ·
+ * review: a photo goes on the wall once an admin approved it · auto: at once (an admin can still hide it).
+ */
+export const PHOTO_MODES = ['off', 'review', 'auto'] as const;
+export type PhotoMode = (typeof PHOTO_MODES)[number];
+/** place: the guest in one of the places they lit · ball: at the ball right now (shown at Košice) */
+export const PHOTO_KINDS = ['place', 'ball'] as const;
+export type PhotoKind = (typeof PHOTO_KINDS)[number];
+/** pending: waits for an admin · approved: on the wall · hidden: taken off the wall */
+export const PHOTO_STATUSES = ['pending', 'approved', 'hidden'] as const;
+export type PhotoStatus = (typeof PHOTO_STATUSES)[number];
+
 /** Limits enforced by the API and shown by the form. */
 export const LIMITS = {
   placesPerSubmission: 10,
@@ -144,4 +157,19 @@ export const LIMITS = {
   attendeesPerIp10min: 300,
   attendeeNameChars: 120,
   attendeeAffiliationChars: 160,
+  /**
+   * Photos: the browser sends a JPEG with this long side (enough for a postcard on a 4K wall, ~150–300 kB) and a
+   * small one for the admin's list; the API refuses bigger files and pictures.
+   */
+  photoSide: 1280,
+  photoThumbSide: 360,
+  photoMaxSide: 2048,
+  photoBytes: 1_200_000,
+  photoThumbBytes: 150_000,
+  photosPerDevice10min: 6,
+  photosPerIp10min: 300,
+  /** at most this many photos per event: keeps the database small (~250 kB each) */
+  photosPerEvent: 1000,
+  /** newest approved photos in the live feed; the wall loads the whole list when the count changes otherwise */
+  photoWindow: 12,
 } as const;

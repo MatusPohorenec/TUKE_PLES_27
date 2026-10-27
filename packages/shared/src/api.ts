@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
-  DISPLAY_SCENES, EVENT_STATUSES, FACULTIES, LIMITS, PERSON_ROLES, VISIT_KINDS,
-  type DisplayScene, type EventStatus, type GateState, type GroupCode, type VisitKind,
+  DISPLAY_SCENES, EVENT_STATUSES, FACULTIES, LIMITS, PERSON_ROLES, PHOTO_MODES, PHOTO_STATUSES, VISIT_KINDS,
+  type DisplayScene, type EventStatus, type GateState, type GroupCode, type PhotoKind, type PhotoMode, type PhotoStatus, type VisitKind,
 } from './constants.ts';
 
 const codes = <T extends readonly { code: string }[]>(list: T) => list.map(x => x.code) as unknown as [T[number]['code'], ...T[number]['code'][]];
@@ -39,6 +39,16 @@ export const AttendeeSchema = z.object({
 });
 export type AttendeeInput = z.infer<typeof AttendeeSchema>;
 
+/**
+ * The fields of a photo upload (POST /events/:slug/photos, multipart: `meta` = this as JSON, `photo` and `thumb` =
+ * JPEG files). A place photo names one of the guest's own lights; the API copies the place from it.
+ */
+export const PhotoUploadSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('place'), pinId: z.number().int().positive(), code: z.string().trim().max(64).optional() }),
+  z.object({ kind: z.literal('ball'), code: z.string().trim().max(64).optional() }),
+]);
+export type PhotoUpload = z.infer<typeof PhotoUploadSchema>;
+
 export const LoginSchema = z.object({ password: z.string().min(1).max(200) });
 
 export const EventPatchSchema = z.object({
@@ -46,10 +56,12 @@ export const EventPatchSchema = z.object({
   displayScene: z.enum(codes(DISPLAY_SCENES)).optional(),
   /** New access code printed in the QR link; empty string removes the code. */
   code: z.string().trim().max(64).optional(),
+  photos: z.enum(PHOTO_MODES).optional(),
 });
 export type EventPatch = z.infer<typeof EventPatchSchema>;
 
 export const PinPatchSchema = z.object({ status: z.enum(['visible', 'hidden']) });
+export const PhotoPatchSchema = z.object({ status: z.enum(PHOTO_STATUSES) });
 export const FeedbackPatchSchema = z.object({ status: z.enum(['new', 'accepted', 'rejected', 'done']) });
 
 // ---------- responses
@@ -109,6 +121,8 @@ export interface EventInfo {
   status: EventStatus;
   requiresCode: boolean;
   displayScene: DisplayScene;
+  /** guests' photos: off, review (shown once approved), auto (shown at once) */
+  photos: PhotoMode;
 }
 
 export interface LivePin {
@@ -123,11 +137,36 @@ export interface LivePin {
 
 export interface LiveTotals { pins: number; places: number; countries: number }
 
+/**
+ * A photo on the wall. Place photos sit at the guest's light (its place, country and what they did there), ball photos
+ * at Košice. width/height: of the JPEG, so the wall lays the postcard out before the picture has loaded.
+ */
+export interface WallPhoto {
+  id: string;
+  kind: PhotoKind;
+  /** the place of the light; for a ball photo the venue's name */
+  name: string;
+  countryCode: string;
+  country: string;
+  lat: number;
+  lon: number;
+  visitKind: VisitKind | null;
+  width: number;
+  height: number;
+  createdAt: string;
+  /** when an admin approved it (or it was sent, without review): the wall shows new approvals first */
+  approvedAt: string;
+}
+
+/** The newest approved photos (LIMITS.photoWindow) and how many are on the wall: a different count makes the wall reload the list. */
+export interface PhotoFeed { latest: WallPhoto[]; total: number }
+
 export interface LiveResponse {
   event: EventInfo;
   cursor: number;
   pins: LivePin[];
   totals: LiveTotals;
+  photos: PhotoFeed;
 }
 
 export interface SummaryPlace {
@@ -144,7 +183,10 @@ export interface SummaryResponse { event: EventInfo; cursor: number; places: Sum
 
 export interface SubmitResponse { submissionId: string; pins: LivePin[]; undoUntil: string }
 
+export interface PhotoUploadResponse { id: string; status: PhotoStatus; undoUntil: string }
+
 export interface AdminPin extends LivePin { status: 'visible' | 'hidden'; role: string | null; faculty: string | null }
+export interface AdminPhoto extends Omit<WallPhoto, 'approvedAt'> { status: PhotoStatus; approvedAt: string | null }
 export interface AdminFeedback { id: number; page: string; message: string; author: string | null; status: string; createdAt: string }
 export interface AdminAttendee { id: number; name: string; affiliation: string; companion: string | null; createdAt: string }
 

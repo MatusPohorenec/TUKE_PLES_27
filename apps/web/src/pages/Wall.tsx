@@ -5,6 +5,7 @@
  * code into the QR link.
  *
  * By default the wall alternates the flat map and the globe (the cycle below); ?view=2d or ?view=3d keeps one.
+ * Guests' photos fly out of their lights as postcards (PhotoMoments); ?photos=0 leaves them out.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ORIGIN } from '@ples/shared/constants';
@@ -14,7 +15,8 @@ import { GlobeScene } from '../globe/scene.ts';
 import { CROSSFADE_MS, useGlobeScene, type View } from '../globe/useGlobeScene.ts';
 import { CountUp } from '../components/CountUp.tsx';
 import { GlobeTooltip } from '../components/GlobeTooltip.tsx';
-import { PlaceSpotlight, type Box } from '../components/PlaceSpotlight.tsx';
+import { PhotoMoments } from '../components/PhotoMoments.tsx';
+import { PlaceSpotlight, type Box, type Stage } from '../components/PlaceSpotlight.tsx';
 import { QrCode } from '../components/QrCode.tsx';
 import { Starfield } from '../components/Starfield.tsx';
 import { useGlobeData } from '../lib/useGlobeData.ts';
@@ -87,6 +89,9 @@ export default function Wall() {
   const [visible, setVisible] = useState<GlobePlace[]>([]);
   const guests = useGuests(scene, slug);
   const mode = guests.event?.displayScene ?? 'cooperation';
+  // the guests' photos and the place cards take turns in front (photos first)
+  const stage = useRef<Stage>({ photo: false, card: false }).current;
+  const photos = queryParam('photos') !== '0';
 
   // the opening runs through the years; a milestone stays readable for a few seconds after its year
   const [year, setYear] = useState<{ year: number; milestone: string | null } | null>(null);
@@ -259,7 +264,8 @@ export default function Wall() {
       <Starfield />
       <div className="globe-host" ref={ref} />
       {!kiosk && <GlobeTooltip scene={scene} host={ref.current} />}
-      <PlaceSpotlight scene={scene} obstacles={obstacles} />
+      <PlaceSpotlight scene={scene} obstacles={obstacles} stage={stage} />
+      {photos && <PhotoMoments scene={scene} slug={slug} feed={guests.photos} stage={stage} obstacles={obstacles} venue={venue} />}
 
       <header className="wall-title title-block" ref={titleRef}>
         <small>TECHNICKÁ UNIVERZITA V KOŠICIACH</small>

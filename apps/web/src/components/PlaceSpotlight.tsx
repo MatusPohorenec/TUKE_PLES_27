@@ -5,7 +5,8 @@
  * covers the title, the counters, the QR code, the buttons or its own place, and it leaves before the
  * place sets behind the horizon. A map can offer a dock instead (the flat map: a lower third over the empty
  * southern ocean), then the place itself only gets a name tag; where even a one-line card does not fit
- * there, the name tag carries the main number and no card covers the map.
+ * there, the name tag carries the main number and no card covers the map. Guests' photos (PhotoMoments) go first:
+ * while one is coming or shown, no card starts, and a card on screen leaves early for it.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CATEGORY_GROUPS } from '@ples/shared/constants';
@@ -17,6 +18,8 @@ import './spotlight.css';
 
 type Spot = { kind: 'coop'; id: string; lat: number; lon: number; place: GlobePlace } | { kind: 'guest'; id: string; lat: number; lon: number; place: GuestPlace };
 export interface Box { left: number; top: number; right: number; bottom: number }
+/** Who has the front of the wall: `photo` – a guest's photo is coming or shown; `card` – a place card is up. */
+export interface Stage { photo: boolean; card: boolean }
 type Side = 'left' | 'right';
 /**
  * margin: in the free space next to the globe; beside: on the map next to the place; above / below: over or under
@@ -34,6 +37,7 @@ const LEAVE_MS = 450;
 const LOAD_MS = 2500; // longest wait for a place's partners; after that the card shows without them
 const FIRST_DELAY_MS = 9000; // at least this long after the page opens
 const AFTER_REVEAL_MS = 4500; // the whole lit globe first (and the year of the timeline fades out), then the cards
+const YIELD_MS = 2500; // a card shown at least this long leaves when a guest's photo wants the stage
 const PAD = 14; // free space kept around the title, counters and buttons
 const EDGE = 12; // free space kept at the window edges
 const BESIDE = 60; // distance between a card and its place when the card sits on the globe
@@ -169,8 +173,11 @@ function tagStat(spot: Spot): string {
   return `${fmt(spot.place.count)} ${plural(spot.place.count, 'hosť', 'hostia', 'hostí')}`;
 }
 
-/** obstacles(): what the cards must keep clear of (title, counters, QR code, buttons), in client pixels. */
-export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; obstacles: () => Box[] }) {
+/**
+ * obstacles(): what the cards must keep clear of (title, counters, QR code, buttons), in client pixels.
+ * stage: shared with the guests' photos, which go first.
+ */
+export function PlaceSpotlight({ scene, obstacles, stage }: { scene: WallScene | null; obstacles: () => Box[]; stage?: Stage }) {
   const [spot, setSpot] = useState<Spot | null>(null);
   const [detail, setDetail] = useState<PlaceDetail | null>(null);
   const [shown, setShown] = useState(false);
@@ -197,6 +204,7 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
     let placement: Placement | null = null;
     let kind: Layout = 'float';
     let pos: { x: number; y: number } | null = null;
+    let shownAt = 0;
     let last = 0;
     let raf = 0;
 
@@ -232,6 +240,8 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
       last = t;
       if (phase === 'wait' && scene.busy()) {
         until = Math.max(until, t + AFTER_REVEAL_MS); // no cards while the light spreads: they would hide the stars
+      } else if (phase === 'wait' && stage?.photo) {
+        until = Math.max(until, t + GAP_MS); // a guest's photo has the stage
       } else if (phase === 'wait' && t > until) {
         const next = pickSpot(scene, recent, obstaclesRef.current());
         if (next) {
@@ -255,8 +265,8 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
         } else {
           until = t + 1500; // nothing in the middle (an ocean): try again soon, the globe turns faster meanwhile
         }
-      } else if (phase === 'load' && current && scene.busy()) {
-        reset(t, AFTER_REVEAL_MS); // the reveal started again while this card was being prepared
+      } else if (phase === 'load' && current && (scene.busy() || stage?.photo)) {
+        reset(t, scene.busy() ? AFTER_REVEAL_MS : GAP_MS); // the reveal started again, or a photo comes, while this card was being prepared
       } else if (phase === 'load' && current) {
         if (t > until) want = keyOf(current); // partners took too long
         const el = card.current;
@@ -288,6 +298,7 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
           } else {
             phase = 'show';
             until = t + SHOW_MS;
+            shownAt = t;
             pos = { x: placement.x, y: placement.y };
             el?.style.setProperty('transform', `translate(${Math.round(pos.x)}px, ${Math.round(pos.y)}px)`);
             setShown(true);
@@ -303,7 +314,8 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
           : placement.mode === 'dock' ? dockAt(scene.cardDock(), w, h, obstacles)
           : follow(placement, p.x, p.y, w, h, obstacles);
         const gone = p.facing < 0.15 || p.x < 0 || p.x > innerWidth || p.y < 0 || p.y > innerHeight || !target || scene.busy(); // e.g. R replays the reveal
-        if (phase === 'show' && (t > until || gone)) {
+        const yielding = Boolean(stage?.photo) && t > shownAt + YIELD_MS; // a guest's photo is waiting
+        if (phase === 'show' && (t > until || gone || yielding)) {
           phase = 'leave';
           until = t + LEAVE_MS;
           card.current?.classList.add('leaving');
@@ -319,11 +331,12 @@ export function PlaceSpotlight({ scene, obstacles }: { scene: WallScene | null; 
         }
         if (current) draw(p.x, p.y, w, h, obstacles);
       }
+      if (stage) stage.card = phase !== 'wait';
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => { cancelAnimationFrame(raf); scene.setFocus(false); };
-  }, [scene]);
+    return () => { cancelAnimationFrame(raf); scene.setFocus(false); if (stage) stage.card = false; };
+  }, [scene, stage]);
 
   if (!spot) return null;
   const docked = layout === 'dock' || layout === 'compact';

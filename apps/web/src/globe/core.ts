@@ -157,6 +157,16 @@ export abstract class WallScene {
   /** Whether a card that cannot dock may float next to its place; false: it shrinks to a name tag. */
   cardsFloat(): boolean { return true; }
 
+  /** The flat map (the whole world at once): nothing hides behind a horizon and there is no disc to keep clear of. */
+  flat(): boolean { return false; }
+
+  /**
+   * A guest's photo of a place is about to show: the view brings the place to the front and holds still (the globe
+   * stops turning and turns to it). Returns the milliseconds that takes; endShowPlace() lets the view go on.
+   */
+  showPlace(_lat: number, _lon: number): number { return 0; }
+  endShowPlace(): void {}
+
   /** Starts the frame loop; a map calls it at the end of its constructor, once its layers exist. */
   protected startLoop(): void {
     let last = performance.now();

@@ -20,6 +20,8 @@ const smoothstep = (e0: number, e1: number, x: number) => { const k = Math.min(1
 const GLOBE_RADIUS = 100; // three-globe units
 const FOCUS_SPEED = 1.6; // × base speed at most while a card is on screen
 const REVEAL_SPEED = 0.3; // × base speed while the light spreads, so the beams can be followed
+const PHOTO_TURN_MS = 2200; // the globe turns to the place of a guest's photo …
+const PHOTO_LAT: readonly [number, number] = [8, 45]; // … keeping its usual tilt (the view starts at 38° N)
 
 export class GlobeScene extends WallScene {
   readonly globe: GlobeInstance;
@@ -93,7 +95,7 @@ export class GlobeScene extends WallScene {
     r.last = now;
     const cam = this.camera().position;
     const azimuth = (Math.atan2(cam.x, cam.z) * 180) / Math.PI;
-    if (!Number.isNaN(this.turned.azimuth)) {
+    if (!Number.isNaN(this.turned.azimuth) && controls.autoRotate) { // turning to a photo's place is no turn of the wall
       const step = ((azimuth - this.turned.azimuth + 540) % 360) - 180; // across ±180° without a jump
       this.turned.degrees += Math.abs(step);
     }
@@ -142,6 +144,20 @@ export class GlobeScene extends WallScene {
     this.setAutoRotate(false);
     const { altitude } = this.globe.pointOfView();
     this.globe.pointOfView({ lat, lng: lon, altitude }, ms);
+  }
+
+  /** A guest's photo: the globe stops and, unless the place already faces the viewer, turns to it. */
+  override showPlace(lat: number, lon: number): number {
+    this.setAutoRotate(false);
+    if (this.facing(lat, lon) > 0.8) return 0;
+    this.turnTo(Math.min(PHOTO_LAT[1], Math.max(PHOTO_LAT[0], lat)), lon, PHOTO_TURN_MS);
+    return PHOTO_TURN_MS;
+  }
+
+  /** The photo is gone: the globe turns again, speeding up gently from a standstill. */
+  override endShowPlace(): void {
+    this.rotation.speed = 0;
+    this.setAutoRotate(true);
   }
 
   protected override placesChanged(): void {

@@ -8,6 +8,7 @@
  *   GET    /api/events/:slug/summary            all lights aggregated per place (initial load, shared for 2 s)
  *   POST   /api/events/:slug/attendees          confirmation of attendance from /onboarding (before and during the ball)
  * Lights are accepted while the ball is live; before it (status open) only from a logged-in admin (rehearsal).
+ * The guests' photos have routes of their own under the same path (photos.ts); the live feed carries the newest.
  */
 import { Hono } from 'hono';
 import {
@@ -16,23 +17,24 @@ import {
 } from '@ples/shared';
 import { getDb, isDatabaseConfigured, sql, type Db, type EventRow, type PinRow } from '@ples/db';
 import { CACHE, fail, readJson, shared } from '../lib/http.ts';
+import { photoFeed } from '../lib/photos.ts';
 import { clientIp, deviceHash, hasSession, ipHash, safeEqual, sha256 } from '../lib/security.ts';
 import { venueOf } from '../lib/venue.ts';
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Where the QR code with the access code hangs, for the message when the code is missing or wrong. */
-const SCAN_HINT: Record<VenueKey, string> = {
+export const SCAN_HINT: Record<VenueKey, string> = {
   ples: 'Na pridanie svetla naskenuj QR kód z plesu.',
   vestibul: 'Na pridanie svetla naskenuj QR kód na stene vo vestibule.',
 };
 
-async function db(venue: VenueKey): Promise<Db> {
+export async function db(venue: VenueKey): Promise<Db> {
   if (!isDatabaseConfigured(venue)) fail(503, 'database_missing', 'Zbieranie svetiel ešte nie je spustené (chýba databáza).');
   return getDb(venue);
 }
 
-async function loadEvent(venue: VenueKey, slug: string): Promise<EventRow> {
+export async function loadEvent(venue: VenueKey, slug: string): Promise<EventRow> {
   const ev = await (await db(venue)).selectFrom('events').selectAll().where('slug', '=', slug).executeTakeFirst();
   if (!ev || ev.status === 'draft') fail(404, 'event_not_found', 'Udalosť neexistuje.');
   return ev!;
@@ -40,7 +42,15 @@ async function loadEvent(venue: VenueKey, slug: string): Promise<EventRow> {
 
 export const eventInfo = (ev: EventRow): EventInfo => ({
   slug: ev.slug, name: ev.name, status: ev.status, requiresCode: Boolean(ev.code_hash), displayScene: ev.display_scene,
+  // without migration 0004 the column is missing: no photos
+  photos: ev.photo_mode ?? 'off',
 });
+
+/** The access code of the QR link, when the event has one. */
+export const codeAccepted = (ev: EventRow, code: string | undefined) => !ev.code_hash || Boolean(code && safeEqual(sha256(code.toUpperCase()), ev.code_hash));
+
+/** Guests may send lights and photos: the ball night, and before it an admin trying the whole flow (rehearsal). */
+export const acceptsGuests = (ev: EventRow, admin: boolean) => ev.status === 'live' || (ev.status === 'open' && admin);
 
 /** Lights shown on the wall: visible, and not in a hidden country. */
 const visiblePins = (d: Db, eventId: number) => d.selectFrom('pins as p')
@@ -76,11 +86,9 @@ export const eventRoutes = new Hono()
     const venue = venueOf(c);
     const ev = await loadEvent(venue, c.req.param('slug'));
     // the ball night; before it only an admin trying the whole flow (the wall, the form) on the venue screen
-    if (ev.status !== 'live' && !(ev.status === 'open' && hasSession(c))) fail(409, 'event_closed', 'Pridávanie svetiel je momentálne zatvorené.');
+    if (!acceptsGuests(ev, hasSession(c))) fail(409, 'event_closed', 'Pridávanie svetiel je momentálne zatvorené.');
     const input = await readJson(c, PinSubmitSchema);
-    if (ev.code_hash && !(input.code && safeEqual(sha256(input.code.toUpperCase()), ev.code_hash))) {
-      fail(403, 'code_invalid', SCAN_HINT[venue]);
-    }
+    if (!codeAccepted(ev, input.code)) fail(403, 'code_invalid', SCAN_HINT[venue]);
     const device = deviceHash(c);
     const ip = ipHash(c);
     const d = await db(venue);
@@ -161,12 +169,22 @@ export const eventRoutes = new Hono()
     const id = c.req.param('id');
     if (!UUID.test(id)) fail(400, 'invalid_id', 'Neplatné ID.');
     const d = await db(venue);
-    // deleting the submission removes its lights (ON DELETE CASCADE)
-    const deleted = await d.deleteFrom('submissions')
-      .where('id', '=', id).where('event_id', '=', ev.id).where('device_hash', '=', deviceHash(c))
-      .where('created_at', '>', new Date(Date.now() - LIMITS.undoMinutes * 60_000))
-      .output('deleted.id')
-      .execute();
+    const device = deviceHash(c);
+    const since = new Date(Date.now() - LIMITS.undoMinutes * 60_000);
+    const deleted = await d.transaction().execute(async trx => {
+      // the photos the guest added to these lights go with them (photos.pin_id has no foreign key)
+      const pins = await trx.selectFrom('pins as p').innerJoin('submissions as s', 's.id', 'p.submission_id').select('p.id')
+        .where('s.id', '=', id).where('s.event_id', '=', ev.id).where('s.device_hash', '=', device).where('s.created_at', '>', since)
+        .execute();
+      // deleting the submission removes its lights (ON DELETE CASCADE)
+      const gone = await trx.deleteFrom('submissions')
+        .where('id', '=', id).where('event_id', '=', ev.id).where('device_hash', '=', device).where('created_at', '>', since)
+        .output('deleted.id')
+        .execute();
+      // (a database without migration 0004 has no photos: the column photo_mode is missing then)
+      if (gone.length && pins.length && ev.photo_mode !== undefined) await trx.deleteFrom('photos').where('pin_id', 'in', pins.map(p => p.id)).execute();
+      return gone;
+    });
     if (!deleted.length) fail(404, 'not_found', 'Svetlá sa už nedajú vrátiť.');
     return c.json({ ok: true });
   })
@@ -182,7 +200,7 @@ export const eventRoutes = new Hono()
         const d = await db(venue);
         const rows = await visiblePins(d, ev.id).selectAll('p').orderBy('p.id', 'desc').top(LIMITS.liveWindow).execute();
         const list = rows.map(toLivePin).reverse();
-        return { event: eventInfo(ev), cursor: list.at(-1)?.id ?? 0, pins: list, totals: await totals(d, ev.id) };
+        return { event: eventInfo(ev), cursor: list.at(-1)?.id ?? 0, pins: list, totals: await totals(d, ev.id), photos: await photoFeed(d, ev, venue) };
       });
       c.header('Cache-Control', CACHE.live);
       return c.json(body);
@@ -193,7 +211,9 @@ export const eventRoutes = new Hono()
     const rows = await visiblePins(d, ev.id).selectAll('p').where('p.id', '>', after).orderBy('p.id', 'asc').top(200).execute();
     const list = rows.map(toLivePin);
     c.header('Cache-Control', CACHE.none);
-    return c.json({ event: eventInfo(ev), cursor: list.at(-1)?.id ?? after, pins: list, totals: await totals(d, ev.id) } satisfies LiveResponse);
+    return c.json({
+      event: eventInfo(ev), cursor: list.at(-1)?.id ?? after, pins: list, totals: await totals(d, ev.id), photos: await photoFeed(d, ev, venue),
+    } satisfies LiveResponse);
   })
 
   .get('/:slug/summary', async c => {
