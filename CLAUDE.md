@@ -444,9 +444,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 ## Open questions / next
 
-- Deploy of the onboarding + gate + cycle + companion: first, with the user's OK, `npm run db:migrate -- --env .env.tuke`
-  and the same with `--venue vestibul` (migrations 0002_attendees and 0003_attendee_companion; the API's attendance routes
-  need them), then both zips. After the upload
+- Deploy of the onboarding + gate + cycle + companion: both TUKE databases were migrated with 0002 + 0003 on 2026-10-27
+  (with the user's OK; attendees empty; ball event open, lobby event closed). Pending: the user uploads both zips of
+  62362ab. Right after it the lobby must be set to „Vypnutý" in /vestibul/admin: its status is `closed` (the old label
+  „Uzavreté"), which now means „Len na pozeranie" with every lobby page open. After the upload
   production (status open) shows visitors only /onboarding and the teaser; the wall only to a logged-in admin until
   „Ples prebieha". Check: /app.js/api/gate (`onboarding`), srdcom.tuke.sk → /onboarding, /mapa → teaser, an attendance
   (then delete it in /admin), /admin card „Potvrdená účasť". The user sets the lobby to „Vypnutý" in /vestibul/admin.
