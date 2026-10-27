@@ -453,8 +453,9 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 ## Open questions / next
 
-- Production: web 068c935 (the kiosk wall, verified 2026-10-27: / without bar or comment button, phone button „Pridaj
-  svoje svetlo", /?kiosk=0 with the bar and, for the admin, the comment button, no comment button for guests), API 62362ab.
+- Production: web 5ddcd1f (verified 2026-10-27: unknown addresses → 302 → /index.html → the centred teaser; before it
+  068c935 the kiosk wall: / without bar or comment button, phone button „Pridaj svoje svetlo", /?kiosk=0 with the bar and,
+  for the admin, the comment button, no comment button for guests), API 62362ab.
   The user switched the ball to „Ples prebieha" on 2026-10-27 to try the wall and, with the user's OK, it went back to
   „Pred plesom" the same day (gate `onboarding`, a visitor's light 409; no test lights or attendances on production).
   Check the status in /admin (or /app.js/api/gate) before assuming it.
