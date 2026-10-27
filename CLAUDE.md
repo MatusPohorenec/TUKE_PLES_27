@@ -477,18 +477,20 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 ## Open questions / next
 
-- Deploy pending: the load-test fixes (commit after 5ddcd1f) need **both zips** (API: headers, summary 2 s, limit 2 000;
-  web: no-store, counters, capital + country). Then check /app.js/api/health and /build.txt.
+- Production: web + API b643def (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
+  databases up, /build.txt b643def, /live and /summary `public, max-age=0, s-maxage=2` with CORS, preflight 204,
+  /admin/me 401, the web bundle fetches both feeds with `no-store`; the 3D wall in the pane: counter 362 lights /
+  120 places / 57 countries, the scene's stars hold the same 362 lights on 119 stars (a country merged with its
+  capital), no failed request). Before it: web 5ddcd1f (unknown addresses → 302 → /index.html → the centred teaser),
+  068c935 (the kiosk wall), API 62362ab.
+- Ball status: the production light test (10:48–10:51 UTC) ran while the ball was „Pred plesom" (lights from the admin
+  session only); at the b643def check the ball was „Ples prebieha" (live: visitors see every page and may send lights),
+  switched in /admin after the test. Before the ball it must be „Pred plesom" again (the user's call). Check the status
+  in /admin (or /app.js/api/gate) before assuming it. The lobby is „Vypnutý" (gate `off`).
 - Production still holds the 361 test lights of 2026-10-27 on ples-2027 (+1, probably the user's phone): delete them all
   when the user says so (a script with `--env .env.tuke`, every submission of the event; pins cascade), and check that
   /summary shows 0 before the ball. A write load test on the TUKE server itself (with the user's OK) is still open.
 
-- Production: web 5ddcd1f (verified 2026-10-27: unknown addresses → 302 → /index.html → the centred teaser; before it
-  068c935 the kiosk wall: / without bar or comment button, phone button „Pridaj svoje svetlo", /?kiosk=0 with the bar and,
-  for the admin, the comment button, no comment button for guests), API 62362ab.
-  The user switched the ball to „Ples prebieha" on 2026-10-27 to try the wall and, with the user's OK, it went back to
-  „Pred plesom" the same day (gate `onboarding`, a visitor's light 409; no test lights or attendances on production).
-  Check the status in /admin (or /app.js/api/gate) before assuming it.
 - Deployed 62362ab (API + web, 2026-10-27): both TUKE databases migrated with 0002 + 0003 (with the user's OK).
   Verified: health 62362ab with both databases up, web /build.txt 62362ab, CORS + preflight 204 (also attendees), gate
   ball `onboarding` for visitors, POST attendees `{}` → 400 (nothing stored), admin routes 401 without login; in the pane
