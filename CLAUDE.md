@@ -485,9 +485,11 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 ## Open questions / next
 
-- Deploy pending: the admin preview (commit after db516c3) needs **only the web zip**; then check /build.txt, that
-  srdcom.tuke.sk sends a logged-in admin to /onboarding while „Pred plesom", and „Náhľad stránky" in /admin.
-- Production: web + API b643def (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
+- Web 8e73e5e deployed and verified 2026-10-27 (the admin preview; API stays b643def): /build.txt 8e73e5e; with a
+  valid admin session (pane) and „Pred plesom" srdcom.tuke.sk → /onboarding, /mapa → teaser; /admin shows „Náhľad
+  stránky" (/?kiosk=0&nahlad=1, new tab); the preview shows the wall with the bar and the golden pill, /?nahlad=1 the
+  kiosk wall without pill or comment button, /mapa the map with the pill; „Ukončiť náhľad" → teaser, / → /onboarding.
+- Production: API b643def (web b643def until 8e73e5e) (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
   databases up, /build.txt b643def, /live and /summary `public, max-age=0, s-maxage=2` with CORS, preflight 204,
   /admin/me 401, the web bundle fetches both feeds with `no-store`; the 3D wall in the pane: counter 362 lights /
   120 places / 57 countries, the scene's stars hold the same 362 lights on 119 stars (a country merged with its
