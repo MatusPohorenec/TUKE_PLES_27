@@ -5,7 +5,7 @@
 | Adresa | Čo ukazuje |
 |---|---|
 | `/` | Stena: obrazovka pre LED stenu. Na prehrávacom PC sa otvára s `?kiosk=1` (bez odkazov, kurzor sa skryje). Predvolene sa strieda 2D mapa a 3D zemeguľa (pozri [Stena: striedanie 2D a 3D](#stena-striedanie-2d-a-3d)); `?view=2d` ukazuje len mapu, `?view=3d` len zemeguľu. |
-| `/onboarding` | Potvrdenie účasti: meno a príslušnosť. Cieľ QR kódu na pozvánkach; pred plesom jediná otvorená stránka. |
+| `/onboarding` | Potvrdenie účasti: meno, príslušnosť a voliteľne doprovod. Cieľ QR kódu na pozvánkach; pred plesom jediná otvorená stránka. |
 | `/porovnanie` | 3D zemeguľa a 2D mapa vedľa seba v rozlíšení LED steny, spustené naraz. |
 | `/mapa` | Interaktívna mapa: filtre podľa typu spolupráce, detail miesta so zdrojmi. |
 | `/zapoj-sa` | Formulár pre hostí na plese (cieľ QR kódu na stene). |
@@ -21,7 +21,7 @@
 | Po plese | všetky stránky len na pozeranie; svetlá ani potvrdenia sa už nepridávajú |
 | Vypnuté | len teaser |
 
-Prihlásený admin vidí všetky stránky v každom stave (napr. skúšku steny pred plesom). Meno a príslušnosť z onboardingu sú osobné údaje: vidia ich len organizátori v `/admin` (aj ako CSV) a po plese ich treba zmazať. Svetlá hostí sú naďalej anonymné a s menami nie sú prepojené.
+Prihlásený admin vidí všetky stránky v každom stave (napr. skúšku steny pred plesom). Mená, príslušnosť a mená doprovodu z onboardingu sú osobné údaje: vidia ich len organizátori v `/admin` (s počtom osôb, aj ako CSV) a po plese ich treba zmazať. Svetlá hostí sú naďalej anonymné a s menami nie sú prepojené.
 | `/vestibul` | Stena vo vestibule s **vlastnou databázou**: rovnaké stránky pod `/vestibul` (`/vestibul/zapoj-sa`, `/vestibul/mapa`, `/vestibul/admin` …). Svetlá, udalosť, kód v QR aj pripomienky sú oddelené od plesu. Zapína a vypína sa v `/vestibul/admin` (Stav vestibulu); vypnutý ukazuje len teaser. |
 
 Prevádzka: hosting TUKE (Plesk pre Windows, IIS) – web na https://srdcom.tuke.sk, API na https://api.srdcom.tuke.sk, databáza Microsoft SQL Server 2022 (pre ples a pre vestibul dve samostatné databázy, pozri [Vestibul](#vestibul-druhá-databáza)).

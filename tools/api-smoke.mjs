@@ -133,12 +133,16 @@ const rehearsal = await call('POST', `${EV}/pins`, { places: [{ countryCode: 'NP
 check('light from the admin before the ball (rehearsal)', rehearsal.status === 201, `HTTP ${rehearsal.status}`);
 if (rehearsal.json?.submissionId) await call('DELETE', `${EV}/submissions/${rehearsal.json.submissionId}`, undefined, { 'x-device-id': device });
 
-const attendee = await anonymous(() => call('POST', `${EV}/attendees`, { name: 'Skúšobný Hosť Ľščťžý', affiliation: 'FEI TUKE' }, { 'x-device-id': device }));
-check('attendance confirmed', attendee.status === 201 && typeof attendee.json.id === 'number' && attendee.json.name === 'Skúšobný Hosť Ľščťžý', `${attendee.status} ${JSON.stringify(attendee.json)}`);
+const attendee = await anonymous(() => call('POST', `${EV}/attendees`, { name: 'Skúšobný Hosť Ľščťžý', affiliation: 'FEI TUKE', companion: 'Skúšobný Doprovod' }, { 'x-device-id': device }));
+check('attendance with a companion confirmed', attendee.status === 201 && typeof attendee.json.id === 'number' && attendee.json.name === 'Skúšobný Hosť Ľščťžý' && attendee.json.companion === 'Skúšobný Doprovod', `${attendee.status} ${JSON.stringify(attendee.json)}`);
+const alone = await anonymous(() => call('POST', `${EV}/attendees`, { name: 'Skúšobný Sólo', affiliation: 'Hosť' }, { 'x-device-id': device }));
+check('attendance without a companion', alone.status === 201 && alone.json.companion === null, `${alone.status} ${JSON.stringify(alone.json)}`);
 const badAttendee = await anonymous(() => call('POST', `${EV}/attendees`, { name: 'X', affiliation: '' }, { 'x-device-id': device }));
 check('attendance without name and affiliation 400', badAttendee.status === 400, `HTTP ${badAttendee.status}`);
+const badCompanion = await anonymous(() => call('POST', `${EV}/attendees`, { name: 'Skúšobný Hosť', affiliation: 'Hosť', companion: 'X' }, { 'x-device-id': device }));
+check('attendance with a one-letter companion 400', badCompanion.status === 400, `HTTP ${badCompanion.status}`);
 const attendees = await call('GET', '/admin/attendees');
-check('admin attendance list', attendees.status === 200 && attendees.json.attendees.some(a => a.id === attendee.json.id && a.affiliation === 'FEI TUKE'), `${attendees.json.attendees?.length} confirmed`);
+check('admin attendance list', attendees.status === 200 && attendees.json.attendees.some(a => a.id === attendee.json.id && a.affiliation === 'FEI TUKE' && a.companion === 'Skúšobný Doprovod') && attendees.json.attendees.some(a => a.id === alone.json.id && a.companion === null), `${attendees.json.attendees?.length} confirmed`);
 const attendeesVisitor = await anonymous(() => call('GET', '/admin/attendees'));
 check('attendance list needs the admin 401', attendeesVisitor.status === 401, `HTTP ${attendeesVisitor.status}`);
 
@@ -222,6 +226,8 @@ check('light after the ball 409', lateLight.status === 409, `HTTP ${lateLight.st
 // ---------------------------------------------------------------- cleanup: the test attendance, the starting status
 const del = await call('DELETE', `/admin/attendees/${attendee.json.id}`);
 check('admin delete attendance', del.status === 200);
+const delAlone = await call('DELETE', `/admin/attendees/${alone.json.id}`);
+check('admin delete the second attendance', delAlone.status === 200);
 const delAgain = await call('DELETE', `/admin/attendees/${attendee.json.id}`);
 check('admin delete attendance twice 404', delAgain.status === 404);
 check(`status back to ${startStatus}`, (await setStatus(startStatus)) === startStatus);

@@ -247,12 +247,15 @@ and switches „Ples prebieha".
   lobby draft „Vypnutý", open „Pripravený", live „Zapnutý", closed „Len na pozeranie". The seed creates a new ball as open
   and a new lobby as draft. The lobby has no onboarding (`VENUES[…].onboarding`), so it shows the teaser unless live.
 - Onboarding (/onboarding, Onboarding.tsx): name + affiliation (free text with a datalist: roles, faculties „FEI TUKE",
-  partner, guest), button „Záväzne potvrdiť účasť", privacy line, thank-you card „Uvidíme sa pod hviezdami", „Potvrdiť
-  účasť ďalšej osoby"; names confirmed from the browser are remembered (localStorage). During the ball it links to
-  /zapoj-sa. POST `/api/events/:slug/attendees` (zod AttendeeSchema, 2–120 / 2–160 chars, 8 per device and 300 per IP per
-  10 min) → table `dbo.attendees` (migration 0002, device/IP as HMACs). Admin: GET/DELETE `/api/admin/attendees`, card
-  „Potvrdená účasť" with the list, „Stiahnuť CSV" (semicolons, UTF-8 BOM, formula cells defused) and delete (audit without
-  the name).
+  partner, guest) + optional companion (the user, 2026-10-27: „nech vedia pridať aj doprovod"; pill „Prídem s
+  doprovodom" reveals „Meno a priezvisko doprovodu", one companion per confirmation), button „Záväzne potvrdiť účasť",
+  privacy line, thank-you card („… aj s doprovodom (…) je potvrdená. Uvidíme sa pod hviezdami."), „Potvrdiť účasť ďalšej
+  osoby"; names confirmed from the browser are remembered (localStorage). During the ball it links to /zapoj-sa.
+  POST `/api/events/:slug/attendees` (zod AttendeeSchema: name/companion 2–120, affiliation 2–160 chars; 8 per device and
+  300 per IP per 10 min) → table `dbo.attendees` (migration 0002; `companion_name` from 0003; device/IP as HMACs). Admin:
+  GET/DELETE `/api/admin/attendees`, card „Potvrdená účasť (N osôb: X potvrdení, Y s doprovodom)" with the list (column
+  Doprovod), „Stiahnuť CSV" (Meno;Príslušnosť;Doprovod;Osôb;Potvrdené – semicolons, UTF-8 BOM, formula cells defused) and
+  delete (audit without the name).
 - Teaser (Teaser.tsx): breathing star, „Pst… ešte je zhasnuté.", the hint (remember every place you have been to, at the
   ball they become stars that accompany you through the night), button „Potvrdiť účasť na plese", „75 rokov TUKE · Do
   videnia pod hviezdami". The lobby's variant has no button. Backgrounds (stage light, Starfield) sit outside `<main>`:
@@ -441,8 +444,9 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 ## Open questions / next
 
-- Deploy of the onboarding + gate + cycle: first, with the user's OK, `npm run db:migrate -- --env .env.tuke` and the same
-  with `--venue vestibul` (migration 0002_attendees; the API's attendance routes need it), then both zips. After the upload
+- Deploy of the onboarding + gate + cycle + companion: first, with the user's OK, `npm run db:migrate -- --env .env.tuke`
+  and the same with `--venue vestibul` (migrations 0002_attendees and 0003_attendee_companion; the API's attendance routes
+  need them), then both zips. After the upload
   production (status open) shows visitors only /onboarding and the teaser; the wall only to a logged-in admin until
   „Ples prebieha". Check: /app.js/api/gate (`onboarding`), srdcom.tuke.sk → /onboarding, /mapa → teaser, an attendance
   (then delete it in /admin), /admin card „Potvrdená účasť". The user sets the lobby to „Vypnutý" in /vestibul/admin.

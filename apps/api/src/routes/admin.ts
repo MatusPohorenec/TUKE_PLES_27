@@ -106,9 +106,11 @@ export const adminRoutes = new Hono()
   })
 
   .get('/attendees', async c => {
-    const rows = await (await dbOf(c)).selectFrom('attendees').select(['id', 'full_name', 'affiliation', 'created_at'])
+    const rows = await (await dbOf(c)).selectFrom('attendees').select(['id', 'full_name', 'affiliation', 'companion_name', 'created_at'])
       .orderBy('id', 'desc').top(5000).execute();
-    const list: AdminAttendee[] = rows.map(r => ({ id: r.id, name: r.full_name, affiliation: r.affiliation, createdAt: r.created_at.toISOString() }));
+    const list: AdminAttendee[] = rows.map(r => ({
+      id: r.id, name: r.full_name, affiliation: r.affiliation, companion: r.companion_name, createdAt: r.created_at.toISOString(),
+    }));
     return c.json({ attendees: list });
   })
 

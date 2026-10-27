@@ -1,7 +1,8 @@
 /**
  * Confirmation of attendance (/onboarding). The QR code on the invitations leads here, and before the ball it is the
- * only open page. A name and an affiliation, seen only by the organisers in /admin (personal data, deleted after
- * the ball). One phone may confirm a few people; the names confirmed here are remembered in this browser.
+ * only open page. A name and an affiliation, optionally a companion (doprovod), seen only by the organisers in /admin
+ * (personal data, deleted after the ball). One phone may confirm a few people; the names confirmed here are
+ * remembered in this browser.
  */
 import { useEffect, useState, type FormEvent } from 'react';
 import { FACULTIES, LIMITS } from '@ples/shared/constants';
@@ -27,10 +28,12 @@ export default function Onboarding() {
   const [eventError, setEventError] = useState('');
   const [name, setName] = useState('');
   const [affiliation, setAffiliation] = useState('');
+  const [withCompanion, setWithCompanion] = useState(false);
+  const [companion, setCompanion] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [confirmed, setConfirmed] = useState<string[]>(() => store.get<string[]>(`${KEY}-${venue.key}`) ?? []);
-  const [done, setDone] = useState<string | null>(null);
+  const [done, setDone] = useState<{ name: string; companion: string | null } | null>(null);
 
   useEffect(() => {
     api.event(venue.event).then(setEvent).catch((err: ApiError) => setEventError(err.status === 503 || err.status === 404
@@ -42,16 +45,21 @@ export default function Onboarding() {
     e.preventDefault();
     if (name.trim().length < 2) { setError('Napíš svoje meno a priezvisko.'); return; }
     if (affiliation.trim().length < 2) { setError('Napíš, kam patríš: fakulta, pracovisko, firma alebo hosť.'); return; }
+    if (withCompanion && companion.trim().length < 2) { setError('Napíš meno a priezvisko svojho doprovodu.'); return; }
     setSending(true);
     setError('');
     try {
-      const res = await api.attend(venue.event, { name: name.trim(), affiliation: affiliation.trim() });
-      const list = [...confirmed, res.name];
+      const res = await api.attend(venue.event, {
+        name: name.trim(), affiliation: affiliation.trim(), companion: withCompanion ? companion.trim() : undefined,
+      });
+      const list = [...confirmed, res.companion ? `${res.name} s doprovodom (${res.companion})` : res.name];
       setConfirmed(list);
       store.set(`${KEY}-${venue.key}`, list);
-      setDone(res.name);
+      setDone({ name: res.name, companion: res.companion });
       setName('');
       setAffiliation('');
+      setWithCompanion(false);
+      setCompanion('');
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -81,8 +89,11 @@ export default function Onboarding() {
 
       {done ? (
         <section className="join-card join-done" aria-live="polite">
-          <h2>Ďakujeme, {firstName(done)}!</h2>
-          <p>Tvoja účasť je potvrdená. Uvidíme sa pod hviezdami.</p>
+          <h2>Ďakujeme, {firstName(done.name)}!</h2>
+          <p>
+            {done.companion ? `Tvoja účasť aj s doprovodom (${done.companion}) je potvrdená.` : 'Tvoja účasť je potvrdená.'}
+            {' '}Uvidíme sa pod hviezdami.
+          </p>
           <div className="join-actions">
             <button type="button" className="button ghost" onClick={() => setDone(null)}>Potvrdiť účasť ďalšej osoby</button>
           </div>
@@ -104,10 +115,25 @@ export default function Onboarding() {
               maxLength={LIMITS.attendeeAffiliationChars} required />
             <datalist id="onb-affiliations">{SUGGESTIONS.map(s => <option key={s} value={s} />)}</datalist>
           </div>
+          <div className="join-field">
+            <div className="join-options">
+              <label className={`join-option${withCompanion ? ' on' : ''}`}>
+                <input type="checkbox" checked={withCompanion} onChange={e => setWithCompanion(e.target.checked)} />
+                Prídem s doprovodom
+              </label>
+            </div>
+            {withCompanion && (
+              <>
+                <label htmlFor="onb-companion">Meno a priezvisko doprovodu</label>
+                <input id="onb-companion" value={companion} onChange={e => setCompanion(e.target.value)} autoComplete="off"
+                  maxLength={LIMITS.attendeeNameChars} required />
+              </>
+            )}
+          </div>
           {error && <p className="error" role="alert">{error}</p>}
           <button type="submit" className="button join-submit" disabled={sending}>{sending ? 'Posielam…' : 'Záväzne potvrdiť účasť'}</button>
           <p className="muted small">
-            Meno a príslušnosť uvidia len organizátori plesu a použijú ich len na evidenciu účasti. Po plese ich vymažeme.
+            Mená a príslušnosť uvidia len organizátori plesu a použijú ich len na evidenciu účasti. Po plese ich vymažeme.
           </p>
         </form>
       )}

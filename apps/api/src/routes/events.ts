@@ -147,11 +147,12 @@ export const eventRoutes = new Hono()
       const byIp = await recent.where('ip_hash', '=', ip).executeTakeFirst();
       if ((byIp?.n ?? 0) >= LIMITS.attendeesPerIp10min) fail(429, 'too_many', 'Veľa potvrdení naraz. Skús to o pár minút.');
     }
+    const companion = input.companion ?? null;
     const row = await d.insertInto('attendees')
-      .values({ event_id: ev.id, full_name: input.name, affiliation: input.affiliation, device_hash: device, ip_hash: ip })
+      .values({ event_id: ev.id, full_name: input.name, affiliation: input.affiliation, companion_name: companion, device_hash: device, ip_hash: ip })
       .output('inserted.id').executeTakeFirstOrThrow();
     c.header('Cache-Control', CACHE.none);
-    return c.json({ id: row.id, name: input.name } satisfies AttendeeResponse, 201);
+    return c.json({ id: row.id, name: input.name, companion } satisfies AttendeeResponse, 201);
   })
 
   .delete('/:slug/submissions/:id', async c => {

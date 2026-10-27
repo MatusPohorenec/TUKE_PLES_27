@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { DISPLAY_SCENES, FACULTIES, PERSON_ROLES, VENUES, VISIT_KINDS, type EventStatus, type Venue, type VenueKey } from '@ples/shared/constants';
 import type { AdminAttendee, AdminFeedback, AdminPin, EventInfo } from '@ples/shared';
 import { ApiError, api } from '../lib/api.ts';
+import { plural } from '../lib/format.ts';
 import { refreshGate } from '../lib/gate.ts';
 import { Link, useVenue } from '../lib/router.tsx';
 import './admin.css';
@@ -29,10 +30,20 @@ const STATUS: Record<VenueKey, Record<EventStatus, { label: string; hint: string
 const label = (list: readonly { code: string; label: string }[], code: string | null) => list.find(x => x.code === code)?.label ?? '–';
 const time = (iso: string) => new Date(iso).toLocaleString('sk', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+/** "12 osôb: 8 potvrdení, 4 s doprovodom" */
+function headcount(rows: AdminAttendee[]): string {
+  const companions = rows.filter(a => a.companion).length;
+  const persons = rows.length + companions;
+  return `${persons} ${plural(persons, 'osoba', 'osoby', 'osôb')}: ${rows.length} ${plural(rows.length, 'potvrdenie', 'potvrdenia', 'potvrdení')}, ${companions} s doprovodom`;
+}
+
 /** Confirmed attendance as a CSV for Excel (semicolons, UTF-8 with BOM); formula-like cells are defused. */
 function downloadAttendees(rows: AdminAttendee[], slug: string): void {
   const cell = (v: string) => `"${(/^[=+\-@\t\r]/.test(v) ? `'${v}` : v).replace(/"/g, '""')}"`;
-  const lines = ['Meno;Príslušnosť;Potvrdené', ...[...rows].reverse().map(r => [r.name, r.affiliation, new Date(r.createdAt).toLocaleString('sk')].map(cell).join(';'))];
+  const lines = [
+    'Meno;Príslušnosť;Doprovod;Osôb;Potvrdené',
+    ...[...rows].reverse().map(r => [r.name, r.affiliation, r.companion ?? '', String(r.companion ? 2 : 1), new Date(r.createdAt).toLocaleString('sk')].map(cell).join(';')),
+  ];
   const url = URL.createObjectURL(new Blob([`﻿${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8' }));
   const a = document.createElement('a');
   a.href = url;
@@ -111,7 +122,7 @@ function Console({ venue }: { venue: Venue }) {
     try { setEvent(await api.admin.patchEvent(venue.event, p)); } catch (err) { setError((err as Error).message); }
   };
   const removeAttendee = async (a: AdminAttendee) => {
-    if (!confirm(`Zmazať potvrdenie účasti: ${a.name}?`)) return;
+    if (!confirm(`Zmazať potvrdenie účasti: ${a.name}${a.companion ? ` (aj s doprovodom ${a.companion})` : ''}?`)) return;
     try { await api.admin.deleteAttendee(a.id); load(); } catch (err) { setError((err as Error).message); }
   };
   const statuses = STATUS[venue.key];
@@ -132,7 +143,10 @@ function Console({ venue }: { venue: Venue }) {
 
       {venue.onboarding && (
         <section className="admin-card admin-wide">
-          <h2>Potvrdená účasť <span className="muted">({attendees.length})</span></h2>
+          <h2>
+            Potvrdená účasť{' '}
+            <span className="muted">({headcount(attendees)})</span>
+          </h2>
           <p className="muted small">Mená a príslušnosť z /onboarding. Osobné údaje: len pre organizátorov, po plese ich zmaž.</p>
           <div className="admin-code">
             <div>
@@ -141,17 +155,18 @@ function Console({ venue }: { venue: Venue }) {
           </div>
           <div className="admin-table">
             <table>
-              <thead><tr><th>Čas</th><th>Meno</th><th>Príslušnosť</th><th /></tr></thead>
+              <thead><tr><th>Čas</th><th>Meno</th><th>Príslušnosť</th><th>Doprovod</th><th /></tr></thead>
               <tbody>
                 {attendees.map(a => (
                   <tr key={a.id}>
                     <td>{time(a.createdAt)}</td>
                     <td>{a.name}</td>
                     <td>{a.affiliation}</td>
+                    <td>{a.companion ?? <span className="muted">–</span>}</td>
                     <td><button type="button" className="chip" onClick={() => removeAttendee(a)}>Zmazať</button></td>
                   </tr>
                 ))}
-                {!attendees.length && <tr><td colSpan={4} className="muted">Zatiaľ nikto nepotvrdil účasť.</td></tr>}
+                {!attendees.length && <tr><td colSpan={5} className="muted">Zatiaľ nikto nepotvrdil účasť.</td></tr>}
               </tbody>
             </table>
           </div>

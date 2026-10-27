@@ -162,6 +162,8 @@ export interface AttendeesTable {
   event_id: number;
   full_name: string;
   affiliation: string;
+  /** the companion (doprovod) coming along, if any */
+  companion_name: string | null;
   device_hash: string;
   ip_hash: string | null;
   created_at: CreatedAt;
