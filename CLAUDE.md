@@ -447,7 +447,11 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 
 ## Open questions / next
 
-- Production runs 62362ab (API + web, 2026-10-27): both TUKE databases migrated with 0002 + 0003 (with the user's OK).
+- Production: web 068c935 (the kiosk wall, verified 2026-10-27: / without bar or comment button, phone button „Pridaj
+  svoje svetlo", /?kiosk=0 with the bar and, for the admin, the comment button, no comment button for guests), API 62362ab.
+  The user switched the ball to „Ples prebieha" on 2026-10-27 to try the wall, so every page was open to everybody then;
+  check the status in /admin (or /app.js/api/gate) before assuming „Pred plesom".
+- Deployed 62362ab (API + web, 2026-10-27): both TUKE databases migrated with 0002 + 0003 (with the user's OK).
   Verified: health 62362ab with both databases up, web /build.txt 62362ab, CORS + preflight 204 (also attendees), gate
   ball `onboarding` for visitors, POST attendees `{}` → 400 (nothing stored), admin routes 401 without login; in the pane
   (which holds the user's admin login, so the gate lets it see every page) the admin console shows „Stav plesu: Pred
