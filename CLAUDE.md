@@ -538,14 +538,16 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   deleting cookies: the admin session opened every page. Since then the admin sees what the guests see, every page only
   in the opt-in preview from /admin (section „Before the ball").
   Then the user asked for guests' photos on the form and as popups on the wall (section „Guests' photos"): tag
-  `pred-fotkami`, migration 0004 on ples_dev and ples_vestibul_dev, built and verified locally (not deployed yet).
+  `pred-fotkami`, migration 0004 on ples_dev and ples_vestibul_dev, built and verified locally; 23b7721 pushed, zips built.
+- 2026-10-28: with the user's OK migration 0004 on both TUKE databases (production kept running on API b643def).
 
 ## Open questions / next
 
-- Guests' photos (section above) are built and committed but not deployed: first migration 0004 on both TUKE databases
-  (only with the user's OK: `npm run db:migrate -- --env .env.tuke` and the same with `--venue vestibul`), then the user
-  uploads both zips; check health/build.txt, /admin „Fotky hostí", a photo from a phone (it needs „Ples prebieha" or an
-  admin preview) and the postcard on the wall. Organisers: who moderates during the ball (review is the default), the
+- Guests' photos (section above, commit 23b7721): migration 0004 applied to both TUKE databases on 2026-10-28 with the
+  user's OK (read-only check: 0001–0004 recorded, ples-2027 open + photo_mode review, vestibul draft + review, dbo.photos
+  empty; the old API b643def kept running: health, gate, live). Next: the user uploads both zips (built from 23b7721);
+  check health/build.txt, /admin „Fotky hostí", a photo from a phone (it needs „Ples prebieha" or an admin preview) and
+  the postcard on the wall. Organisers: who moderates during the ball (review is the default), the
   consent and privacy wording, deleting the photos after the ball, whether the lobby wants photos (mode off there?),
   the size limit of the TUKE database (~300 kB per photo, max 1 000 per event).
 
