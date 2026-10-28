@@ -539,15 +539,21 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   in the opt-in preview from /admin (section „Before the ball").
   Then the user asked for guests' photos on the form and as popups on the wall (section „Guests' photos"): tag
   `pred-fotkami`, migration 0004 on ples_dev and ples_vestibul_dev, built and verified locally; 23b7721 pushed, zips built.
-- 2026-10-28: with the user's OK migration 0004 on both TUKE databases (production kept running on API b643def).
+- 2026-10-28: with the user's OK migration 0004 on both TUKE databases (production kept running on API b643def); the
+  user uploaded 23b7721 (API + web), verified on production (section „Open questions").
 
 ## Open questions / next
 
-- Guests' photos (section above, commit 23b7721): migration 0004 applied to both TUKE databases on 2026-10-28 with the
-  user's OK (read-only check: 0001–0004 recorded, ples-2027 open + photo_mode review, vestibul draft + review, dbo.photos
-  empty; the old API b643def kept running: health, gate, live). Next: the user uploads both zips (built from 23b7721);
-  check health/build.txt, /admin „Fotky hostí", a photo from a phone (it needs „Ples prebieha" or an admin preview) and
-  the postcard on the wall. Organisers: who moderates during the ball (review is the default), the
+- Guests' photos (section above) deployed 2026-10-28: migration 0004 on both TUKE databases with the user's OK (read-only
+  check: 0001–0004 recorded, ples-2027 open + photo_mode review, vestibul draft + review, dbo.photos empty; the old API
+  b643def kept running), then the user uploaded both zips of 23b7721. Verified: health and /build.txt 23b7721 with both
+  databases up; /events/ples-2027 has `photos: review`, /live has `photos {latest: [], total: 0}`, /photos `[]`, all with
+  CORS; preflight for POST photos 204 (x-device-id); a 1 MB visitor upload reaches Node through IIS and is refused 409
+  („Pred plesom"), 3 MB → 413, unknown photo 404, bad id 400, /admin/photos 401, lobby (off) 404; the web bundle has
+  the form card, the consent, the admin card, the postcard and the 413 message; / → /onboarding, /zapoj-sa → teaser;
+  /admin (the user logged in in the pane) shows „Fotky hostí (0 čaká · 0 na stene · 0 skrytých)" under the status card,
+  mode „Po schválení". Not yet tested on production: a real upload (needs „Ples prebieha" or the admin preview), the
+  JPEG served by IIS, the postcard on the wall. Organisers: who moderates during the ball (review is the default), the
   consent and privacy wording, deleting the photos after the ball, whether the lobby wants photos (mode off there?),
   the size limit of the TUKE database (~300 kB per photo, max 1 000 per event).
 
