@@ -552,8 +552,12 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   („Pred plesom"), 3 MB → 413, unknown photo 404, bad id 400, /admin/photos 401, lobby (off) 404; the web bundle has
   the form card, the consent, the admin card, the postcard and the 413 message; / → /onboarding, /zapoj-sa → teaser;
   /admin (the user logged in in the pane) shows „Fotky hostí (0 čaká · 0 na stene · 0 skrytých)" under the status card,
-  mode „Po schválení". Not yet tested on production: a real upload (needs „Ples prebieha" or the admin preview), the
-  JPEG served by IIS, the postcard on the wall. Organisers: who moderates during the ball (review is the default), the
+  mode „Po schválení". Then, with the user's OK, a real test in the pane (the user's admin login, preview): a synthetic
+  „Práve na plese" photo (1600×1067 canvas, labelled TEST) sent from /zapoj-sa → 201 in 417 ms, pending; visitors 404;
+  /admin showed it in „Čakajú" with its thumbnail (360×240, admin cookie across hosts); „Schváliť" → public JPEG 200,
+  1280×854, 33.7 kB, no EXIF, `public, max-age=604800, immutable`; /live total 1; the 2D wall (`/?nahlad=1&view=2d`,
+  960×540) showed the postcard top left („✦ PRÁVE NA PLESE · Ples TUKE 2027 · Košice · 08:40", ring at Košice);
+  „Zmazať" → 404, list [], /live 0. Lights (362) and status („Pred plesom") untouched; the tab's preview ended. Organisers: who moderates during the ball (review is the default), the
   consent and privacy wording, deleting the photos after the ball, whether the lobby wants photos (mode off there?),
   the size limit of the TUKE database (~300 kB per photo, max 1 000 per event).
 
