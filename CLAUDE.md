@@ -330,8 +330,10 @@ photos show live on the wall in popups.
   someone else's light 404, undone light → photo gone, 413, cut JPEG 400) passes for both venues on the dev API and on
   the Node 18 bundle (multipart via undici; Node 18 logs `ExperimentalWarning: buffer.File`, harmless); a 540 kB photo
   uploads in 64 ms locally. In the pane: the form on a phone (1500×2000 → 960×1280, preview, consent, sent, pending),
-  the admin card, the wall in 2D and 3D and in the fast cycle. Not tested: an upload through IIS/iisnode at TUKE, real
-  phone photos (iOS converts HEIC to JPEG in the picker; a browser that cannot decode a format shows an error).
+  the admin card, the wall in 2D and 3D and in the fast cycle. On production: a synthetic photo through the pane
+  (2026-10-28) and the user's own phone (2026-11-03, „Ples prebieha" + „Hneď na stenu": a portrait ball photo stored as
+  960×1280), both deleted afterwards. (iOS converts HEIC to JPEG in the picker; a browser that cannot decode a format
+  shows an error.)
 
 ## The wall (/) – behaviour as built
 
@@ -541,6 +543,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   `pred-fotkami`, migration 0004 on ples_dev and ples_vestibul_dev, built and verified locally; 23b7721 pushed, zips built.
 - 2026-10-28: with the user's OK migration 0004 on both TUKE databases (production kept running on API b643def); the
   user uploaded 23b7721 (API + web), verified on production (section „Open questions").
+- 2026-11-03: the user tested a photo from the phone on production; then, at the user's request, every guest light (362)
+  and photo (1) of the ball was deleted on production (attendance kept).
 
 ## Open questions / next
 
@@ -574,10 +578,14 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - Ball status: the production light test (10:48–10:51 UTC) ran while the ball was „Pred plesom" (lights from the admin
   session only); at the b643def check the ball was „Ples prebieha" (live: visitors see every page and may send lights),
   switched in /admin after the test. Before the ball it must be „Pred plesom" again (the user's call). Check the status
-  in /admin (or /app.js/api/gate) before assuming it. The lobby is „Vypnutý" (gate `off`).
-- Production still holds the 361 test lights of 2026-10-27 on ples-2027 (+1, probably the user's phone): delete them all
-  when the user says so (a script with `--env .env.tuke`, every submission of the event; pins cascade), and check that
-  /summary shows 0 before the ball. A write load test on the TUKE server itself (with the user's OK) is still open.
+  in /admin (or /app.js/api/gate) before assuming it. The lobby is „Vypnutý" (gate `off`). On 2026-11-03 after the
+  user's phone test: „Pred plesom", photos „Hneď na stenu" (auto; the default and the advice for the ball is
+  „Po schválení").
+- 2026-11-03, at the user's request: every guest light and photo of the ball deleted on the TUKE database (a script with
+  `--env .env.tuke`, one transaction: 171 submissions = 362 lights, all of 2026-10-27, pins cascaded, and 1 photo; audit
+  rows lights_delete_all + photos_delete_all; the attendance confirmation (1) kept; the lobby had none). Verified:
+  /summary, /live (lights and photos) and /photos show 0. A write load test on the TUKE server itself (with the user's
+  OK) is still open.
 
 - Deployed 62362ab (API + web, 2026-10-27): both TUKE databases migrated with 0002 + 0003 (with the user's OK).
   Verified: health 62362ab with both databases up, web /build.txt 62362ab, CORS + preflight 204 (also attendees), gate
