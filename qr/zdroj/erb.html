@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>SVG erb</title>
+<script src="jsQR.js"></script>
+<body style="background:#fff;font:14px sans-serif"><pre id="out">…</pre>
+<script>
+const files = ['onboarding-tuke-erb.svg', 'onboarding-tuke-erb-cierny.svg', 'qr-erb.svg', 'qr-erb-negativ.svg'];
+const want = 'https://srdcom.tuke.sk/onboarding/';
+(async () => {
+  const lines = [];
+  for (const f of files) {
+    const img = new Image(); img.src = f; await img.decode();
+    const row = [];
+    for (const size of [600, 300, 180, 120]) {
+      const c = document.createElement('canvas'); c.width = c.height = size;
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, size, size); g.drawImage(img, 0, 0, size, size);
+      const d = g.getImageData(0, 0, size, size);
+      const r = jsQR(d.data, size, size, { inversionAttempts: 'attemptBoth' });
+      row.push(`${size}px ${r && r.data === want ? 'OK' : '-'}`);
+      if (size === 300) document.body.appendChild(c);
+    }
+    lines.push(`${f.padEnd(22)} ${row.join(' | ')}`);
+  }
+  document.getElementById('out').textContent = lines.join('\n');
+  window.__done = lines;
+})();
+</script>

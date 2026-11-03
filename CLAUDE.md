@@ -82,6 +82,9 @@ data/            tuke_cooperation.json (+ .csv) = the versioned dataset (source 
 scripts/         Python pipeline that builds the dataset (order in data/README.md)
 tools/           dev.mjs (web + api), build-tuke.mjs (deploy/ + zips), iis/iisnode.yml + iis/env.example (template of
                  App_Data/.env), mssql-dev-setup.mjs (local SQL Server login/database + .env), api-smoke.mjs
+qr/              invitation QR codes for https://srdcom.tuke.sk/onboarding/ (SVG + PNG: plain, TUKE emblem in the
+                 centre, shaped as the emblem), A6 mockups navrhy/1–13, foil plates navrhy/tlac/*.svg (black = foil);
+                 qr/zdroj = generators, own QR encoder, readers, stress test (Slovak CITAJ-MA.md: fix its paths first)
 ```
 
 ## Commands
@@ -560,6 +563,11 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   and verified the same day (health and /build.txt acc353b, both databases up; /app.js/api/gate and /vestibul/gate carry
   `status` and `changed` with CORS and `no-store`; the production onboarding in the pane asked /gate at 8 s and 18 s,
   200, no console errors). Production then: „Pred plesom", photos „Hneď na stenu", no lights, no photos.
+  Then the invitation QR codes (folder qr/): the printer's first draft of the invitation pointed to tuke.sk/ples. Codes
+  for https://srdcom.tuke.sk/onboarding/: plain, with the emblem in the centre, and shaped as the TUKE emblem (QR v5-L on
+  the emblem's 19×19 grid at 3 modules per cell, the emblem's lines solved into the code over GF(2), the rest of the
+  shield filled with decorative modules, fake finders rejected); 13 A6 mockups, foil plates, a stress test with jsQR
+  and ZXing (black emblem 11 of 13 conditions, foil 8–9, plain QR 12). Sent to the organisers for the printer.
 
 ## Open questions / next
 
@@ -633,6 +641,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome fullscreen `/?k=CODE`, before „Ples
   prebieha" `/?nahlad=1&k=CODE` after logging in, the wall is a kiosk
   anyway), rehearsal.
+- Invitations (printer): scan a test print of the chosen QR design with several phones (iPhone and Android) before the
+  whole run; the emblem-shaped code ≥ 45–50 mm on matte foil (it fails moderate blur). The QR leads to /onboarding/,
+  which during the ball only links to /zapoj-sa (a redirect there, and to the wall after the ball, is undecided). If
+  the URL changes, regenerate every design from qr/zdroj.
 - English version of the guest form; polish of /mapa on phones. For the ball night: an access code (`?k=CODE` on the
   wall's QR) keeps strangers from sending lights now that the per-address limit is loose.
 - Student lobby: wording of the lobby texts (name „Vestibul TUKE", status labels) and whether its QR needs an access code.
