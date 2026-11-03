@@ -551,7 +551,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   user uploaded 23b7721 (API + web), verified on production (section „Open questions").
 - 2026-11-03: the user tested a photo from the phone on production; then, at the user's request, every guest light (362)
   and photo (1) of the ball was deleted on production (attendance kept). Then, at the user's request, open pages follow a
-  switch in /admin without a reload (the gate polled every 10 s, section „Before the ball").
+  switch in /admin without a reload (the gate polled every 10 s, section „Before the ball"): acc353b, uploaded by the user
+  and verified the same day (health and /build.txt acc353b, both databases up; /app.js/api/gate and /vestibul/gate carry
+  `status` and `changed` with CORS and `no-store`; the production onboarding in the pane asked /gate at 8 s and 18 s,
+  200, no console errors). Production then: „Pred plesom", photos „Hneď na stenu", no lights, no photos.
 
 ## Open questions / next
 
