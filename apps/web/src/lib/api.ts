@@ -74,7 +74,8 @@ function photoForm(meta: PhotoUpload, photo: Blob, thumb: Blob): FormData {
 }
 
 export const api = {
-  gate: () => request<GateResponse>('/gate'),
+  // asked every 10 s by every open page: always from the server
+  gate: () => request<GateResponse>('/gate', { cache: 'no-store' }),
   attend: (slug: string, body: AttendeeInput) => request<AttendeeResponse>(`/events/${slug}/attendees`, { method: 'POST', json: body }),
   globe: () => request<GlobeResponse>('/globe'),
   place: (id: string) => request<PlaceDetail>(`/globe/places/${encodeURIComponent(id)}`),

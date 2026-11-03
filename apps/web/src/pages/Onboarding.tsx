@@ -10,6 +10,7 @@ import type { EventInfo } from '@ples/shared';
 import { Starfield } from '../components/Starfield.tsx';
 import { ApiError, api } from '../lib/api.ts';
 import { store } from '../lib/device.ts';
+import { useEventVersion } from '../lib/gate.ts';
 import { Link, useVenue } from '../lib/router.tsx';
 import './join.css';
 import './onboarding.css';
@@ -35,11 +36,13 @@ export default function Onboarding() {
   const [confirmed, setConfirmed] = useState<string[]>(() => store.get<string[]>(`${KEY}-${venue.key}`) ?? []);
   const [done, setDone] = useState<{ name: string; companion: string | null } | null>(null);
 
+  // loaded again whenever the admin changes the event: when the ball starts, the link to the lights appears by itself
+  const version = useEventVersion();
   useEffect(() => {
-    api.event(venue.event).then(setEvent).catch((err: ApiError) => setEventError(err.status === 503 || err.status === 404
+    api.event(venue.event).then(e => { setEvent(e); setEventError(''); }).catch((err: ApiError) => setEventError(err.status === 503 || err.status === 404
       ? 'Potvrdzovanie účasti ešte nie je spustené. Skús to o chvíľu.'
       : err.message));
-  }, [venue.event]);
+  }, [venue.event, version]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();

@@ -30,9 +30,9 @@ export const CACHE = {
  * The live feed and the summary are identical for all viewers: on Vercel the CDN answered the polls,
  * on IIS this keeps the database load flat however many screens and phones poll.
  */
-export function shared<T>(ttlMs: number): (key: string, compute: () => Promise<T>) => Promise<T> {
+export function shared<T>(ttlMs: number): ((key: string, compute: () => Promise<T>) => Promise<T>) & { forget(key: string): void } {
   const entries = new Map<string, { at: number; value: Promise<T> }>();
-  return (key, compute) => {
+  const get = (key: string, compute: () => Promise<T>) => {
     const now = Date.now();
     const hit = entries.get(key);
     if (hit && now - hit.at < ttlMs) return hit.value;
@@ -41,6 +41,8 @@ export function shared<T>(ttlMs: number): (key: string, compute: () => Promise<T
     value.catch(() => { if (entries.get(key)?.value === value) entries.delete(key); }); // never keep a failure
     return value;
   };
+  // the next caller computes it again, e.g. right after a change made through the API
+  return Object.assign(get, { forget: (key: string) => { entries.delete(key); } });
 }
 
 /** Positive whole number from a query or path parameter, else undefined. */

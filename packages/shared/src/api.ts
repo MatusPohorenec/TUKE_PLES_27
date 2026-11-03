@@ -190,6 +190,10 @@ export interface AdminPhoto extends Omit<WallPhoto, 'approvedAt'> { status: Phot
 export interface AdminFeedback { id: number; page: string; message: string; author: string | null; status: string; createdAt: string }
 export interface AdminAttendee { id: number; name: string; affiliation: string; companion: string | null; createdAt: string }
 
-/** GET /api/gate: which pages the venue shows this visitor (gateOf in constants.ts), never cached. */
-export interface GateResponse { state: GateState; admin: boolean }
+/**
+ * GET /api/gate: which pages the venue shows this visitor (gateOf in constants.ts), never cached by the browser. Every
+ * open page asks again every few seconds: `changed` (when the admin last changed the venue's event: status, photos,
+ * access code, scene) tells the pages to load the event again, so nobody has to reload after a switch in /admin.
+ */
+export interface GateResponse { state: GateState; admin: boolean; status: EventStatus | null; changed: string | null }
 export interface AttendeeResponse { id: number; name: string; companion: string | null }

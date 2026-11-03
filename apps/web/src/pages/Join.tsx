@@ -11,6 +11,7 @@ import { PhotoPanel, type LitPlace } from '../components/PhotoPanel.tsx';
 import { PlaceSearch, hitKey } from '../components/PlaceSearch.tsx';
 import { ApiError, api } from '../lib/api.ts';
 import { store } from '../lib/device.ts';
+import { useEventVersion } from '../lib/gate.ts';
 import { Link, queryParam, useVenue } from '../lib/router.tsx';
 import './join.css';
 
@@ -56,11 +57,13 @@ export default function Join() {
   const [notice, setNotice] = useState(''); // after an undo: what happened to the lights
   const [lit, addLit, removeLit] = useLitPlaces(venue.key);
 
+  // loaded again whenever the admin changes the event (closed, photos on or off, an access code): the form follows
+  const version = useEventVersion();
   useEffect(() => {
-    api.event(slug).then(setEvent).catch((err: ApiError) => setEventError(err.status === 503 || err.status === 404
+    api.event(slug).then(e => { setEvent(e); setEventError(''); }).catch((err: ApiError) => setEventError(err.status === 503 || err.status === 404
       ? `Zbieranie svetiel ešte nie je spustené. ${venue.key === 'ples' ? 'Skús to bližšie k plesu.' : 'Skús to neskôr.'}`
       : err.message));
-  }, [slug, venue.key]);
+  }, [slug, venue.key, version]);
 
   const add = (h: GazetteerHit) => setPlaces(list => (list.some(p => hitKey(p) === hitKey(h)) || list.length >= LIMITS.placesPerSubmission ? list : [...list, h]));
   const remove = (h: GazetteerHit) => setPlaces(list => list.filter(p => hitKey(p) !== hitKey(h)));

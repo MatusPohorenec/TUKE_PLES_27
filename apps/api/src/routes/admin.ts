@@ -21,6 +21,7 @@ import {
 import { photoMeta, toAdminPhoto } from '../lib/photos.ts';
 import { venueOf } from '../lib/venue.ts';
 import { UUID, eventInfo } from './events.ts';
+import { forgetGate } from './gate.ts';
 
 /** The database of the venue the request belongs to. */
 const dbOf = (c: Context) => getDb(venueOf(c));
@@ -83,6 +84,7 @@ export const adminRoutes = new Hono()
       .outputAll('inserted')
       .executeTakeFirst();
     if (!ev) fail(404, 'event_not_found', 'Udalosť neexistuje.');
+    forgetGate(venueOf(c)); // open pages ask the gate every few seconds: they get the change at once
     await audit(c, 'event_update', ev!.slug, { ...input, code: input.code === undefined ? undefined : input.code ? 'set' : 'removed' });
     return c.json(eventInfo(ev!));
   })

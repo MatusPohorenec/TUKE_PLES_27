@@ -152,6 +152,8 @@ const setStatus = async status => (await call('PATCH', `/admin${EV}`, { status }
 check('status open (before the ball)', (await setStatus('open')) === 'open');
 const gateOpen = await anonymous(() => call('GET', '/gate'));
 check('gate before the ball: onboarding', gateOpen.json.state === 'onboarding' && gateOpen.json.admin === false, JSON.stringify(gateOpen.json));
+// open pages ask the gate every 10 s: right after a switch in /admin it must tell the new status and a new change stamp
+check('gate tells the status and when it changed', gateOpen.json.status === 'open' && typeof gateOpen.json.changed === 'string', JSON.stringify(gateOpen.json));
 const early = await anonymous(() => call('POST', `${EV}/pins`, { places: [{ countryCode: 'NP' }], visitKind: 'erasmus_study' }, { 'x-device-id': device }));
 check('light from a visitor before the ball 409', early.status === 409, `HTTP ${early.status}`);
 const rehearsal = await call('POST', `${EV}/pins`, { places: [{ countryCode: 'NP' }], visitKind: 'erasmus_study' }, { 'x-device-id': device });
@@ -175,6 +177,7 @@ check('attendance list needs the admin 401', attendeesVisitor.status === 401, `H
 check('status live (the ball)', (await setStatus('live')) === 'live');
 const gateLive = await anonymous(() => call('GET', '/gate'));
 check('gate on the ball night: open', gateLive.json.state === 'open', JSON.stringify(gateLive.json));
+check('gate follows the switch at once', gateLive.json.status === 'live' && gateLive.json.changed !== gateOpen.json.changed, `${gateOpen.json.changed} -> ${gateLive.json.changed}`);
 
 const event = await call('GET', EV);
 check('event', event.status === 200 && event.json.slug === venue.event && event.json.status === 'live', JSON.stringify(event.json));

@@ -1,7 +1,7 @@
 import { StrictMode, Suspense, lazy, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { venueOfPath } from '@ples/shared/constants';
-import { pageAllowed, useGate, usePreview } from './lib/gate.ts';
+import { GateContext, pageAllowed, useGate, usePreview } from './lib/gate.ts';
 import { kioskMode, navigate, usePathname } from './lib/router.tsx';
 import { pageOf, venueHref } from './lib/venue.ts';
 import { FeedbackButton } from './components/FeedbackButton.tsx';
@@ -61,7 +61,7 @@ function App() {
   // a page the guests cannot open yet, shown by the preview: say so (not on the kiosk wall, the LED screen stays clean)
   const previewing = Boolean(Page && gate?.admin && preview && gate.state !== 'open' && page !== '/admin' && !kiosk);
   return (
-    <>
+    <GateContext.Provider value={gate}>
       <Suspense fallback={<Waiting />}>
         {/* keyed by venue: a page never carries one venue's data over to the other */}
         {Page ? <Page key={venue.key} />
@@ -70,7 +70,7 @@ function App() {
       </Suspense>
       {REVIEW && Page && gate?.admin && !kiosk && page !== '/admin' && page !== '/onboarding' && <FeedbackButton page={pathname.replace(/\/+$/, '') || '/'} />}
       {previewing && <PreviewBadge venue={venue} state={gate!.state} />}
-    </>
+    </GateContext.Provider>
   );
 }
 

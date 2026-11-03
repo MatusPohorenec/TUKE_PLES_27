@@ -246,9 +246,15 @@ it); every other page is blocked with a playful, poetic hint of the ball; just b
 and switches „Ples prebieha".
 - The switch is the event status (`EVENT_STATUSES`), `gateOf()` in constants.ts maps it for visitors: draft → `off`
   (teaser only), open → `onboarding` (only /onboarding), live/closed → `open` (every page). GET `/api/gate` (per venue,
-  no-store) returns `{ state, admin }` (admin = valid session cookie). The web asks once per venue (`useGate`, last answer
-  kept in localStorage for an API hiccup at the ball), `pageAllowed()` decides, main.tsx shows the page, the Teaser, or
-  replaces `/` with `/onboarding`; /admin is always open; `refreshGate()` after login/logout. A logged-in admin sees what
+  no-store) returns `{ state, admin, status, changed }` (admin = valid session cookie; changed = events.updated_at, which
+  every admin PATCH bumps; the event read is shared 2 s per venue and dropped by the PATCH, `forgetGate`). Every open
+  page asks again every 10 s while it is in front and at once when it comes back (`useGate` in main.tsx with usePoll;
+  the last answer kept in localStorage for an API hiccup at the ball), `pageAllowed()` decides, main.tsx shows the page,
+  the Teaser, or replaces `/` with `/onboarding`; /admin is always open; `refreshGate()` after login/logout. So a switch
+  in /admin reaches open pages by itself (the user, 2026-11-03: a phone with the onboarding open needed a manual reload):
+  teaser ↔ page, the wall → /onboarding, and Join/Onboarding load the event again when `changed` changes (`GateContext`
+  + `useEventVersion()`: closed, photos on/off, access code, the live link); typed fields stay. Verified locally
+  2026-11-03 in the pane (phone size, temp servers): every case followed within 1–3 s, the 10 s poll is the upper bound. A logged-in admin sees what
   the guests see (until 2026-10-27 the admin saw every page, and the user, still logged in after switching „Pred
   plesom", took the map for a bug); every page only in the admin's **preview** (`usePreview` in gate.ts): „Náhľad
   stránky" in /admin opens `/?kiosk=0&nahlad=1` in a new tab, the flag lives in sessionStorage per venue (this tab only;
@@ -544,7 +550,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - 2026-10-28: with the user's OK migration 0004 on both TUKE databases (production kept running on API b643def); the
   user uploaded 23b7721 (API + web), verified on production (section „Open questions").
 - 2026-11-03: the user tested a photo from the phone on production; then, at the user's request, every guest light (362)
-  and photo (1) of the ball was deleted on production (attendance kept).
+  and photo (1) of the ball was deleted on production (attendance kept). Then, at the user's request, open pages follow a
+  switch in /admin without a reload (the gate polled every 10 s, section „Before the ball").
 
 ## Open questions / next
 
