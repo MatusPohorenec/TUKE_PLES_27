@@ -454,6 +454,11 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   ≤ 7 ms; bursts over the 60-light window resync from the summary (lights appear at once, no beams). Production reads
   (read only): 50–90 parallel requests (gate, event, live, search) p95 ≤ 241 ms. The guest form loads ~75 kB (brotli);
   the globe chunk (0.8 MB) only on the wall and /mapa. Not tested: writes on the TUKE server itself.
+- Gate polling (every open page every 10 s while in front, since acc353b), measured on production 2026-11-03 (read only,
+  from the native PC on the TUKE network, scratchpad gate_load.mjs): 100 req/s for 30 s (= 1 000 open pages) and
+  250 req/s for 15 s (= 2 500): every answer 200, p50 2 ms, p95 3 ms, p99 18 / 22 ms, max 99 / 144 ms, health fine after.
+  The database sees at most one event read per 2 s per venue whatever the number of pages; hidden tabs and locked
+  phones do not ask; after a switch each open form/onboarding loads the event once (spread over the 10 s).
 
 ## Verifying in the browser pane
 
