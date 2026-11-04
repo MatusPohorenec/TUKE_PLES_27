@@ -1,5 +1,20 @@
 [
  {
+  "name": "University of Miskolc (Miskolci Egyetem)",
+  "name_local": "",
+  "city": "Miskolc",
+  "country": "Hungary",
+  "country_code": "HU",
+  "lat": null,
+  "lon": null,
+  "category": "bilateral_agreement",
+  "tuke_unit": "TUKE",
+  "description": "Prvá dohoda o spolupráci, ktorú v roku 1966 podpísali rektori oboch univerzít (VŠT a vtedajšej Nehézipari Műszaki Egyetem)",
+  "since": "1966",
+  "source_url": "https://web.uni-miskolc.hu/files/3240/Sajt%C3%B3k%C3%B6zlem%C3%A9ny%20-%20A%20Miskolci%20Egyetemre%20l%C3%A1togatott%20a%20Kassai%20M%C5%B1szaki%20Egyetem%20vezet%C3%A9se.pdf",
+  "confidence": "high"
+ },
+ {
   "name": "European University Association (EUA)",
   "name_local": "",
   "city": "Brussels",

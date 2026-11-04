@@ -16,10 +16,14 @@ CALL_UA_EG = "https://erasmus.tuke.sk/erasmus-vyzva-pre-mobilitu-ucitelov-a-zame
 CALL_VE = "https://erasmus.tuke.sk/erasmus-vyzva-pre-mobilitu-ucitelov-a-zamestnancov-tuke-do-krajin-mimo-eu-venezuela-2/"
 CALL_EKF_UA = "https://erasmus.tuke.sk/erasmus-vyzva-pre-mobilitu-zamestnancov-ekf-tuke-do-krajin-mimo-eu-ukrajina/"
 CALL_UZH = "https://erasmus.tuke.sk/vyzva-na-zamestnanecku-mobilitu-uzhorod-ukrajina/"
+# University of Miskolc press release, 19 Nov 2015: "az első együttműködési megállapodást 1966-ban írta alá a két rektor"
+MISKOLC_1966 = ("https://web.uni-miskolc.hu/files/3240/Sajt%C3%B3k%C3%B6zlem%C3%A9ny%20-%20A%20Miskolci%20Egyetemre%20l%C3%A1to"
+                "gatott%20a%20Kassai%20M%C5%B1szaki%20Egyetem%20vezet%C3%A9se.pdf")
 
 # (name, city, country code, category, TUKE unit, description, since, source)
 ROWS = [
     # university level
+    ("University of Miskolc (Miskolci Egyetem)", "Miskolc", "HU", "bilateral_agreement", "TUKE", "Prvá dohoda o spolupráci, ktorú v roku 1966 podpísali rektori oboch univerzít (VŠT a vtedajšej Nehézipari Műszaki Egyetem)", "1966", MISKOLC_1966),
     ("European University Association (EUA)", "Brussels", "BE", "network_membership", "TUKE", "TUKE je riadnym členom EUA (Individual Full Member)", "", "https://www.eua.eu"),
     ("Magna Charta Universitatum Observatory", "Bologna", "IT", "network_membership", "TUKE", "TUKE je signatárom Magna Charta Universitatum", "", "https://www.magna-charta.org/magna-charta-universitatum/signatory-universities"),
     ("Université Côte d'Azur", "Nice", "FR", "double_degree", "EkF", "Program dvojitého diplomu EkF TUKE a Université Côte d'Azur", "", "https://nicediplom.ekf.tuke.sk/"),

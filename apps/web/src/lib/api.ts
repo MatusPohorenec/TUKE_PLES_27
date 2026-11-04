@@ -77,7 +77,9 @@ export const api = {
   // asked every 10 s by every open page: always from the server
   gate: () => request<GateResponse>('/gate', { cache: 'no-store' }),
   attend: (slug: string, body: AttendeeInput) => request<AttendeeResponse>(`/events/${slug}/attendees`, { method: 'POST', json: body }),
-  globe: () => request<GlobeResponse>('/globe'),
+  // revalidated at every load (ETag, so an unchanged dataset costs a 304): the server's stale-while-revalidate would
+  // otherwise let the browser show the old dataset for one more load after a new one is seeded (the wall loads once)
+  globe: () => request<GlobeResponse>('/globe', { cache: 'no-cache' }),
   place: (id: string) => request<PlaceDetail>(`/globe/places/${encodeURIComponent(id)}`),
   search: (q: string, signal?: AbortSignal) => request<{ query: string; hits: GazetteerHit[] }>(`/gazetteer/search?q=${encodeURIComponent(q)}`, { signal }),
   event: (slug: string) => request<EventInfo>(`/events/${slug}`),

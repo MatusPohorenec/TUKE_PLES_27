@@ -5,11 +5,20 @@ export const ORIGIN = { name: 'Technická univerzita v Košiciach', city: 'Koši
 export const TUKE_FOUNDED = 1952;
 
 /**
- * Moments of the 75 years shown under the year while the timeline runs.
- * Sources: tuke.sk/en/history (1952, 1991), the Erasmus+ European Universities call 2020 (Ulysseus).
+ * Moments of the 75 years shown under the year while the timeline runs. Sources:
+ * 1952, 1991: tuke.sk/sk/historia; 1966, 1972: ima.ngo/stavba-dielo/tuke (the main building at Letná 9, built 1966–1972);
+ * 1969, 1976, 1985: Haló TU 4/2021-22, pp. 16–17 „Fakulty TUKE na časovej osi" (pdf.tuke.sk/halo-tu/halotu-21-22-4.pdf);
+ * 1989: kosicednes.sk/spravy/davy-kosicanov-zmobilizovali-lidri-z-radov-studentov and kosice.dnes24.sk (November 1989
+ * day by day: the students' strike of 20–21 November); 2020: the Erasmus+ European Universities call 2020 (Ulysseus).
  */
 export const MILESTONES: readonly { year: number; text: string }[] = [
   { year: 1952, text: 'Vzniká Vysoká škola technická v Košiciach' },
+  { year: 1966, text: 'Začína sa stavba hlavnej budovy na Letnej' },
+  { year: 1969, text: 'Vzniká Elektrotechnická fakulta' },
+  { year: 1972, text: 'Hlavná budova s aulou na Letnej je hotová' },
+  { year: 1976, text: 'Stavebná fakulta otvára dvere prvým študentom' },
+  { year: 1985, text: 'Na VŠT vzniká prvé robotizované pracovisko v ČSSR' },
+  { year: 1989, text: 'Študenti VŠT vstupujú do novembrového štrajku' },
   { year: 1991, text: 'Premenovanie na Technickú univerzitu v Košiciach' },
   { year: 2004, text: 'Slovensko vstupuje do Európskej únie' },
   { year: 2020, text: 'TUKE spoluzakladá európsku univerzitu Ulysseus' },

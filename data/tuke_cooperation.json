@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-20",
+ "generated": "2026-11-04",
  "origin": {
   "name": "Technická univerzita v Košiciach",
   "city": "Košice",
@@ -34,7 +34,7 @@
   "countries": 88,
   "countries_with_institution": 86,
   "farthest": "Wellington",
-  "links": 2558
+  "links": 2559
  },
  "institutions": [
   {
@@ -25252,6 +25252,16 @@
      "detail": "HUSKROUA/1101/194 – 2007 - 2013 Hungary-Slovakia-Romania-Ukraine ENPI CBC; NET4SENERGY – 2014 - 2020 Hungary - Slovakia - Romania - Ukraine ENI CBC; REVITAL I – 2014 - 2020 Hungary - Slovakia - Romania - Ukraine ENI CBC; DIKEINSPECT – 2014 - 2020 Hungary - Slovakia - Romania - Ukraine ENI CBC",
      "since": "2013",
      "source_url": "https://keep.eu/projects/23951/",
+     "confidence": "high"
+    },
+    {
+     "category": "bilateral_agreement",
+     "tuke_units": [
+      "TUKE"
+     ],
+     "detail": "Prvá dohoda o spolupráci, ktorú v roku 1966 podpísali rektori oboch univerzít (VŠT a vtedajšej Nehézipari Műszaki Egyetem)",
+     "since": "1966",
+     "source_url": "https://web.uni-miskolc.hu/files/3240/Sajt%C3%B3k%C3%B6zlem%C3%A9ny%20-%20A%20Miskolci%20Egyetemre%20l%C3%A1togatott%20a%20Kassai%20M%C5%B1szaki%20Egyetem%20vezet%C3%A9se.pdf",
      "confidence": "high"
     },
     {
@@ -59479,7 +59489,7 @@
     "research_cooperation",
     "research_project_eu"
    ],
-   "links": 17,
+   "links": 18,
    "distance_km": 77
   },
   {
