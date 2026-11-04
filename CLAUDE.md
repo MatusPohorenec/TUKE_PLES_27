@@ -434,6 +434,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   it (+8 px); it re-checks every 2 s and on resize, never during the opening. Measured 2026-10-20 (Russia shown): scale 1 at
   1920×1080, 0.95 at 1536×730 kiosk, 0.8 / 0.85 at 1280×720 kiosk / not (QR 120 / 95 px), nothing covered, also with three
   guest names in the list. (The old narrow column covered Yakutsk, Beijing, Kitami, Tokyo … below 1920×1080.)
+  Since the title's capital R (2026-11-04, 8 px wider at 1280×720) 1280×720 kiosk gives 0.75; 1920×1080 stays 1
+  (132 px between the title and the panel).
 - Cards never cover the map (the user: cards over half the map). Like TV lower thirds / docked map panels
   (Flightradar24, Esri dock, Datawrapper callouts), `MapScene.cardDock()` offers the empty southern ocean south of 38° S
   between 52° W and 138° E (stars there narrow it); the card docks there as wide as the band (`--dock-w`) and the place gets
@@ -579,6 +581,11 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   and took it for the printed code. Checked locally (status live, phone size): the printed /onboarding/ shows the
   attendance form, and the link „Ples práve prebieha: pridaj aj svoje svetlo →" only at the bottom; / shows the wall.
   The user keeps it as it is (no redirect /onboarding → /); qr/final and its scripts committed.
+  Then text edits from the organisers' consultation: the wall's title „Rozsvieťme mapu sveta" (capital R), the
+  onboarding's heading „Potvrď svoju účasť na plese TUKE 2027" and intro „Z Košíc sa už 75 rokov šíri svetlo ku
+  všetkým miestam sveta, s ktorými TUKE spolupracuje a v túto noc sa rozsvietia aj miesta, kde si bol/a ty." (no
+  comma after „spolupracuje"; non-breaking spaces after its one-letter words, the first in the app). Checked locally:
+  phone 375 px (heading 2 lines, no one-letter word at a line end), wall title 1 line on the phone.
 
 ## Open questions / next
 

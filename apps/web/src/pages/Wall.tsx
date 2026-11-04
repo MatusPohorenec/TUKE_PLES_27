@@ -269,7 +269,7 @@ export default function Wall() {
 
       <header className="wall-title title-block" ref={titleRef}>
         <small>TECHNICKÁ UNIVERZITA V KOŠICIACH</small>
-        <h1>rozsvieťme mapu sveta</h1>
+        <h1>Rozsvieťme mapu sveta</h1>
       </header>
 
       <section className="wall-stats" aria-label="Počty">

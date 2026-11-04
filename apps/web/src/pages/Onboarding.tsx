@@ -80,10 +80,10 @@ export default function Onboarding() {
     <main className="join onboarding">
       <header className="join-head">
         <span className="join-brand">{venue.brand}</span>
-        <h1>Potvrď svoju účasť</h1>
+        <h1>Potvrď svoju účasť na plese TUKE 2027</h1>
         <p>
-          Ples TUKE 2027 oslavuje 75 rokov univerzity. Z Košíc sa rozletí svetlo ku všetkým miestam sveta, s ktorými TUKE
-          spolupracuje, a v tú noc sa rozsvietia aj miesta, kde si bol/a ty.
+          Z&nbsp;Košíc sa už 75 rokov šíri svetlo ku všetkým miestam sveta, s&nbsp;ktorými TUKE spolupracuje
+          a&nbsp;v&nbsp;túto noc sa rozsvietia aj miesta, kde si bol/a ty.
         </p>
       </header>
 
