@@ -84,7 +84,9 @@ tools/           dev.mjs (web + api), build-tuke.mjs (deploy/ + zips), iis/iisno
                  App_Data/.env), mssql-dev-setup.mjs (local SQL Server login/database + .env), api-smoke.mjs
 qr/              invitation QR codes for https://srdcom.tuke.sk/onboarding/ (SVG + PNG: plain, TUKE emblem in the
                  centre, shaped as the emblem), A6 mockups navrhy/1–13, foil plates navrhy/tlac/*.svg (black = foil);
-                 qr/zdroj = generators, own QR encoder, readers, stress test (Slovak CITAJ-MA.md: fix its paths first)
+                 qr/zdroj = generators, own QR encoder, readers, stress test (Slovak CITAJ-MA.md: fix its paths first);
+                 qr/final = the chosen plates qr-erb + qr-erb-negativ for the printer (PDF 1:1 100 % K, SVG, PNG, the
+                 blue colour mockups, ZIP), made by qr/zdroj/final_print.py
 ```
 
 ## Commands
@@ -568,6 +570,15 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   the emblem's 19×19 grid at 3 modules per cell, the emblem's lines solved into the code over GF(2), the rest of the
   shield filled with decorative modules, fake finders rejected); 13 A6 mockups, foil plates, a stress test with jsQR
   and ZXing (black emblem 11 of 13 conditions, foil 8–9, plain QR 12). Sent to the organisers for the printer.
+  The user then chose qr-erb and qr-erb-negativ as final: qr/final has them as vector PDF 1:1 (100 % K, written from
+  the SVG paths), SVG and PNG (2730 px), with the colour mockups on the blue card and a ZIP for the printer's chat.
+  Checked: Poppler's render of the PDF = the grid, both readers at 200–2730 px, narrowest gap 0.37 mm at 50 mm.
+  A variant for the main page https://srdcom.tuke.sk/ was generated that afternoon but dropped: the printer had
+  already got the /onboarding/ codes (the user, 2026-11-04), so qr/ holds exactly the printed version.
+- 2026-11-04: the user scanned the main-page variant with „Ples prebieha" and saw the map with „Pridaj svoje svetlo",
+  and took it for the printed code. Checked locally (status live, phone size): the printed /onboarding/ shows the
+  attendance form, and the link „Ples práve prebieha: pridaj aj svoje svetlo →" only at the bottom; / shows the wall.
+  The user keeps it as it is (no redirect /onboarding → /); qr/final and its scripts committed.
 
 ## Open questions / next
 
@@ -641,10 +652,12 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
 - On site: LED wall resolution and playback PC test (dedicated GPU, Chrome fullscreen `/?k=CODE`, before „Ples
   prebieha" `/?nahlad=1&k=CODE` after logging in, the wall is a kiosk
   anyway), rehearsal.
-- Invitations (printer): scan a test print of the chosen QR design with several phones (iPhone and Android) before the
-  whole run; the emblem-shaped code ≥ 45–50 mm on matte foil (it fails moderate blur). The QR leads to /onboarding/,
-  which during the ball only links to /zapoj-sa (a redirect there, and to the wall after the ball, is undecided). If
-  the URL changes, regenerate every design from qr/zdroj.
+- Invitations (printer): final plates qr-erb + qr-erb-negativ (the user, 2026-11-03; qr/final). Scan a test print
+  with several phones (iPhone and Android) before the whole run; the emblem-shaped code ≥ 45–50 mm on matte foil
+  (it fails moderate blur). The printed QR leads to /onboarding/: during the ball it shows
+  the attendance form with the link to /zapoj-sa only at the bottom (checked 2026-11-04); the user keeps it so
+  (2026-11-04: no redirect /onboarding → /). If the URL changes, regenerate every design from qr/zdroj and rerun
+  qr/zdroj/final_print.py.
 - English version of the guest form; polish of /mapa on phones. For the ball night: an access code (`?k=CODE` on the
   wall's QR) keeps strangers from sending lights now that the per-address limit is loose.
 - Student lobby: wording of the lobby texts (name „Vestibul TUKE", status labels) and whether its QR needs an access code.

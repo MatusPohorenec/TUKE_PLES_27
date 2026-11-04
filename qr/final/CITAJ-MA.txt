@@ -1,0 +1,24 @@
+﻿QR kód v tvare znaku TUKE – finálne podklady
+Reprezentačný ples TUKE 2027 · kód vedie na https://srdcom.tuke.sk/onboarding/
+
+Dve platne pre fóliu (čierna = fólia)
+  qr-erb           znak TUKE z QR kódu: fólia sú čiary znaku aj moduly kódu
+  qr-erb-negativ   negatív: fólia je celý štít, čiary T-U a moduly kódu sú vyrezané (presvitá papier)
+
+Súbory ku každej platni
+  .pdf   na tlač: vektor v mierke 1:1, znak 50 × 50 mm, strana 57,02 mm aj s voľným okrajom 3,5 mm,
+         100 % K (C0 M0 Y0 K100), len krivky, bez písma a obrázkov
+  .svg   ten istý vektor
+  .png   2730 × 2730 px (pri 1216 dpi presne 57,02 mm), čierna na bielej
+
+Farebné náhľady na modrej pozvánke (len ukážka, nie podklad na tlač)
+  qr-erb-nahlad-zlata-folia.png
+  qr-erb-nahlad-strieborna-folia.png
+  qr-erb-negativ-nahlad-strieborna-folia.png
+
+Pri tlači
+  - znak nezmenšovať pod 45 mm (zväčšiť sa dá ľubovoľne), najlepšie matná fólia
+  - najmenšie detaily pri 50 mm: modul kódu 0,88 mm, najužšia medzera 0,37 mm (pri oblúkoch štítu)
+  - tvar nemeniť: čiary znaku sú súčasťou kódu, medzery okolo nich aj okolo troch „očí“ kódu musia ostať
+  - okolo znaku nechať voľný okraj aspoň 3,5 mm
+  - skúšobný výtlačok pred celým nákladom naskenovať viacerými telefónmi (iPhone aj Android)

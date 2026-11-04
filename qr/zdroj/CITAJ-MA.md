@@ -18,6 +18,8 @@ nainštalujú sa takto: `npm i jsqr@1.4.0 @zxing/library@0.21.3`. Cesty `D:/Proj
 | `decode_*.cjs`, `erb.html` | čítanie hotových PNG/SVG (jsQR, ZXing, prehliadač) |
 | `stress_make.py` + `stress_decode.cjs` | záťažový test: zmenšenie, rozmazanie, šum, kontrast, svetlo, natočenie, perspektíva, JPEG |
 | `mail_assets.py` | prílohy e-mailu (náhľady JPEG, ZIP pre tlačiareň) |
+| `final_print.py` | **finálne podklady** (qr-erb a qr-erb-negativ, vybrané 2026-11-03): `qr/final` = PDF 1:1 (100 % K), SVG, PNG 1216 dpi (vykreslí ho Poppler `pdftoppm` z PDF), farebné náhľady 10 – 12 na modrej, `CITAJ-MA.txt` a ZIP do chatu |
+| `final_check.py` + `final_check.cjs` | kontrola finálnych podkladov (PDF proti rastru mriežky, najtenšia fólia a medzera, čítačky) |
 
 Kód v tvare znaku: znak TUKE je kreslený na mriežke 19 × 19, pri 3 moduloch na bunku má 57 × 57 modulov a každá
 hrana jeho čiar leží na hrane modulu. QR verzia 5 (37 × 37, oprava chýb L) je otočená o 90°, aby správa ležala nad
@@ -35,7 +37,18 @@ Záťažový test (oba dekodéry, z 13 podmienok): čierny erb 11, zlatý 9, zla
 tlač na krémovom 8. Klasický QR má 12, skoršie fóliové návrhy 8 – 9. Vyplnenie štítu čítanie zlepšilo
 (predtým 6 – 8 pri fólii), lebo veľká prázdna plocha pod kódom kazila prahovanie pri spodných očiach.
 
-Ak sa zmení adresa v kóde, treba pregenerovať všetko (Q/H matice, `emblem_qr.py` má `URL` na začiatku).
+Ak sa zmení adresa v kóde, treba pregenerovať všetko: `URL` vo všetkých skriptoch, potom `qr_matrix.cjs`,
+`make_qr.cjs`, `make_designs.py`, `make_logo_qr.py`, `emblem_qr.py eval` (overiť masku a kazy) a `final`,
+`final_print.py`, nakoniec čítačky, záťažový test a `final_check`. Takto vznikla 2026-11-03 aj verzia pre hlavnú
+stránku https://srdcom.tuke.sk/ (klasické kódy verzia 3, kód v tvare znaku s rovnakou maskou a kazmi, záťažový test
+rovnaký). Nepoužila sa: tlačiareň už dostala kódy s /onboarding/ (2026-11-04).
+
+Finálne podklady (2026-11-03): PDF je zapísané priamo z ciest SVG (rovnaký počet čiar a kriviek), znak má presne
+50 mm, strana 57,02 mm so 4 modulmi voľného okraja. PDF vykreslené Popplerom sa od rastra mriežky z `emblem_qr.py`
+líši len v ~100 osamotených pixeloch vyhladených hrán (pri 21 px na modul). jsQR aj ZXing prečítajú obe platne od
+2730 po 200 px aj priamo vykreslené PDF, farebné náhľady v polarite, akú vidí telefón (zlatá a strieborná fólia
+inverzne, negatív normálne). Pri 50 mm: modul 0,88 mm, žiadna fólia tenšia ako 0,44 mm, najužšia medzera 0,37 mm
+(pri oblúkoch štítu).
 
 Licencie: písma vo `fonts/` sú z Google Fonts pod licenciou SIL Open Font License 1.1 (jej text je v metadátach
 každého súboru): Cormorant Garamond, Great Vibes, Manrope. Súbory `-LF` sú kópie Cormorant Garamond, v ktorých
