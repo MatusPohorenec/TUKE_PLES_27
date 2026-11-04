@@ -157,6 +157,10 @@ root of api.srdcom.tuke.sk (folder `/api.srdcom.tuke.sk`). iisnode restarts the 
 iisnode.yml or App_Data\.env change (otherwise Plesk → Node.js → Restart App). Check the commit on /app.js/api/health and
 /build.txt. Data changes: `npm run db:seed -- --env .env.tuke` (with OK; once the lobby's database exists also with
 `--venue vestibul`, each venue has its own copy), then also redeploy the API (it carries the snapshot).
+Backups: before the 2026-11-04 upload the user downloaded the running sites from Plesk into `deploy/backups`
+(git-ignored, native PC): `backup-411_http.zip` (httpdocs incl. Plesk's web.config) and `backup-411-api.zip` (the API
+site incl. App_Data with the production **`.env`** and iisnode logs), both acc353b. A rollback = upload a backup zip the
+same way; the `.env` in it can restore lost keys (read it only from scripts, never print it).
 
 **What is on the server**
 - srdcom.tuke.sk (`httpdocs`): static `deploy/web`; every page route has a folder with a copy of index.html (`/mapa` →
@@ -586,6 +590,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   všetkým miestam sveta, s ktorými TUKE spolupracuje a v túto noc sa rozsvietia aj miesta, kde si bol/a ty." (no
   comma after „spolupracuje"; non-breaking spaces after its one-letter words, the first in the app). Checked locally:
   phone 375 px (heading 2 lines, no one-letter word at a line end), wall title 1 line on the phone.
+  53bdb76 uploaded by the user (web and API; the API code is unchanged since acc353b) and verified: /build.txt and
+  health 53bdb76, both databases up; the production onboarding at 375 px shows the new heading (2 lines) and intro
+  (3 lines, no one-letter word at a line end), /gate and /events 200, no console errors; the Wall chunk carries
+  „Rozsvieťme mapu sveta" (the wall itself is hidden from visitors while „Pred plesom").
 
 ## Open questions / next
 
@@ -610,7 +618,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   valid admin session (pane) and „Pred plesom" srdcom.tuke.sk → /onboarding, /mapa → teaser; /admin shows „Náhľad
   stránky" (/?kiosk=0&nahlad=1, new tab); the preview shows the wall with the bar and the golden pill, /?nahlad=1 the
   kiosk wall without pill or comment button, /mapa the map with the pill; „Ukončiť náhľad" → teaser, / → /onboarding.
-- Production: API b643def (web b643def until 8e73e5e) (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
+- Production: web + API 53bdb76 since 2026-11-04 (before: acc353b, kept in deploy/backups). Earlier: API b643def (web
+  b643def until 8e73e5e) (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
   databases up, /build.txt b643def, /live and /summary `public, max-age=0, s-maxage=2` with CORS, preflight 204,
   /admin/me 401, the web bundle fetches both feeds with `no-store`; the 3D wall in the pane: counter 362 lights /
   120 places / 57 countries, the scene's stars hold the same 362 lights on 119 stars (a country merged with its
