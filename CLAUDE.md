@@ -617,7 +617,11 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   the first light (dataset 2026-11-04+6a6c8a7d, patched in). Local wall test (2D, 1280×720): Miskolc lands first (1966;
   Hungary lit, 1 country / 1 place / 10 institutions by 1972), each milestone ~2.6 s on screen, the opening ≈ 54 s. The
   first run showed the old dataset: the browser answered /globe from its cache (stale-while-revalidate), so the web now
-  revalidates /globe at every load.
+  revalidates /globe at every load. fee9789: both TUKE databases seeded with the user's OK (2026-11-04+6a6c8a7d, ~55 s
+  each; the seed left the event status alone) and both zips uploaded by the user. Verified: /build.txt and health
+  fee9789 with both databases up, /globe 2026-11-04+6a6c8a7d (before 1990: Miskolc 1966, Praha, Budapest, Jena), CORS
+  and preflight 204, /admin/me 401, the bundle carries the milestones and fetches /globe with no-cache. The wall itself
+  stays hidden while „Pred plesom" (the pane has no admin login; the user can look through „Náhľad stránky").
 
 ## Open questions / next
 
@@ -642,7 +646,7 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   valid admin session (pane) and „Pred plesom" srdcom.tuke.sk → /onboarding, /mapa → teaser; /admin shows „Náhľad
   stránky" (/?kiosk=0&nahlad=1, new tab); the preview shows the wall with the bar and the golden pill, /?nahlad=1 the
   kiosk wall without pill or comment button, /mapa the map with the pill; „Ukončiť náhľad" → teaser, / → /onboarding.
-- Production: web + API 53bdb76 since 2026-11-04 (before: acc353b, kept in deploy/backups). Earlier: API b643def (web
+- Production: web + API fee9789 since 2026-11-04 (53bdb76 that morning; before: acc353b, kept in deploy/backups). Earlier: API b643def (web
   b643def until 8e73e5e) (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
   databases up, /build.txt b643def, /live and /summary `public, max-age=0, s-maxage=2` with CORS, preflight 204,
   /admin/me 401, the web bundle fetches both feeds with `no-store`; the 3D wall in the pane: counter 362 lights /
