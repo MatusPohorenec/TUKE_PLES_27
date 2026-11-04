@@ -598,6 +598,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   script with `--env .env.tuke`: dry run first, then that one submission by id in one transaction, audit
   `lights_delete`); the ball photo of 2026-11-03 09:15 UTC and the 2 attendances stay. /summary and /live: 0 lights.
   At that moment the ball was „Ples prebieha" (the user switched it at 08:15 UTC), photos „Hneď na stenu".
+  Then, at the user's request, that ball photo too (dry run, then by id in one transaction, audit `photo_delete`):
+  gallery 0, /live photos 0, its JPEG and thumb 404. Production then: no lights, no photos, 2 attendances.
 
 ## Open questions / next
 
