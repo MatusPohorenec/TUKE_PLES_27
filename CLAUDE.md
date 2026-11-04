@@ -594,6 +594,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   health 53bdb76, both databases up; the production onboarding at 375 px shows the new heading (2 lines) and intro
   (3 lines, no one-letter word at a line end), /gate and /events 200, no console errors; the Wall chunk carries
   „Rozsvieťme mapu sveta" (the wall itself is hidden from visitors while „Pred plesom").
+  Then, at the user's request, the user's test light on production was deleted (Moscow, 2026-11-03 09:21 UTC; a
+  script with `--env .env.tuke`: dry run first, then that one submission by id in one transaction, audit
+  `lights_delete`); the ball photo of 2026-11-03 09:15 UTC and the 2 attendances stay. /summary and /live: 0 lights.
+  At that moment the ball was „Ples prebieha" (the user switched it at 08:15 UTC), photos „Hneď na stenu".
 
 ## Open questions / next
 
