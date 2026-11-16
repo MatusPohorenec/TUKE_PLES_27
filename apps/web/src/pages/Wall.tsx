@@ -2,7 +2,8 @@
  * The wall: what the LED screen at the ball shows (/), or in the student lobby (/vestibul, its own database).
  * It runs as a kiosk (no links, no comment button, cursor hidden, screen awake); ?kiosk=0 shows the links for tests.
  * On a phone, where the QR panel makes no sense, a button leads to the form instead. ?k=CODE puts the event access
- * code into the QR link.
+ * code into the QR link. The QR is the TUKE emblem like on the invitation; ?qr=plain shows a plain code instead
+ * (bigger modules, in case the emblem reads badly from the hall).
  *
  * By default the wall alternates the flat map and the globe (the cycle below); ?view=2d or ?view=3d keeps one.
  * Guests' photos fly out of their lights as postcards (PhotoMoments); ?photos=0 leaves them out.
@@ -251,8 +252,9 @@ export default function Wall() {
     institutions: visible.reduce((s, p) => s + p.institutions, 0),
   }), [visible]);
 
-  // the QR leads to the form of this wall's venue, so the lights land in its database
-  const joinUrl = `${location.origin}${venue.prefix}/zapoj-sa${code ? `?k=${encodeURIComponent(code)}` : ''}`;
+  // the QR leads to the form of this wall's venue, so the lights land in its database (the slash saves the web
+  // server's redirect to the route's folder; without an access code the QR is the TUKE emblem, see QrCode)
+  const joinUrl = `${location.origin}${venue.prefix}/zapoj-sa/${code ? `?k=${encodeURIComponent(code)}` : ''}`;
   const collecting = guests.available && (guests.event?.status === 'open' || guests.event?.status === 'live');
 
   // a phone shows the wall without the QR panel: a button leads to the form (the links stay hidden in kiosk mode)
@@ -297,7 +299,7 @@ export default function Wall() {
 
       {collecting && (
         <aside className="wall-join" ref={joinRef}>
-          <QrCode value={joinUrl} size={kiosk ? 150 : 112} />
+          <QrCode value={joinUrl} size={kiosk ? 150 : 112} plain={queryParam('qr') === 'plain'} />
           <div>
             <b>Pridaj svoje svetlo</b>
             <span>Naskenuj kód a označ, kde všade si bol/a.</span>

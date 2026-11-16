@@ -20,6 +20,7 @@ nainštalujú sa takto: `npm i jsqr@1.4.0 @zxing/library@0.21.3`. Cesty `D:/Proj
 | `mail_assets.py` | prílohy e-mailu (náhľady JPEG, ZIP pre tlačiareň) |
 | `final_print.py` | **finálne podklady** (qr-erb a qr-erb-negativ, vybrané 2026-11-03): `qr/final` = PDF 1:1 (100 % K), SVG, PNG 1216 dpi (vykreslí ho Poppler `pdftoppm` z PDF), farebné náhľady 10 – 12 na modrej, `CITAJ-MA.txt` a ZIP do chatu |
 | `final_check.py` + `final_check.cjs` | kontrola finálnych podkladov (PDF proti rastru mriežky, najtenšia fólia a medzera, čítačky) |
+| `wall_emblem.py` | **erb na stene** (2026-11-16): ten istý kód v tvare znaku pre formulár hostí (`/zapoj-sa/`, `/vestibul/zapoj-sa/`), zapíše `apps/web/src/components/emblemQr.ts` |
 
 Kód v tvare znaku: znak TUKE je kreslený na mriežke 19 × 19, pri 3 moduloch na bunku má 57 × 57 modulov a každá
 hrana jeho čiar leží na hrane modulu. QR verzia 5 (37 × 37, oprava chýb L) je otočená o 90°, aby správa ležala nad
@@ -42,6 +43,14 @@ Ak sa zmení adresa v kóde, treba pregenerovať všetko: `URL` vo všetkých sk
 `final_print.py`, nakoniec čítačky, záťažový test a `final_check`. Takto vznikla 2026-11-03 aj verzia pre hlavnú
 stránku https://srdcom.tuke.sk/ (klasické kódy verzia 3, kód v tvare znaku s rovnakou maskou a kazmi, záťažový test
 rovnaký). Nepoužila sa: tlačiareň už dostala kódy s /onboarding/ (2026-11-04).
+
+Erb na stene (2026-11-16): QR na stene (panel „Pridaj svoje svetlo") je od 2026-11-16 tiež v tvare znaku, ako na
+pozvánke, strieborný na tmavom paneli. `wall_emblem.py eval` pre https://srdcom.tuke.sk/zapoj-sa/ a
+https://srdcom.tuke.sk/vestibul/zapoj-sa/ vybral rovnako ako pozvánka medzeru 1 a masku 2 (2 kazy, 1 chybný bit
+prvej kópie formátu), `ts` zapísal cesty do `apps/web/src/components/emblemQr.ts`. jsQR prečíta oba čierne na bielej
+od 1140 po 170 px aj „ako na stene" (strieborné na tmavomodrej, s inverziou) od 228 po 105 px; OpenCV nečíta ani
+erb z pozvánky (nie je to chyba kódu). Adresa s prístupovým kódom (`?k=`) a `?qr=plain` dostanú obyčajný QR. Pri inej
+adrese treba spustiť `eval` a `ts` znova.
 
 Finálne podklady (2026-11-03): PDF je zapísané priamo z ciest SVG (rovnaký počet čiar a kriviek), znak má presne
 50 mm, strana 57,02 mm so 4 modulmi voľného okraja. PDF vykreslené Popplerom sa od rastra mriežky z `emblem_qr.py`
