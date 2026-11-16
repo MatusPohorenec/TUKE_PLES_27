@@ -329,20 +329,32 @@ photos show live on the wall in popups.
   `photos`; audit photo_status, photo_delete, photos_delete_all.
 - Wall (PhotoMoments.tsx + photo-moments.css): a silver postcard (kicker „Fotka hosťa", the place, country · visit kind;
   a ball photo: the venue's name and „Košice · HH:MM"), own slight tilt, gold glow. It flies out of its star (Web
-  Animations, 1.2 s), a glint sweeps over it, it stays 9 s (a returning one 7 s) and flies back (0.8 s); the star flares
-  (guest star by pinKey, a ball photo: 'origin'). The globe holds still and first turns to the place (`showPlace`: 2.2 s,
-  lat clamped to 8–45°, no turn when facing > 0.8; `endShowPlace` restarts the rotation from 0; turns() counts only while
-  auto-rotating, so photos lengthen the 3D phase). `placeCard` tries every position (16 px grid, scales 1–0.6), never over
-  obstacles (title text, counters, QR, nav) or the light's ring; cost = 1000 × (1 − scale) + 15 per lit place covered
-  (summed-area table, 24 px cells) + in the globe's disc 220 + 2.5/px + 0.1/px from its light. Globe: a gold line to the
-  light; flat map: the ring only. Measured 2026-10-27: 2D 1920×1080 and 960×540 top left at scale 0.8 (the title text
-  limits it; picture 576×384 unscaled at 1920), 3D 960×540 right of the globe with the line to Nepal; no long tasks.
+  Animations, 1.2 s), a glint sweeps over it, it stays 9 s (a returning one 7 s) and flies back into the star where that
+  is by then (0.8 s); the star flares (guest star by pinKey, a ball photo: 'origin'). **The globe never stops or turns
+  for a photo** (since 2026-11-16; before, `showPlace` stopped it and turned to the place, and at the user's presentation
+  the two production photos, Rabat and Košice, sent it back to Europe every ~50 s, so it never reached America and the
+  3D phase dragged on): it turns on at ≤ 1.6× base while a photo is chosen or up (`setPhotoFocus`, like a card's
+  `setFocus`). On the globe a photo comes only while its light faces the viewer (facing ≥ 0.3, on screen, not under
+  a panel) and will still (≥ 0.15) when the postcard has flown back (`turnWhileFocused` over 3 s for a card to leave
+  + 11 s); a new photo whose light is behind waits only while it comes round within 25 s of joining the queue (`turnIn`
+  at the current speed), else it comes at once without the line; older photos come back only while their light is in
+  view (ball photos when Europe passes). The flat map is unchanged (every light is in view). `placeCard` tries every
+  position (16 px grid, scales 1–0.6), never over obstacles (title text, counters, QR, nav) or the light's ring along
+  its way during the show (5 points); cost = 1000 × (1 − scale) + 15 per lit place covered
+  (summed-area table, 24 px cells) + in the globe's disc 220 + 2.5/px + 0.1/px from the middle of its light's way.
+  Globe: a gold line to the light; flat map: the ring only. Measured 2026-10-27: 2D 1920×1080 and 960×540 top left at
+  scale 0.8 (the title text limits it; picture 576×384 unscaled at 1920), 3D 960×540 right of the globe with the line to
+  Nepal; no long tasks. Measured 2026-11-16 (Docker PC, 1280×720, the production pair rebuilt locally: a Rabat place
+  photo + a ball photo, 960×1280): `?view=3d` 158 s and `?cycle=fast` 2D → 3D → 2D with the camera azimuth logged every
+  250 ms: no step back, latitude stays 38°; the 3D globe passed America ~25 s after the opening and made a full turn in
+  ~118 s with three photos and cards; the ball photo came with the line as Košice came round (Δλ ≈ −78°), Rabat's
+  photo as Rabat passed; a new photo whose light was behind came at once without the line; 2D unchanged.
 - Order: the wall loads `/photos` once (approved in the last 3 min = new), new ids from /live queue up in approval order,
   a total that differs from the gallery reloads it (hidden/deleted photos leave, even while shown). With an empty queue
   an older photo returns every 40 s (least recently shown, the first 20 s after the page opens); nothing while busy()
   and 5 s after an opening. Mode off empties the gallery; switching back on shows every photo once more as new. `Stage`:
   while a photo comes or shows no place card starts and a shown card leaves after 2.5 s; a photo waits for a card to
-  leave. `?photos=0` keeps photos off the wall.
+  leave; on the globe cards go on while a new photo waits for its light. `?photos=0` keeps photos off the wall.
 - Verified 2026-10-27 (native PC): api-smoke (+31 photo checks: review/approve/hide/off/auto, EXIF and GPS stripped,
   someone else's light 404, undone light → photo gone, 413, cut JPEG 400) passes for both venues on the dev API and on
   the Node 18 bundle (multipart via undici; Node 18 logs `ExperimentalWarning: buffer.File`, harmless); a 540 kB photo
@@ -622,6 +634,14 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   fee9789 with both databases up, /globe 2026-11-04+6a6c8a7d (before 1990: Miskolc 1966, Praha, Budapest, Jena), CORS
   and preflight 204, /admin/me 401, the bundle carries the milestones and fetches /globe with no-cache. The wall itself
   stays hidden while „Pred plesom" (the pane has no admin login; the user can look through „Náhľad stránky").
+- 2026-11-16 (Docker PC, after fast-forwarding main from ff62be7 to 45c9d42): the user presented the live site
+  (production „Ples prebieha" since 13:52 UTC with two photos: a place photo in Rabat, Maroko, and a ball photo) and
+  found the 3D globe bad: right after its opening a photo came and the globe went back to the start, again and again,
+  never reaching America (2D was fine). Cause: `showPlace` stopped the globe and turned it to each photo's place
+  (Europe / North Africa), then restarted it from speed 0; with an older photo every 40 s it never got round, and the
+  3D phase lasted far longer than its 3 turns (turns() counted only the auto-rotation). Fixed in the web only (section
+  „Guests' photos": the globe never stops or turns for a photo, photos wait for their light to come round). Verified
+  locally; the Docker PC's ples_dev got migrations 0002–0004 and dataset 2026-11-04+6a6c8a7d that day.
 
 ## Open questions / next
 
@@ -646,6 +666,10 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   valid admin session (pane) and „Pred plesom" srdcom.tuke.sk → /onboarding, /mapa → teaser; /admin shows „Náhľad
   stránky" (/?kiosk=0&nahlad=1, new tab); the preview shows the wall with the bar and the golden pill, /?nahlad=1 the
   kiosk wall without pill or comment button, /mapa the map with the pill; „Ukončiť náhľad" → teaser, / → /onboarding.
+- Upload pending (2026-11-16): the web zip with the 3D photo fix (the API code is unchanged since fee9789, so the API
+  zip may stay); then check /build.txt and the 3D phase of the wall. Production status: „Ples prebieha" since
+  2026-11-16 13:52 UTC (the user's presentation), photos on, 2 photos; before the ball „Pred plesom" again (the user's
+  call).
 - Production: web + API fee9789 since 2026-11-04 (53bdb76 that morning; before: acc353b, kept in deploy/backups). Earlier: API b643def (web
   b643def until 8e73e5e) (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
   databases up, /build.txt b643def, /live and /summary `public, max-age=0, s-maxage=2` with CORS, preflight 204,

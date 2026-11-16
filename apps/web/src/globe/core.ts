@@ -161,11 +161,12 @@ export abstract class WallScene {
   flat(): boolean { return false; }
 
   /**
-   * A guest's photo of a place is about to show: the view brings the place to the front and holds still (the globe
-   * stops turning and turns to it). Returns the milliseconds that takes; endShowPlace() lets the view go on.
+   * A guest's photo is coming or on screen (true) or gone (false): the globe turns slower, as for a card. It never
+   * stops or turns to the photo's place: that sent the globe back to Europe at every photo, so it never got round.
    */
-  showPlace(_lat: number, _lon: number): number { return 0; }
-  endShowPlace(): void {}
+  setPhotoFocus(_on: boolean): void {}
+  /** Degrees of longitude the view turns in the given time at its current speed (a map that does not turn: 0). */
+  turnIn(_seconds: number): number { return 0; }
 
   /** Starts the frame loop; a map calls it at the end of its constructor, once its layers exist. */
   protected startLoop(): void {

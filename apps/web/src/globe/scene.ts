@@ -18,10 +18,8 @@ export type { CountryFeature, GuestPlace, PickResult, SceneMode } from './core.t
 const smoothstep = (e0: number, e1: number, x: number) => { const k = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return k * k * (3 - 2 * k); };
 
 const GLOBE_RADIUS = 100; // three-globe units
-const FOCUS_SPEED = 1.6; // × base speed at most while a card is on screen
+const FOCUS_SPEED = 1.6; // × base speed at most while a card or a guest's photo is on screen
 const REVEAL_SPEED = 0.3; // × base speed while the light spreads, so the beams can be followed
-const PHOTO_TURN_MS = 2200; // the globe turns to the place of a guest's photo …
-const PHOTO_LAT: readonly [number, number] = [8, 45]; // … keeping its usual tilt (the view starts at 38° N)
 
 export class GlobeScene extends WallScene {
   readonly globe: GlobeInstance;
@@ -30,7 +28,8 @@ export class GlobeScene extends WallScene {
   private title?: { el: HTMLElement; bottomGap: number; bottom: number; limit?: () => number | null };
   /** unit vectors of every lit place (x, y, z per place): how much is there to see in the current view */
   private interest = new Float32Array(0);
-  private readonly rotation: { base: number; max: number; speed: number; focused: boolean; last: number };
+  /** focused: a place card is up; photo: a guest's photo is coming or up */
+  private readonly rotation: { base: number; max: number; speed: number; focused: boolean; photo: boolean; last: number };
   /** degrees the view has turned since resetTurns(), and the camera's last azimuth */
   private turned = { degrees: 0, azimuth: NaN };
 
@@ -59,7 +58,7 @@ export class GlobeScene extends WallScene {
     controls.autoRotateSpeed = opts.autoRotateSpeed ?? 0.45;
     controls.enableZoom = true;
     const base = opts.autoRotateSpeed ?? 0.45;
-    this.rotation = { base, max: base * 3, speed: base, focused: false, last: 0 };
+    this.rotation = { base, max: base * 3, speed: base, focused: false, photo: false, last: 0 };
 
     const scene = this.globe.scene() as Scene;
     const renderer = this.globe.renderer() as WebGLRenderer;
@@ -85,8 +84,8 @@ export class GlobeScene extends WallScene {
   /**
    * Turns faster where there is little to see: up to three times the base speed over an empty ocean
    * (the Pacific), the base speed wherever a few dozen lit places face the viewer. During the reveal it turns
-   * slowly, so the beams can be followed to where they land; while a card is on screen only a little faster
-   * than the base speed, so the card can still be read.
+   * slowly, so the beams can be followed to where they land; while a card or a guest's photo is on screen only a
+   * little faster than the base speed, so it can still be read.
    */
   protected override frameTick(now: number): void {
     const controls = this.globe.controls() as unknown as { autoRotate: boolean; autoRotateSpeed: number };
@@ -95,7 +94,7 @@ export class GlobeScene extends WallScene {
     r.last = now;
     const cam = this.camera().position;
     const azimuth = (Math.atan2(cam.x, cam.z) * 180) / Math.PI;
-    if (!Number.isNaN(this.turned.azimuth) && controls.autoRotate) { // turning to a photo's place is no turn of the wall
+    if (!Number.isNaN(this.turned.azimuth) && controls.autoRotate) { // a turnTo() is no turn of the wall
       const step = ((azimuth - this.turned.azimuth + 540) % 360) - 180; // across ±180° without a jump
       this.turned.degrees += Math.abs(step);
     }
@@ -110,7 +109,7 @@ export class GlobeScene extends WallScene {
       let seen = 0; // places in the middle of the disc count fully, towards the horizon less, behind not at all
       for (let i = 0; i < a.length; i += 3) seen += smoothstep(0.5, 0.95, a[i]! * cx + a[i + 1]! * cy + a[i + 2]! * cz);
       target += (r.max - r.base) * (1 - smoothstep(8, 45, seen));
-      if (r.focused) target = Math.min(target, r.base * FOCUS_SPEED);
+      if (r.focused || r.photo) target = Math.min(target, r.base * FOCUS_SPEED);
     }
     const ease = target > r.speed ? 2 : 0.8; // speed up gently (after the reveal), slow down within a second
     r.speed += (target - r.speed) * (1 - Math.exp(-dt / ease));
@@ -130,6 +129,15 @@ export class GlobeScene extends WallScene {
     return controls.autoRotate ? 6 * Math.min(this.rotation.speed, this.rotation.base * FOCUS_SPEED) * seconds : 0;
   }
 
+  /** Degrees of longitude the view turns in the given time at the speed it turns now. */
+  override turnIn(seconds: number): number {
+    const controls = this.globe.controls() as unknown as { autoRotate: boolean };
+    return controls.autoRotate ? 6 * this.rotation.speed * seconds : 0;
+  }
+
+  /** A guest's photo is coming or up: the globe turns on, at most a little faster than the base speed. */
+  override setPhotoFocus(on: boolean): void { this.rotation.photo = on; }
+
   setAutoRotate(on: boolean): void {
     (this.globe.controls() as unknown as { autoRotate: boolean }).autoRotate = on;
   }
@@ -144,20 +152,6 @@ export class GlobeScene extends WallScene {
     this.setAutoRotate(false);
     const { altitude } = this.globe.pointOfView();
     this.globe.pointOfView({ lat, lng: lon, altitude }, ms);
-  }
-
-  /** A guest's photo: the globe stops and, unless the place already faces the viewer, turns to it. */
-  override showPlace(lat: number, lon: number): number {
-    this.setAutoRotate(false);
-    if (this.facing(lat, lon) > 0.8) return 0;
-    this.turnTo(Math.min(PHOTO_LAT[1], Math.max(PHOTO_LAT[0], lat)), lon, PHOTO_TURN_MS);
-    return PHOTO_TURN_MS;
-  }
-
-  /** The photo is gone: the globe turns again, speeding up gently from a standstill. */
-  override endShowPlace(): void {
-    this.rotation.speed = 0;
-    this.setAutoRotate(true);
   }
 
   protected override placesChanged(): void {

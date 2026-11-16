@@ -1,10 +1,12 @@
 /**
  * Guests' photos on the wall: a postcard flies out of the photo's light (its star; Košice for a photo from the ball),
  * stays a few seconds and flies back into it. New photos (approved in /admin, or sent while photos go on the wall at
- * once) come first, one after another; when none are waiting, an older one comes back now and then. The globe stops
- * and turns to the place first, and the postcard takes the free space beside it; on the flat map it goes where it
- * covers the fewest lit places, as near its light as that allows. Never over the title, the counters, the QR code or
- * the buttons. Place cards (PlaceSpotlight) give way: both share `stage`.
+ * once) come first, one after another; when none are waiting, an older one comes back now and then. The globe keeps
+ * turning (slower while a postcard is up) and never turns back to a photo's place: a photo comes while its light
+ * faces the viewer and stays in view until the postcard flies back into it; a new photo waits for that only while its
+ * light comes round soon, else it comes at once and without the line. The postcard takes the free space beside the
+ * globe; on the flat map it goes where it covers the fewest lit places, as near its light as that allows. Never over
+ * the title, the counters, the QR code or the buttons. Place cards (PlaceSpotlight) give way: both share `stage`.
  */
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { VISIT_KINDS, type Venue, type VenueKey } from '@ples/shared/constants';
@@ -25,6 +27,12 @@ const FIRST_AGAIN_MS = 20_000; // the first older photo after the page opens …
 const AGAIN_MS = 40_000; // … then one every this often, while no new ones come
 const LOAD_MS = 8000; // a photo that has not loaded by then is skipped
 const FRESH_AT_LOAD_MS = 3 * 60_000; // photos approved this recently still count as new when the wall (re)starts
+const FRESH_WAIT_MS = 25_000; // on the globe a new photo waits at most this long for its light to come round
+const IN_VIEW = 0.3; // on the globe a photo comes while its light faces the viewer (1 = middle, 0 = horizon) …
+const STILL_IN_VIEW = 0.15; // … and will still when the postcard flies back into it
+const CARD_YIELD_S = 3; // a place card on screen may take this long to make room for a photo
+const UP_S = CARD_YIELD_S + (ENTER_MS + SHOW_NEW_MS + LEAVE_MS) / 1000; // chosen → flown back, at most (s)
+const CHECK_MS = 250; // how often the wall looks for the next photo (on the globe: a light that has come round)
 const EDGE = 16; // free space kept at the window edges
 const PAD = 14; // free space kept around the title, counters and buttons
 const RING = 30; // the light itself stays visible
@@ -58,14 +66,20 @@ function pictureSize(photo: WallPhoto, flat: boolean): { pw: number; ph: number 
 
 const overlaps = (a: Box, b: Box, pad = 0) => a.left < b.right + pad && a.right > b.left - pad && a.top < b.bottom + pad && a.bottom > b.top - pad;
 const distance = (x: number, y: number, b: Box) => Math.hypot(Math.max(b.left - x, 0, x - b.right), Math.max(b.top - y, 0, y - b.bottom));
+const inside = (x: number, y: number, b: Box) => x > b.left && x < b.right && y > b.top && y < b.bottom;
+/** The postcard shrunk to a spark at its light (x, y on screen): where it flies out of and back into. */
+const spark = (x: number, y: number, w: number, h: number, tilt: number) =>
+  `translate(${Math.round(x - w / 2)}px, ${Math.round(y - h / 2)}px) scale(0.05) rotate(${tilt * 5}deg)`;
 
 /**
  * Where a w × h postcard goes (its top left corner on screen, and its scale): the cheapest position of every one tried,
  * counting how much smaller than full size it is, the lit places it would cover (for a few seconds a big photo is
  * worth a few covered stars, never a covered Europe), on the globe how far it reaches into the globe, and how far it
- * is from its light. Null when it fits nowhere, not even at 60 %.
+ * is from its light. `light`: where the light is while the postcard is up (on the globe it moves on as the globe
+ * turns; empty when the light is out of view); the postcard never covers any of those points. Null when it fits
+ * nowhere, not even at 60 %.
  */
-function placeCard(w: number, h: number, place: { x: number; y: number; visible: boolean }, obstacles: Box[],
+function placeCard(w: number, h: number, light: { x: number; y: number }[], obstacles: Box[],
   lit: { x: number; y: number }[], disc: { x: number; y: number; r: number } | null): { x: number; y: number; scale: number } | null {
   const W = innerWidth, H = innerHeight;
   // lit places per grid cell, summed (a summed-area table): any rectangle's count in four lookups
@@ -83,7 +97,8 @@ function placeCard(w: number, h: number, place: { x: number; y: number; visible:
     const r0 = Math.max(0, Math.floor(b.top / CELL)), r1 = Math.min(rows, Math.ceil(b.bottom / CELL));
     return sat[r1 * stride + c1]! - sat[r0 * stride + c1]! - sat[r1 * stride + c0]! + sat[r0 * stride + c0]!;
   };
-  const ring: Box | null = place.visible ? { left: place.x - RING, top: place.y - RING, right: place.x + RING, bottom: place.y + RING } : null;
+  const rings: Box[] = light.map(p => ({ left: p.x - RING, top: p.y - RING, right: p.x + RING, bottom: p.y + RING }));
+  const near = light[Math.floor(light.length / 2)]; // the postcard stays near the middle of the light's way
   let best: { x: number; y: number; scale: number } | null = null;
   let bestCost = Infinity;
   for (const scale of SCALES) {
@@ -91,13 +106,13 @@ function placeCard(w: number, h: number, place: { x: number; y: number; visible:
     for (let y = EDGE; y <= H - EDGE - ch; y += STEP) {
       for (let x = EDGE; x <= W - EDGE - cw; x += STEP) {
         const box = { left: x, top: y, right: x + cw, bottom: y + ch };
-        if (obstacles.some(o => overlaps(box, o, PAD)) || (ring && overlaps(box, ring))) continue;
+        if (obstacles.some(o => overlaps(box, o, PAD)) || rings.some(r => overlaps(box, r))) continue;
         let cost = (1 - scale) * COST.smaller + covered(box) * COST.lit;
         if (disc) {
           const d = distance(disc.x, disc.y, box);
           if (d < disc.r) cost += COST.globe + (disc.r - d) * COST.inGlobe;
         }
-        if (place.visible) cost += distance(place.x, place.y, box) * COST.far;
+        if (near) cost += distance(near.x, near.y, box) * COST.far;
         if (cost < bestCost) { bestCost = cost; best = { x, y, scale }; }
       }
     }
@@ -125,7 +140,8 @@ function Caption({ photo, venue }: { photo: WallPhoto; venue: Venue }) {
   );
 }
 
-interface Moment { photo: WallPhoto; fresh: boolean; ready: boolean; failed: boolean; since: number }
+/** queued: when a new photo joined the queue (it keeps that time if it has to go back) */
+interface Moment { photo: WallPhoto; fresh: boolean; queued: number; ready: boolean; failed: boolean; since: number }
 
 export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
   scene: WallScene | null; slug: string; feed: PhotoFeed | null; stage: Stage; obstacles: () => Box[]; venue: Venue;
@@ -144,6 +160,7 @@ export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
   const gallery = useRef(new Map<string, WallPhoto>());
   const queue = useRef<string[]>([]);
   const lastShown = useRef(new Map<string, number>());
+  const queuedAt = useRef(new Map<string, number>()); // when each new photo joined the queue (performance.now)
   const loaded = useRef(false);
   const latestFeed = useRef(feed);
   latestFeed.current = feed;
@@ -158,7 +175,10 @@ export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
     if (state.running) { state.again = true; return; } // the running sync goes again with the newest feed
     const add = (p: WallPhoto, fresh: boolean) => {
       gallery.current.set(p.id, p);
-      if (fresh && !queue.current.includes(p.id)) queue.current.push(p.id);
+      if (fresh && !queue.current.includes(p.id)) {
+        queue.current.push(p.id);
+        queuedAt.current.set(p.id, performance.now());
+      }
     };
     const reload = async (freshSince: number | null) => {
       const { photos } = await api.photos(slug);
@@ -189,18 +209,18 @@ export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
 
   useEffect(() => {
     if (!scene) return;
-    type Phase = 'idle' | 'load' | 'turn' | 'enter' | 'show' | 'leave' | 'gap';
+    type Phase = 'idle' | 'load' | 'enter' | 'show' | 'leave' | 'gap';
     let phase: Phase = 'idle';
     let until = 0;
     let quietUntil = 0; // after the opening the lit map is seen first
     let nextAgain = performance.now() + FIRST_AGAIN_MS;
+    let checkAt = 0;
     let moment: Moment | null = null;
     let box: Box | null = null; // where the postcard is, on screen
-    let from = ''; // the postcard as a spark at its light: where it flies out of and back into
-    let held = false; // the scene holds still for this photo
+    let held = false; // the globe turns slower for this photo
     let raf = 0;
 
-    const release = () => { if (held) { scene.endShowPlace(); held = false; } };
+    const release = () => { if (held) { scene.setPhotoFocus(false); held = false; } };
     const end = (t: number) => {
       release();
       if (moment) lastShown.current.set(moment.photo.id, Date.now());
@@ -213,16 +233,61 @@ export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
       nextAgain = t + AGAIN_MS;
     };
     // a new photo that could not finish goes back to the front of the queue
-    const giveBack = () => { if (moment?.fresh && phase !== 'show' && phase !== 'leave') queue.current.unshift(moment.photo.id); };
+    const giveBack = () => {
+      if (!moment?.fresh || phase === 'show' || phase === 'leave') return;
+      queue.current.unshift(moment.photo.id);
+      queuedAt.current.set(moment.photo.id, moment.queued);
+    };
+
+    /**
+     * Whether the photo's light faces the viewer `delay` seconds from now and stays in view until its postcard has
+     * flown back (the globe turns on meanwhile); now (delay 0) it must also be on screen and not under the title or
+     * a panel. The flat map: always.
+     */
+    const inView = (photo: WallPhoto, delay: number, blocked: Box[]): boolean => {
+      if (scene.flat()) return true;
+      const lon = photo.lon + scene.turnIn(delay); // the camera moves west: places drift east
+      if (scene.facing(photo.lat, lon) < IN_VIEW || scene.facing(photo.lat, lon + scene.turnWhileFocused(UP_S)) < STILL_IN_VIEW) return false;
+      if (delay > 0) return true;
+      const p = scene.screenPoint(photo.lat, photo.lon);
+      return p.x > 0 && p.x < innerWidth && p.y > 0 && p.y < innerHeight && !blocked.some(o => inside(p.x, p.y, o));
+    };
 
     /** The photo that has not been on the wall for the longest time (never shown first), not the one just shown. */
-    const pickAgain = (): string | undefined => {
+    const pickAgain = (ok: (p: WallPhoto) => boolean): string | undefined => {
       let best: string | undefined, bestAt = Infinity;
-      for (const id of gallery.current.keys()) {
+      for (const [id, p] of gallery.current) {
         const at = (lastShown.current.get(id) ?? 0) + Math.random(); // ties: any of them
-        if (at < bestAt && !(gallery.current.size > 1 && at > Date.now() - AGAIN_MS)) { best = id; bestAt = at; }
+        if (at < bestAt && !(gallery.current.size > 1 && at > Date.now() - AGAIN_MS) && ok(p)) { best = id; bestAt = at; }
       }
       return best;
+    };
+
+    /**
+     * The next photo, or null to wait: a new one first, else (now and then) an older one. On the globe only one whose
+     * light is in view (see inView); a new one waits for its light while that comes round within FRESH_WAIT_MS of
+     * joining the queue, else it comes at once (its light is behind the globe: no line).
+     */
+    const choose = (t: number): { photo: WallPhoto; fresh: boolean; queued: number } | null => {
+      const blocked = scene.flat() ? [] : obstaclesRef.current();
+      const q = queue.current.filter(id => gallery.current.has(id));
+      queue.current = q;
+      if (q.length > 0) {
+        let i = q.findIndex(id => inView(gallery.current.get(id)!, 0, blocked));
+        if (i < 0) {
+          const head = gallery.current.get(q[0]!)!;
+          const left = FRESH_WAIT_MS - (t - (queuedAt.current.get(head.id) ?? t));
+          for (let s = 2; s * 1000 <= left; s += 2) if (inView(head, s, blocked)) return null; // it comes round soon
+          i = 0;
+        }
+        const id = q.splice(i, 1)[0]!;
+        const queued = queuedAt.current.get(id) ?? t;
+        queuedAt.current.delete(id);
+        return { photo: gallery.current.get(id)!, fresh: true, queued };
+      }
+      if (t < nextAgain) return null;
+      const id = pickAgain(p => inView(p, 0, blocked));
+      return id ? { photo: gallery.current.get(id)!, fresh: false, queued: t } : null;
     };
 
     const leave = (t: number) => {
@@ -233,7 +298,8 @@ export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
       if (!el) return;
       const to = el.style.transform;
       const p = moment && scene.screenPoint(moment.photo.lat, moment.photo.lon);
-      const back = p && p.facing > 0.15 && from ? from : `${to} scale(0.92)`; // back into its light, or fade where it is
+      // back into its light, where that is now (the globe has turned on), or it fades where it is
+      const back = p && p.facing > 0.15 ? spark(p.x, p.y, el.offsetWidth, el.offsetHeight, tiltOf(moment!.photo.id)) : `${to} scale(0.92)`;
       el.animate([{ transform: to, opacity: 1 }, { transform: back, opacity: 0 }], { duration: LEAVE_MS, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' });
     };
 
@@ -242,16 +308,20 @@ export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
       const m = moment!;
       if (!el) { end(t); return; }
       const w = el.offsetWidth, h = el.offsetHeight;
+      const onScreen = (q: { x: number; y: number; facing: number }) => q.facing > 0.15 && q.x > 0 && q.x < innerWidth && q.y > 0 && q.y < innerHeight;
       const p = scene.screenPoint(m.photo.lat, m.photo.lon);
-      const visible = p.facing > 0.15 && p.x > 0 && p.x < innerWidth && p.y > 0 && p.y < innerHeight;
+      const visible = onScreen(p);
+      // the globe turns on while the postcard is up: where its light will be meanwhile (the map: where it is)
+      const stay = (ENTER_MS + (m.fresh ? SHOW_NEW_MS : SHOW_AGAIN_MS) + LEAVE_MS) / 1000;
+      const way = visible ? [0, 0.25, 0.5, 0.75, 1].map(k => scene.screenPoint(m.photo.lat, m.photo.lon + scene.turnWhileFocused(stay * k))).filter(onScreen) : [];
       const lit = [...scene.visibleCoop(), ...scene.guestPlaces()].map(q => scene.screenPoint(q.lat, q.lon)).filter(q => q.facing > 0);
-      const spot = placeCard(w, h, { x: p.x, y: p.y, visible }, obstaclesRef.current(), lit, scene.flat() ? null : scene.disc());
+      const spot = placeCard(w, h, way, obstaclesRef.current(), lit, scene.flat() ? null : scene.disc());
       if (!spot) { end(t); return; } // no room on this screen
       const tilt = tiltOf(m.photo.id);
       // transform-origin is the middle: translate puts the unscaled box, scale shrinks it around its middle
       const to = `translate(${Math.round(spot.x - (w * (1 - spot.scale)) / 2)}px, ${Math.round(spot.y - (h * (1 - spot.scale)) / 2)}px) scale(${spot.scale}) rotate(${tilt}deg)`;
       const sx = visible ? p.x : spot.x + (w * spot.scale) / 2, sy = visible ? p.y : spot.y + (h * spot.scale) / 2;
-      from = `translate(${Math.round(sx - w / 2)}px, ${Math.round(sy - h / 2)}px) scale(0.05) rotate(${tilt * 5}deg)`;
+      const from = spark(sx, sy, w, h, tilt);
       box = { left: spot.x, top: spot.y, right: spot.x + w * spot.scale, bottom: spot.y + h * spot.scale };
       el.style.transform = to;
       el.classList.add('on');
@@ -287,7 +357,7 @@ export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
     const loop = (t: number) => {
       raf = requestAnimationFrame(loop);
       const busy = scene.busy(); // the light is spreading or going out (the 2D/3D cycle)
-      if (busy && (phase === 'load' || phase === 'turn')) { giveBack(); end(t); }
+      if (busy && phase === 'load') { giveBack(); end(t); }
       else if (busy && (phase === 'enter' || phase === 'show')) leave(t);
       switch (phase) {
         case 'gap':
@@ -297,13 +367,15 @@ export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
           break;
         case 'idle': {
           if (busy) { stage.photo = false; quietUntil = t + AFTER_REVEAL_MS; break; }
-          if (t < quietUntil) break;
-          const fresh = queue.current.length > 0;
-          const id = fresh ? queue.current.shift() : t > nextAgain ? pickAgain() : undefined;
-          const photo = id ? gallery.current.get(id) : undefined;
-          if (!photo) { if (!fresh) stage.photo = false; break; }
+          if (t < quietUntil || t < checkAt) break;
+          checkAt = t + CHECK_MS;
+          const next = choose(t);
+          if (!next) { stage.photo = false; break; } // place cards go on meanwhile
+          const { photo, fresh, queued } = next;
           stage.photo = true;
-          const m: Moment = { photo, fresh, ready: false, failed: false, since: t };
+          scene.setPhotoFocus(true); // the globe turns slower from now until the postcard has gone
+          held = true;
+          const m: Moment = { photo, fresh, queued, ready: false, failed: false, since: t };
           moment = m;
           const img = new Image();
           img.decoding = 'async';
@@ -318,14 +390,9 @@ export function PhotoMoments({ scene, slug, feed, stage, obstacles, venue }: {
           if (m.failed || t - m.since > LOAD_MS || !gallery.current.has(m.photo.id)) { end(t); break; }
           // the picture has loaded, the place card has left and the postcard is in the page to be measured
           if (!m.ready || stage.card || rendered.current !== m.photo.id) break;
-          until = t + scene.showPlace(m.photo.lat, m.photo.lon) + 60;
-          held = true;
-          phase = 'turn';
+          enter(t);
           break;
         }
-        case 'turn':
-          if (t >= until) enter(t);
-          break;
         case 'enter':
           if (t < until) break;
           phase = 'show';
