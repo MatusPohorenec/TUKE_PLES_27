@@ -666,11 +666,15 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   valid admin session (pane) and „Pred plesom" srdcom.tuke.sk → /onboarding, /mapa → teaser; /admin shows „Náhľad
   stránky" (/?kiosk=0&nahlad=1, new tab); the preview shows the wall with the bar and the golden pill, /?nahlad=1 the
   kiosk wall without pill or comment button, /mapa the map with the pill; „Ukončiť náhľad" → teaser, / → /onboarding.
-- Upload pending (2026-11-16): the web zip with the 3D photo fix (the API code is unchanged since fee9789, so the API
-  zip may stay); then check /build.txt and the 3D phase of the wall. Production status: „Ples prebieha" since
-  2026-11-16 13:52 UTC (the user's presentation), photos on, 2 photos; before the ball „Pred plesom" again (the user's
-  call).
-- Production: web + API fee9789 since 2026-11-04 (53bdb76 that morning; before: acc353b, kept in deploy/backups). Earlier: API b643def (web
+- Production: web + API 4c1551c since 2026-11-16 (the 3D photo fix; the user uploaded both zips, the API code is the
+  same as fee9789). Verified: /build.txt and health 4c1551c with both databases up, the served Wall chunk has
+  setPhotoFocus/turnIn and no showPlace; the production wall `?view=3d` in the user's Chrome (2560×1215, camera logged
+  every 250 ms for 160 s): no step back, latitude 38°, Rabat's photo with the line 5 s after the opening while the
+  globe turned on, America at 53–80 s, Asia at 88–100 s, the ball photo with the line as Košice came round (102 s),
+  Rabat's again at 153 s; turn rate = 6 × autoRotateSpeed °/s (OrbitControls with damping 0.1); no console errors.
+  Production status: „Ples prebieha" since 2026-11-16 13:52 UTC (the user's presentation), photos on, 2 photos and
+  1 light; before the ball „Pred plesom" again (the user's call).
+- Before: web + API fee9789 since 2026-11-04 (53bdb76 that morning; before: acc353b, kept in deploy/backups). Earlier: API b643def (web
   b643def until 8e73e5e) (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
   databases up, /build.txt b643def, /live and /summary `public, max-age=0, s-maxage=2` with CORS, preflight 204,
   /admin/me 401, the web bundle fetches both feeds with `no-store`; the 3D wall in the pane: counter 362 lights /
