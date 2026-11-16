@@ -656,6 +656,12 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   4c1551c deployed by the user and verified (section „Open questions"). Then the user asked to purge the production
   entries and switch to „Pred plesom" (handed to its own session: the TUKE SQL Server needs the VPN from the Docker PC)
   and for the wall's QR in the TUKE emblem like the invitation (section „The wall", Layout).
+  The purge (with the user's OK, after the user connected the TUKE VPN; dry run first, script in that session's
+  scratchpad, nothing committed): one transaction on the ball's TUKE database deleted the 1 guest light (Maroko), the
+  2 photos (Maroko and the ball) and the 2 attendance confirmations (of 2026-10-27 and 2026-11-03, test entries), wrote
+  4 audit rows, and set the status to open („Pred plesom", 18:17 UTC); feedback (0) and the older audit stay, photo
+  mode stays auto („Hneď na stenu", the user's choice). The lobby was left alone (switched off; this PC's .env.tuke
+  has no MSSQL_VESTIBUL_* keys, so its content was not read). Then 4088419 (the emblem QR) uploaded by the user.
 
 ## Open questions / next
 
@@ -680,14 +686,20 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   valid admin session (pane) and „Pred plesom" srdcom.tuke.sk → /onboarding, /mapa → teaser; /admin shows „Náhľad
   stránky" (/?kiosk=0&nahlad=1, new tab); the preview shows the wall with the bar and the golden pill, /?nahlad=1 the
   kiosk wall without pill or comment button, /mapa the map with the pill; „Ukončiť náhľad" → teaser, / → /onboarding.
-- Production: web + API 4c1551c since 2026-11-16 (the 3D photo fix; the user uploaded both zips, the API code is the
+- Production: web + API 4088419 since 2026-11-16 evening (the wall's QR as the TUKE emblem; the API code is still the
+  same as fee9789). Verified: /build.txt and health 4088419 with both databases up, the served Wall chunk is
+  byte-identical to the local build and holds both emblem codes (ball and lobby form). The wall itself is hidden from
+  visitors while „Pred plesom": look at it through „Náhľad stránky" in /admin. State for the ball: „Pred plesom" since
+  2026-11-16 18:17 UTC (gate `onboarding`), photos „Hneď na stenu", the ball's database empty (0 lights, 0 photos,
+  0 attendances; /live, /summary, /photos verified), lobby „Vypnutý".
+- Before: web + API 4c1551c (the 3D photo fix; the user uploaded both zips, the API code is the
   same as fee9789). Verified: /build.txt and health 4c1551c with both databases up, the served Wall chunk has
   setPhotoFocus/turnIn and no showPlace; the production wall `?view=3d` in the user's Chrome (2560×1215, camera logged
   every 250 ms for 160 s): no step back, latitude 38°, Rabat's photo with the line 5 s after the opening while the
   globe turned on, America at 53–80 s, Asia at 88–100 s, the ball photo with the line as Košice came round (102 s),
   Rabat's again at 153 s; turn rate = 6 × autoRotateSpeed °/s (OrbitControls with damping 0.1); no console errors.
-  Production status: „Ples prebieha" since 2026-11-16 13:52 UTC (the user's presentation), photos on, 2 photos and
-  1 light; before the ball „Pred plesom" again (the user's call).
+  Production status then: „Ples prebieha" since 2026-11-16 13:52 UTC (the user's presentation), photos on, 2 photos
+  and 1 light (all purged that evening, see History 2026-11-16).
 - Before: web + API fee9789 since 2026-11-04 (53bdb76 that morning; before: acc353b, kept in deploy/backups). Earlier: API b643def (web
   b643def until 8e73e5e) (the load-test fixes, deployed and verified 2026-10-27: health b643def with both
   databases up, /build.txt b643def, /live and /summary `public, max-age=0, s-maxage=2` with CORS, preflight 204,
@@ -695,7 +707,8 @@ Opening = **timeline 1952 → 2027** (~30 s), `GlobeScene.setCooperation(places,
   120 places / 57 countries, the scene's stars hold the same 362 lights on 119 stars (a country merged with its
   capital), no failed request). Before it: web 5ddcd1f (unknown addresses → 302 → /index.html → the centred teaser),
   068c935 (the kiosk wall), API 62362ab.
-- Ball status: the production light test (10:48–10:51 UTC) ran while the ball was „Pred plesom" (lights from the admin
+- Ball status (2026-11-16 evening): „Pred plesom", database empty, photos „Hneď na stenu" (the user's choice; the
+  advice for the ball is „Po schválení"). Older notes: the production light test (10:48–10:51 UTC) ran while the ball was „Pred plesom" (lights from the admin
   session only); at the b643def check the ball was „Ples prebieha" (live: visitors see every page and may send lights),
   switched in /admin after the test. Before the ball it must be „Pred plesom" again (the user's call). Check the status
   in /admin (or /app.js/api/gate) before assuming it. The lobby is „Vypnutý" (gate `off`). On 2026-11-03 after the
